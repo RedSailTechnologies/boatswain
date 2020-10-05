@@ -1,9 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"github.com/gin-gonic/gin"
+
+	poseidon "poseidon/server"
 )
 
 func main() {
-	fmt.Println("hello world")
+	host := gin.Default()
+	host.Use(gin.Recovery())
+
+	poseidon.AddRoutes(host)
+
+	host.Run()
 }
