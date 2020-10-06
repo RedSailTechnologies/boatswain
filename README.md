@@ -1,5 +1,7 @@
 # Boatswain
-A kubernetes-native cd tool.
+
+## About
+A kubernetes-native CD tool.
 
 ## Design
 * Kubernetes native technologies
@@ -22,3 +24,12 @@ A kubernetes-native cd tool.
   * Cluster management/scraper
 * Davy
   * Helm management plugin
+
+## TODO
+- [x] Create client
+- [ ] Create basic api for versions
+- [ ] Dockerfile setup
+- [ ] Helm charts
+- [ ] All-in-one binary
+- [ ] Logging
+- [ ] Swagger
