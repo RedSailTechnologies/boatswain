@@ -1,4 +1,4 @@
-# Boatswain
+# Boatswain (bow·sn)
 
 ## About
 A kubernetes-native CD tool.
@@ -22,7 +22,7 @@ A kubernetes-native CD tool.
   * Gateway service
 * Kraken
   * Cluster management/scraper
-* Davy
+* DavyJones
   * Helm management plugin
 
 ## TODO

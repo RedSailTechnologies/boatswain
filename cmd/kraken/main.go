@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+
+	"github.com/redsailtechnologies/boatswain/pkg/kraken"
 )
 
 func main() {
@@ -13,9 +15,10 @@ func main() {
 
 	r := router.Group("/api/clusters")
 	{
-		r.GET("") // list of all clusters
-		r.GET("/:name/namespaces")
-		r.GET("/:name/deployments") // query param for a ns?
+		kraken := new(kraken.ClustersController)
+		r.GET("", kraken.Clusters)
+		r.GET("/:name/namespaces", kraken.Namespaces)
+		r.GET("/:name/deployments", kraken.Deployments)
 	}
 
 	router.Run()

@@ -1,7 +1,18 @@
 FROM golang:1.15 as base
-WORKDIR /go/src/github.com/redsailtechnologies/boatswain/kraken
+WORKDIR /go/src/github.com/redsailtechnologies/boatswain
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
-RUN make kraken
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bin/app ./cmd/kraken
 
-FROM golang:1.15-alpine
+FROM base as debug
+RUN go get github.com/go-delve/delve/cmd/dlv
+EXPOSE 40000
+ENTRYPOINT [ "/go/bin/dlv", "--listen=:40000", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "bin/app" ]
+
+FROM golang:1.15-alpine as release
+RUN addgroup -g 10001 -S kraken && \
+    adduser -u 10001 -S kraken -G kraken
+USER kraken
+EXPOSE 3100
+WORKDIR /kraken
+COPY --from=base /go/src/github.com/redsailtechnologies/boatswain/bin/app .
+ENTRYPOINT [ "./app" ]

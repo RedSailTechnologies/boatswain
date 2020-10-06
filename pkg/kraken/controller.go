@@ -1,4 +1,4 @@
-package main
+package kraken
 
 import (
 	"github.com/gin-gonic/gin"
@@ -17,7 +17,7 @@ func (cc *ClustersController) Clusters(c *gin.Context) {
 // Namespaces get all the namespaces for a particular cluster
 func (cc *ClustersController) Namespaces(c *gin.Context) {
 	var cluster ClusterParam
-	if err := c.ShouldBindUri(cluster); err != nil {
+	if err := c.ShouldBindUri(&cluster); err != nil {
 		c.JSON(400, gin.H{"message": "cluster name incorrect"})
 	}
 
@@ -31,20 +31,33 @@ func (cc *ClustersController) Namespaces(c *gin.Context) {
 func (cc *ClustersController) Deployments(c *gin.Context) {
 	var cluster ClusterParam
 	var namespace NamespaceQuery
-	if err := c.ShouldBindUri(cluster); err != nil {
+	if err := c.ShouldBindUri(&cluster); err != nil {
 		c.JSON(400, gin.H{"message": "cluster name incorrect"})
 	}
-	c.ShouldBindQuery(&namespace)
-	c.JSON(200, DeploymentsResponse{
-		Cluster: cluster.Name,
-		Deployments: []DeploymentResponse{
-			DeploymentResponse{
-				Name:      "deployment-a",
-				Namespace: "namespace-a",
-				Version:   "0.1.0",
+	err := c.ShouldBindQuery(&namespace)
+	if err == nil && namespace.Namespace != "" {
+		c.JSON(200, DeploymentsResponse{
+			Cluster: cluster.Name,
+			Deployments: []DeploymentResponse{
+				DeploymentResponse{
+					Name:      "deployment-a",
+					Namespace: namespace.Namespace,
+					Version:   "0.1.0",
+				},
 			},
-		},
-	})
+		})
+	} else {
+		c.JSON(200, DeploymentsResponse{
+			Cluster: cluster.Name,
+			Deployments: []DeploymentResponse{
+				DeploymentResponse{
+					Name:      "deployment-a",
+					Namespace: "namespace-a",
+					Version:   "0.1.0",
+				},
+			},
+		})
+	}
 }
 
 // ClustersResponse is the response given to a call to get the configured clusters
@@ -54,7 +67,7 @@ type ClustersResponse struct {
 
 // ClusterParam is the uri query for the cluster
 type ClusterParam struct {
-	Name string `uri:"name" binding:"required,string"`
+	Name string `uri:"name" binding:"required"`
 }
 
 // NamespaceQuery is the query param for the namespace

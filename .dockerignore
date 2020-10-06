@@ -1,0 +1,14 @@
+# docker/build support stuff
+**/Dockerfile
+**/.dockerignore
+**/Makefile
+
+# node stuff
+**/node_modules/
+**/dist/
+
+# misc
+**/LICENSE
+**/README.md
+**/api/
+**/docs/
