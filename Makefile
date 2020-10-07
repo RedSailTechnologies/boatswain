@@ -1,10 +1,10 @@
-.PHONY: client echo help version
-
-# VARS
-WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+.PHONY: client echo help kraken target version
 
 # ENV
+DEBUG=false
 DOCKER_BUILDKIT=1
+PROJECT_NAME=null
+WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
 ## client: builds the triton client
@@ -21,17 +21,19 @@ help:
 	@echo "Usage:"
 	@sed -n 's/^##//p' $(MAKEFILE_LIST) | column -t -s ':' |  sed -e 's/^/ /'
 
-kraken:
-	@echo Building kraken release container
-	@docker build $(WORKDIR) -f cmd/kraken/Dockerfile --target=base
+## kraken: builds the kraken base image
+kraken: echo
+	@$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=kraken template
 
-kraken-debug: kraken
-	@echo Building kraken debug container
-	@docker build $(WORKDIR) -f cmd/kraken/Dockerfile --target=debug --tag kraken:latest
-	@bash -c "trap 'docker kill kraken-debug && docker rm kraken-debug > /dev/null' 0;(docker run -p 8080:8080 -p 40000:40000 --name kraken-debug kraken:latest &) && sleep infinity"
-
-kraken-release:
-	@docker build $(WORKDIR) -f cmd/kraken/Dockerfile --target=release --tag kraken:latest
+template:
+ifeq ($(DEBUG),true)
+	@echo Building $(PROJECT_NAME) debug container
+	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=debug --tag $(PROJECT_NAME):latest
+	@bash -c "trap 'docker kill $(PROJECT_NAME)-debug; docker rm $(PROJECT_NAME)-debug > /dev/null' 0;(docker run -p 8080:8080 -p 40000:40000 --name $(PROJECT_NAME)-debug $(PROJECT_NAME):latest &) && sleep infinity"
+else
+	@echo Building $(PROJECT_NAME) release container
+	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=release --tag $(PROJECT_NAME):latest
+endif
 
 ## version: FIXME
 version:
