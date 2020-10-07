@@ -31,5 +31,5 @@ func main() {
 		r.GET("/:name/deployments", kraken.Deployments)
 	}
 
-	router.Run(":8081")
+	router.Run()
 }
