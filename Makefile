@@ -10,7 +10,7 @@ WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 ## client: builds the triton client
 client: echo web/*
 	@echo "Building triton client"
-	@cd $(WORKDIR)/web/triton; npm run build
+	@cd $(WORKDIR)/web/triton; npm start
 
 ## echo: prints out the project root
 echo:

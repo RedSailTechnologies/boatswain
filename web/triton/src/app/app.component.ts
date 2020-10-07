@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-root',
@@ -6,5 +8,17 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.sass']
 })
 export class AppComponent {
-  title = 'triton';
+  public page = "";
+
+  constructor(router: Router, title: Title) {
+      router.events.subscribe(_ => {
+        this.page = this.getPage(router.url);
+        title.setTitle('Boatswain - ' + this.getPage(router.url));
+      });
+  }
+
+  private getPage(url: string) {
+    if (url == "/") return "Home";
+    return url[1].toUpperCase() + url.slice(2);
+  }
 }
