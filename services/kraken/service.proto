@@ -8,6 +8,8 @@ service Kraken {
 
 message Cluster {
     string name = 1;
+    string endpoint = 2;
+    bool ready = 3;
 }
 
 message ClusterRequest {}

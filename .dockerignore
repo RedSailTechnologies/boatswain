@@ -3,9 +3,8 @@
 **/.dockerignore
 **/Makefile
 
-# node stuff
-**/node_modules/
-**/dist/
+# ignore the client here, we build it out of its own context
+**/web/
 
 # misc
 **/LICENSE
