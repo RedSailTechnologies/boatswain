@@ -18,18 +18,28 @@ A kubernetes-native CD tool.
 ## Components
 * Triton
   * Angular client
-* Poseidon
-  * Gateway service
+* DavyJones/Mate
+  * Gateway/reverse proxy (Envoy?)
 * Kraken
   * Cluster management/scraper
-* DavyJones
+* Poseidon
   * Helm management plugin
+* Gyarados
+  * Blue/green and Canary plugin
+* Siren
+  * Github (actions) management plugin
+* Cthulhu
+  * Azdo management plugin
+* Leviathan
+  * Single binary version
 
 ## TODO
 - [x] Create client
-- [ ] Create basic api for versions
+- [x] Create basic api for versions
 - [ ] Dockerfile setup
+- [ ] Envoy proxy
 - [ ] Helm charts
 - [ ] All-in-one binary
 - [ ] Logging
-- [ ] Swagger
+- [ ] Pprof
+- [ ] Docs/API Docs
