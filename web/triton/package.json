@@ -21,7 +21,11 @@
     "@angular/platform-browser": "~10.1.4",
     "@angular/platform-browser-dynamic": "~10.1.4",
     "@angular/router": "~10.1.4",
+    "@improbable-eng/grpc-web": "^0.13.0",
+    "@types/google-protobuf": "^3.7.3",
+    "grpc": "^1.24.3",
     "rxjs": "~6.6.0",
+    "ts-protoc-gen": "^0.13.0",
     "tslib": "^2.0.0",
     "zone.js": "~0.10.2"
   },

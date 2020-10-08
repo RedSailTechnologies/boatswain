@@ -13,8 +13,8 @@ func TestYAMLUnmarshals(t *testing.T) {
 	input := []byte(`clusters:
   - name: testName
     endpoint: testEndpoint
-	token: testToken
-	cert: testCert
+    token: testToken
+    cert: testCert
 `)
 
 	f, err := ioutil.TempFile("", "*")
@@ -25,13 +25,13 @@ func TestYAMLUnmarshals(t *testing.T) {
 	f.Write(input)
 	f.Close()
 
-	sut := new(ClusterList)
+	sut := &Config{}
 	err = sut.YAML(fmt.Sprintf(f.Name()))
 
 	assert.Nil(t, err)
-	assert.Equal(t, &ClusterList{
-		[]Cluster{
-			Cluster{
+	assert.Equal(t, &Config{
+		[]ClusterConfig{
+			ClusterConfig{
 				Name:     "testName",
 				Endpoint: "testEndpoint",
 				Token:    "testToken",
@@ -57,7 +57,7 @@ func testYAMLInvalidYaml(t *testing.T) {
 	f.Write(input)
 	f.Close()
 
-	sut := new(ClusterList)
+	sut := &Config{}
 	err = sut.YAML(fmt.Sprintf(f.Name()))
 
 	assert.Error(t, err)
@@ -65,7 +65,7 @@ func testYAMLInvalidYaml(t *testing.T) {
 
 func TestYAMLBadFile(t *testing.T) {
 	badFile := "/fakedir/doesntexist"
-	sut := new(ClusterList)
+	sut := &Config{}
 	err := sut.YAML(badFile)
 	assert.Error(t, err)
 }

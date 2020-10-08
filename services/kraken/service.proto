@@ -1,0 +1,31 @@
+syntax = "proto3";
+option go_package = "github.com/redsailtechnologies/boatswain/pkg/kraken";
+
+service Kraken {
+    rpc Clusters (ClusterRequest) returns (ClusterResponse);
+    rpc Deployments (DeploymentRequest) returns (DeploymentResponse);
+}
+
+message Cluster {
+    string name = 1;
+}
+
+message ClusterRequest {}
+
+message ClusterResponse {
+    repeated Cluster clusters = 1;
+}
+
+message Deployment {
+    string name = 1;
+    string namespace = 2;
+    string version = 3;
+}
+
+message DeploymentRequest {
+    string cluster = 1;
+}
+
+message DeploymentResponse {
+    repeated Deployment deployments = 1;
+}
