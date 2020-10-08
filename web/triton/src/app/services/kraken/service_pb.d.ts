@@ -7,6 +7,12 @@ export class Cluster extends jspb.Message {
   getName(): string;
   setName(value: string): void;
 
+  getEndpoint(): string;
+  setEndpoint(value: string): void;
+
+  getReady(): boolean;
+  setReady(value: boolean): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Cluster.AsObject;
   static toObject(includeInstance: boolean, msg: Cluster): Cluster.AsObject;
@@ -20,6 +26,8 @@ export class Cluster extends jspb.Message {
 export namespace Cluster {
   export type AsObject = {
     name: string,
+    endpoint: string,
+    ready: boolean,
   }
 }
 

@@ -25,8 +25,35 @@ func (s *Server) Clusters(ctx context.Context, req *ClusterRequest) (*ClusterRes
 	}
 
 	for _, cluster := range s.config.Clusters {
+		config, err := s.config.GetClusterConfig(cluster.Name)
+		if err != nil {
+			return nil, err
+		}
+		clientset, err := config.ToClientset()
+		if err != nil {
+			return nil, err
+		}
+
+		ready := true
+		nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+		if err != nil {
+			ready = false
+		} else {
+			for _, node := range nodes.Items {
+				for _, condition := range node.Status.Conditions {
+					if condition.Type == "Ready" {
+						if condition.Status != "True" {
+							ready = false
+						}
+					}
+				}
+			}
+		}
+
 		response.Clusters = append(response.Clusters, &Cluster{
-			Name: cluster.Name,
+			Name:     cluster.Name,
+			Endpoint: cluster.Endpoint,
+			Ready:    ready,
 		})
 	}
 

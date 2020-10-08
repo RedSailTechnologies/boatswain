@@ -176,7 +176,9 @@ proto.Cluster.prototype.toObject = function(opt_includeInstance) {
  */
 proto.Cluster.toObject = function(includeInstance, msg) {
   var f, obj = {
-    name: jspb.Message.getFieldWithDefault(msg, 1, "")
+    name: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    endpoint: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    ready: jspb.Message.getBooleanFieldWithDefault(msg, 3, false)
   };
 
   if (includeInstance) {
@@ -217,6 +219,14 @@ proto.Cluster.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {string} */ (reader.readString());
       msg.setName(value);
       break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setEndpoint(value);
+      break;
+    case 3:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setReady(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -253,6 +263,20 @@ proto.Cluster.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getEndpoint();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getReady();
+  if (f) {
+    writer.writeBool(
+      3,
+      f
+    );
+  }
 };
 
 
@@ -271,6 +295,42 @@ proto.Cluster.prototype.getName = function() {
  */
 proto.Cluster.prototype.setName = function(value) {
   return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string endpoint = 2;
+ * @return {string}
+ */
+proto.Cluster.prototype.getEndpoint = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.Cluster} returns this
+ */
+proto.Cluster.prototype.setEndpoint = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional bool ready = 3;
+ * @return {boolean}
+ */
+proto.Cluster.prototype.getReady = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.Cluster} returns this
+ */
+proto.Cluster.prototype.setReady = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 3, value);
 };
 
 

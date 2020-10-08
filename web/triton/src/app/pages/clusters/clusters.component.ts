@@ -11,14 +11,14 @@ import { KrakenService } from 'src/app/services/kraken/kraken.service'
 
 export class ClustersComponent implements AfterViewInit, OnInit {
   clusters: Cluster.AsObject[];
-  deploymentData: Map<string, Deployment.AsObject[]>;
+  deploymentData: Map<Cluster.AsObject, Deployment.AsObject[]>;
 
   constructor(private kraken: KrakenService) {  }
 
   @ViewChild(MatSort) sort: MatSort;
 
   ngOnInit() {
-    this.deploymentData = new Map<string, Deployment.AsObject[]>();
+    this.deploymentData = new Map<Cluster.AsObject, Deployment.AsObject[]>();
     this.kraken.getClusters().then(value => {
       this.clusters = value.clustersList;
       this.clusters.forEach(cluster => {
@@ -26,10 +26,7 @@ export class ClustersComponent implements AfterViewInit, OnInit {
           this.deploymentData[cluster.name] = value.deploymentsList;
         });
       });
-    })
-  }
-  private delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    });
   }
   
   ngAfterViewInit() {
