@@ -1,0 +1,7 @@
+apiVersion: v2
+name: boatswain
+description: Chart for the boatswain deployment tool.
+
+type: application
+version: 0.0.1
+appVersion: 0.0.1

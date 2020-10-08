@@ -15,7 +15,6 @@ client: echo web/*
 	@echo "Building triton client"
 	@cd $(WORKDIR)/web/triton; npm start
 
-## echo: prints out the project root
 echo:
 	@echo Project directory: $(WORKDIR)
 
