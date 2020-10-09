@@ -24,9 +24,9 @@ clean:
 	@docker rmi -f $(DOCKER_REPO)triton:latest
 	@docker rmi -f $(DOCKER_REPO)triton:$(DOCKER_TAG)
 	@for service in $(SERVICE_LIST); do \
-	   docker rmi -f $(DOCKER_REPO)$$service:latest; \
-	   docker rmi -f $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
-	 done
+	  docker rmi -f $(DOCKER_REPO)$$service:latest; \
+	  docker rmi -f $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
+	done
 
 ## client: builds the triton client
 client: echo
@@ -53,16 +53,19 @@ kraken: echo
 ## proto: generates the services from their proto definitions
 proto:
 	@echo Generating service code
-	@protoc -I services/ --go_out=$(GEN_GO) --go_opt=paths=source_relative --go-grpc_out=$(GEN_GO) --go-grpc_opt=paths=source_relative \
-	 --plugin="protoc-gen-ts=web/triton/node_modules/.bin/protoc-gen-ts" --js_out="import_style=commonjs,binary:$(GEN_TS)" --ts_out="service=grpc-web:$(GEN_TS)" \
-	 $$(find services/ -iname "*.proto");
+	@for service in $$(find services/ -mindepth 1 -maxdepth 1 -printf '%f\n'); do \
+	  mkdir -p $(GEN_GO)/$$service; mkdir -p $(GEN_GO)/$$service; \
+	  protoc -I services/ --go_out=$(GEN_GO) --go_opt=paths=source_relative --twirp_out=$(GEN_GO) --twirp_opt=paths=source_relative \
+	    --twirp_typescript_out=version=v6:$(GEN_TS)/$$service \
+	    $$(find services/ -iname "*.proto"); \
+	done
 
 ## push: pushes docker images
 push:
 	@docker push $(DOCKER_REPO)triton:$(DOCKER_TAG)
 	@for service in $(SERVICE_LIST); do \
-	   docker push $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
-	 done
+	  docker push $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
+	done
 
 template:
 ifeq ($(DEBUG),true)

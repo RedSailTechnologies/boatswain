@@ -4,6 +4,8 @@ import (
 	"context"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	pb "github.com/redsailtechnologies/boatswain/pkg/kraken"
 )
 
 // Server is the server implementation of the Kraken grpc service
@@ -19,9 +21,9 @@ func New(c *Config) *Server {
 }
 
 // Clusters gets all clusters configured
-func (s *Server) Clusters(ctx context.Context, req *ClusterRequest) (*ClusterResponse, error) {
-	response := &ClusterResponse{
-		Clusters: make([]*Cluster, 0),
+func (s *Server) Clusters(ctx context.Context, req *pb.ClusterRequest) (*pb.ClusterResponse, error) {
+	response := &pb.ClusterResponse{
+		Clusters: make([]*pb.Cluster, 0),
 	}
 
 	for _, cluster := range s.config.Clusters {
@@ -50,7 +52,7 @@ func (s *Server) Clusters(ctx context.Context, req *ClusterRequest) (*ClusterRes
 			}
 		}
 
-		response.Clusters = append(response.Clusters, &Cluster{
+		response.Clusters = append(response.Clusters, &pb.Cluster{
 			Name:     cluster.Name,
 			Endpoint: cluster.Endpoint,
 			Ready:    ready,
@@ -61,7 +63,7 @@ func (s *Server) Clusters(ctx context.Context, req *ClusterRequest) (*ClusterRes
 }
 
 // Deployments gets all the deployments for a namespace
-func (s *Server) Deployments(ctx context.Context, req *DeploymentRequest) (*DeploymentResponse, error) {
+func (s *Server) Deployments(ctx context.Context, req *pb.DeploymentRequest) (*pb.DeploymentResponse, error) {
 	config, err := s.config.GetClusterConfig(req.Cluster)
 	if err != nil {
 		return nil, err
@@ -77,11 +79,11 @@ func (s *Server) Deployments(ctx context.Context, req *DeploymentRequest) (*Depl
 		return nil, err
 	}
 
-	response := &DeploymentResponse{
-		Deployments: make([]*Deployment, 0),
+	response := &pb.DeploymentResponse{
+		Deployments: make([]*pb.Deployment, 0),
 	}
 	for _, deployment := range deployments.Items {
-		response.Deployments = append(response.Deployments, &Deployment{
+		response.Deployments = append(response.Deployments, &pb.Deployment{
 			Name:      deployment.ObjectMeta.Name,
 			Namespace: deployment.ObjectMeta.Namespace,
 			Version:   deployment.ObjectMeta.Labels["version"],

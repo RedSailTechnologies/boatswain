@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { MatSort } from '@angular/material/sort';
-import { Cluster, Deployment } from 'src/app/services/kraken/service_pb';
-import { KrakenService } from 'src/app/services/kraken/kraken.service'
+import { Cluster, DefaultKraken, Deployment, Kraken } from 'src/app/services/kraken/service';
+import * as fetch from 'isomorphic-fetch';
 
 @Component({
   selector: 'app-clusters',
@@ -10,20 +10,23 @@ import { KrakenService } from 'src/app/services/kraken/kraken.service'
 })
 
 export class ClustersComponent implements AfterViewInit, OnInit {
-  clusters: Cluster.AsObject[];
-  deploymentData: Map<Cluster.AsObject, Deployment.AsObject[]>;
+  private client: Kraken;
+  public clusters: Cluster[];
+  public deploymentData: Map<Cluster, Deployment[]>;
 
-  constructor(private kraken: KrakenService) {  }
+  constructor() {
+    this.client = new DefaultKraken(`${location.protocol}//${location.host}/api`, fetch['default']);
+  }
 
   @ViewChild(MatSort) sort: MatSort;
 
   ngOnInit() {
-    this.deploymentData = new Map<Cluster.AsObject, Deployment.AsObject[]>();
-    this.kraken.getClusters().then(value => {
-      this.clusters = value.clustersList;
+    this.deploymentData = new Map<Cluster, Deployment[]>();
+    this.client.clusters({}).then(value => {
+      this.clusters = value.clusters;
       this.clusters.forEach(cluster => {
-        this.kraken.getDeployments(cluster.name).then(value => {
-          this.deploymentData[cluster.name] = value.deploymentsList;
+        this.client.deployments({"cluster": cluster.name}).then(value => {
+          this.deploymentData[cluster.name] = value.deployments;
         });
       });
     });

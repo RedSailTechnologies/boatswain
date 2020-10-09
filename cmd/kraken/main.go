@@ -3,11 +3,11 @@ package main
 import (
 	"flag"
 	"log"
-	"net"
+	"net/http"
 
-	"google.golang.org/grpc"
-
-	"github.com/redsailtechnologies/boatswain/pkg/kraken"
+	"github.com/redsailtechnologies/boatswain/internal/kraken"
+	pb "github.com/redsailtechnologies/boatswain/pkg/kraken"
+	"github.com/twitchtv/twirp"
 )
 
 func main() {
@@ -19,12 +19,8 @@ func main() {
 		log.Fatalf("could not parse configuration")
 	}
 
-	listener, err := net.Listen("tcp", "0.0.0.0:8080")
-	if err != nil {
-		log.Fatalf("failed to listen %v", err)
-	}
-
-	grpcServer := grpc.NewServer()
-	kraken.RegisterKrakenServer(grpcServer, kraken.New(config))
-	grpcServer.Serve(listener)
+	server := kraken.New(config)
+	twirp := pb.NewKrakenServer(server, twirp.WithServerPathPrefix("/api"))
+	log.Printf(twirp.PathPrefix())
+	http.ListenAndServe(":8080", twirp)
 }
