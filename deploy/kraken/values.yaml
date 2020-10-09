@@ -1,6 +1,17 @@
-# Default values for kraken.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+
+config:
+  clusters:
+    kubeConfig: ""
+    contexts: []
+    fromValues: []
+    # map in values directly
+    # - name: <cluster-name>
+    #   endpoint: <api-server-endpoint>
+    #   token: <kube-token>
+    #   cert: |
+    #     --------BEGIN CERTIFICATE-----
+    #     ...
+    #     -----END CERTIFICATE-----
 
 replicaCount: 1
 

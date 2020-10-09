@@ -11,4 +11,5 @@
 **/Dockerfile*
 **/node_modules
 **/npm-debug.log
+**/proxy.conf.json
 README.md

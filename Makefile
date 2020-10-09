@@ -13,7 +13,7 @@ WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
 ## all: builds the client and all services
-all: echo proto kraken client
+all: echo proto kraken client push
 
 ## clean: removes binaries, images, etc
 clean:
@@ -57,11 +57,18 @@ proto:
 	 --plugin="protoc-gen-ts=web/triton/node_modules/.bin/protoc-gen-ts" --js_out="import_style=commonjs,binary:$(GEN_TS)" --ts_out="service=grpc-web:$(GEN_TS)" \
 	 $$(find services/ -iname "*.proto");
 
+## push: pushes docker images
+push:
+	@docker push $(DOCKER_REPO)triton:$(DOCKER_TAG)
+	@for service in $(SERVICE_LIST); do \
+	   docker push $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
+	 done
+
 template:
 ifeq ($(DEBUG),true)
 	@echo Building $(PROJECT_NAME) debug container
 	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=debug --tag $(PROJECT_NAME):$(DOCKER_TAG)
-	@bash -c "trap 'docker kill $(PROJECT_NAME)-debug; docker rm $(PROJECT_NAME)-debug > /dev/null' 0;(docker run -p 8080:8080 -p 8081:8081 -p 40000:40000 --name $(PROJECT_NAME)-debug $(PROJECT_NAME)$(DOCKER_TAG) &) && sleep infinity"
+	@bash -c "trap 'docker kill $(PROJECT_NAME)-debug; docker rm $(PROJECT_NAME)-debug > /dev/null' 0;(docker run -p 8080:8080 -p 8081:8081 -p 40000:40000 --name $(PROJECT_NAME)-debug $(PROJECT_NAME):$(DOCKER_TAG) &) && sleep infinity"
 else
 	@echo Building $(PROJECT_NAME) release container
 	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=release --tag $(DOCKER_REPO)$(PROJECT_NAME):$(DOCKER_TAG)
