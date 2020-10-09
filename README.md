@@ -24,22 +24,27 @@ A kubernetes-native CD tool.
   * Cluster management/scraper
 * Poseidon
   * Helm management plugin
-* Gyarados
-  * Blue/green and Canary plugin
-* Siren
-  * Github (actions) management plugin
-* Cthulhu
-  * Azdo management plugin
 * Leviathan
   * Single binary version
+* Gyarados (planned)
+  * Blue/green and Canary plugin
+* Siren (planned)
+  * Github actions management plugin
+* Cthulhu (planned)
+  * Azdo management plugin
 
-## TODO
+## TODO for 0.1
 - [x] Create client
 - [x] Create basic api for versions
-- [ ] Dockerfile setup
-- [ ] Envoy proxy
+- [x] Dockerfile setup
 - [ ] Helm charts
+- [ ] Envoy proxy
 - [ ] All-in-one binary
 - [ ] Logging
 - [ ] Pprof
 - [ ] Docs/API Docs
+- [ ] Plan Future Features
+  - [ ] Helm integration
+  - [ ] Filter/organize by NS
+  - [ ] Refresh button for a cluster
+  - [ ] Save user presets in a cookie
