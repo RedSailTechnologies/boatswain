@@ -37,14 +37,17 @@ A kubernetes-native CD tool.
 - [x] Create client
 - [x] Create basic api for versions
 - [x] Dockerfile setup
-- [ ] Helm charts
-- [ ] Envoy proxy
-- [ ] All-in-one binary
-- [ ] Logging
-- [ ] Pprof
+- [x] Helm charts
+- [x] Envoy proxy
+- [x] Logging
 - [ ] Docs/API Docs
-- [ ] Plan Future Features
+- [ ] ~~Pprof~~(lets do this later, when the need arises)
   - [ ] Helm integration
+- [ ] All-in-one binary
+- [ ] Plan Future Features
   - [ ] Filter/organize by NS
   - [ ] Refresh button for a cluster
   - [ ] Save user presets in a cookie
+  - [ ] Users/Auditing
+  - [ ] Pipelines/tasks/triggers
+  - [ ] Acceptance critera

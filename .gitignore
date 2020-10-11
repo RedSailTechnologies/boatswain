@@ -12,5 +12,13 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# Editor stuf
+# Chart stuff
+deploy/boatswain/charts/
+deploy/boatswain/Chart.lock
+
+# Dev stuff
+**/*-debug-config.yaml
+temp.yaml
+
+# Editor stuff
 **/.vscode/

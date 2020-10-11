@@ -6,7 +6,7 @@ metadata:
   labels:
     {{ include "kraken.labels" . | nindent 4 }}
 stringData:
-  kraken.yaml: |
+  config.yaml: |
     clusters:
       {{- $contextsToConfig := .Values.config.clusters.contexts -}}
       {{- $config := fromYaml .Values.config.clusters.kubeConfig -}}

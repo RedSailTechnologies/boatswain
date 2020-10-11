@@ -3,8 +3,11 @@
 **/.dockerignore
 **/Makefile
 
-# ignore the client here, we build it out of its own context
+# ignore other repo stuff not needed
 **/web/
+**/deploy/
+**/services/
+**/test/
 
 # misc
 **/LICENSE

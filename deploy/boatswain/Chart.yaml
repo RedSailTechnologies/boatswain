@@ -5,3 +5,17 @@ description: Chart for the boatswain deployment tool.
 type: application
 version: 0.0.1
 appVersion: 0.0.1
+
+dependencies:
+  - name: "kraken"
+    condition: kraken.enabled
+    repository: "file://../kraken"
+    version: "~0.1.0"
+  - name: "mate"
+    condition: mate.enabled
+    repository: "file://../mate"
+    version: "~0.1.0"
+  - name: "triton"
+    condition: triton.enabled
+    repository: "file://../triton"
+    version: "~0.1.0"

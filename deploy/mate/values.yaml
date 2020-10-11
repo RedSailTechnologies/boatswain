@@ -1,28 +1,18 @@
 
-config:
-  clusters:
-    kubeConfig: ""
-    # use kubeConfig with setfile 
-    # e.g.: --set-file config.clusters.kubeConfig=/home/<user>/.kube/config
-    contexts: []
-    # list of configs to get from the kubeConfig above
-    fromValues: []
-    # map in values directly
-    # - name: <cluster-name>
-    #   endpoint: <api-server-endpoint>
-    #   token: <kube-token>
-    #   cert: |
-    #     --------BEGIN CERTIFICATE-----
-    #     ...
-    #     -----END CERTIFICATE-----
+# the default envoy routing configuration
+# this shouldn't need to be chnaged under normal configurations
+routing:
+  services:
+    - triton
+    - kraken
+  connectTimeout: 0.25s
 
 replicaCount: 1
 
 image:
-  repository: nginx
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  repository: envoyproxy/envoy
+  pullPolicy: Always
+  tag: v1.16-latest
 
 imagePullSecrets: []
 nameOverride: ""
@@ -52,7 +42,7 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 80
+  port: 8080
 
 ingress:
   enabled: false

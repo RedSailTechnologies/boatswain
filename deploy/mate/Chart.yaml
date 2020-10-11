@@ -1,6 +1,6 @@
 apiVersion: v2
-name: triton
-description: The triton client chart
+name: mate
+description: Mate is the gateway/router for boatswain.
 
 type: application
 version: 0.1.0

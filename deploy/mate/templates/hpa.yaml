@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "boatswain.fullname" . }}
+  name: {{ include "mate.fullname" . }}
   labels:
-    {{- include "boatswain.labels" . | nindent 4 }}
+    {{- include "mate.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "boatswain.fullname" . }}
+    name: {{ include "mate.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:

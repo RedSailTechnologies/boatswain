@@ -2,25 +2,28 @@ package main
 
 import (
 	"flag"
-	"log"
 	"net/http"
 
-	"github.com/redsailtechnologies/boatswain/internal/kraken"
-	pb "github.com/redsailtechnologies/boatswain/pkg/kraken"
+	"github.com/redsailtechnologies/boatswain/pkg/logger"
+
 	"github.com/twitchtv/twirp"
+
+	"github.com/redsailtechnologies/boatswain/pkg/kraken"
+	rpc "github.com/redsailtechnologies/boatswain/rpc/kraken"
 )
 
 func main() {
 	var configFile string
 	flag.StringVar(&configFile, "config", "", "kraken config file path")
 	flag.Parse()
+
 	config := &kraken.Config{}
 	if err := config.YAML(configFile); err != nil {
-		log.Fatalf("could not parse configuration")
+		logger.Fatal("could not read configuration")
 	}
 
 	server := kraken.New(config)
-	twirp := pb.NewKrakenServer(server, twirp.WithServerPathPrefix("/api"))
-	log.Printf(twirp.PathPrefix())
-	http.ListenAndServe(":8080", twirp)
+	twirp := rpc.NewKrakenServer(server, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+	logger.Info("starting kraken component (RELEASE THE KRAKEN!!!)")
+	logger.Fatal("server exited", "error", http.ListenAndServe(":8080", twirp))
 }

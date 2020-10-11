@@ -3,9 +3,11 @@ package kraken
 import (
 	"context"
 
+	"github.com/twitchtv/twirp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	pb "github.com/redsailtechnologies/boatswain/pkg/kraken"
+	"github.com/redsailtechnologies/boatswain/pkg/logger"
+	pb "github.com/redsailtechnologies/boatswain/rpc/kraken"
 )
 
 // Server is the server implementation of the Kraken grpc service
@@ -29,16 +31,19 @@ func (s *Server) Clusters(ctx context.Context, req *pb.ClusterRequest) (*pb.Clus
 	for _, cluster := range s.config.Clusters {
 		config, err := s.config.GetClusterConfig(cluster.Name)
 		if err != nil {
-			return nil, err
+			logger.Error("could not get config for cluster", "cluster", cluster.Name)
+			return nil, twirp.InternalError("error getting cluster configuration")
 		}
 		clientset, err := config.ToClientset()
 		if err != nil {
-			return nil, err
+			logger.Error("could not get clientset for cluster", "cluster", cluster.Name)
+			return nil, twirp.InternalError("error getting cluster clientset")
 		}
 
 		ready := true
 		nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
+			logger.Warn("could not get nodes from cluster", "cluster", cluster.Name)
 			ready = false
 		} else {
 			for _, node := range nodes.Items {
@@ -92,5 +97,3 @@ func (s *Server) Deployments(ctx context.Context, req *pb.DeploymentRequest) (*p
 
 	return response, nil
 }
-
-func (s *Server) mustEmbedUnimplementedKrakenServer() {}
