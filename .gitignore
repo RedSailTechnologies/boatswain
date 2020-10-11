@@ -5,6 +5,7 @@
 *.so
 *.dylib
 **/main
+**/bin
 
 # Test binary, built with `go test -c`
 *.test
@@ -16,8 +17,8 @@
 deploy/boatswain/charts/
 deploy/boatswain/Chart.lock
 
-# Dev stuff
-**/*-debug-config.yaml
+# Dev stuff - TODO AdamP figure out a way around this
+**/**-debug-config.yaml
 temp.yaml
 
 # Editor stuff

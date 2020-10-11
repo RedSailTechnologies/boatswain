@@ -22,26 +22,21 @@ type Config struct {
 	Clusters []ClusterConfig `yaml:"clusters"`
 }
 
-// GetClusterConfig gets the cluster config given the cluster name
-func (c *Config) GetClusterConfig(cluster string) (*ClusterConfig, error) {
-	for _, config := range c.Clusters {
-		if config.Name == cluster {
-			return &config, nil
-		}
+// ToClientset gets the client-go Clientset for this cluster given the cluster's name
+func (c *Config) ToClientset(clusterName string) (*kubernetes.Clientset, error) {
+	cluster, err := c.getClusterConfig(clusterName)
+	if err != nil {
+		return nil, err
 	}
-	return nil, errors.New("cluster not found")
-}
 
-// ToClientset gets the client-go Clientset for this cluster
-func (c *ClusterConfig) ToClientset() (*kubernetes.Clientset, error) {
-	config := &rest.Config{
-		Host:        c.Endpoint,
-		BearerToken: c.Token,
+	restConfig := &rest.Config{
+		Host:        cluster.Endpoint,
+		BearerToken: cluster.Token,
 		TLSClientConfig: rest.TLSClientConfig{
-			CAData: []byte(c.Cert),
+			CAData: []byte(cluster.Cert),
 		},
 	}
-	return kubernetes.NewForConfig(config)
+	return kubernetes.NewForConfig(restConfig)
 }
 
 // YAML takes a relative filename and returns the config found in it
@@ -54,4 +49,13 @@ func (c *Config) YAML(file string) error {
 		return err
 	}
 	return nil
+}
+
+func (c *Config) getClusterConfig(clusterName string) (*ClusterConfig, error) {
+	for _, config := range c.Clusters {
+		if config.Name == clusterName {
+			return &config, nil
+		}
+	}
+	return nil, errors.New("cluster not found")
 }

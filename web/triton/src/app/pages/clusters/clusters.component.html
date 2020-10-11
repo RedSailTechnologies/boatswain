@@ -14,7 +14,7 @@
                 </mat-panel-description>
             </mat-expansion-panel-header>
             <div *ngIf="cluster.ready">
-                <table *ngIf="deploymentData[cluster.name]; else noData" mat-table [dataSource]="deploymentData[cluster.name]" matSort class="table">
+                <table *ngIf="deploymentData.get(cluster); else noData" mat-table [dataSource]="deploymentData.get(cluster)" matSort class="table">
                     <ng-container matColumnDef="name">
                         <th mat-header-cell *matHeaderCellDef mat-sort-header> Name </th>
                         <td mat-cell *matCellDef="let element"> {{element.name}} </td>

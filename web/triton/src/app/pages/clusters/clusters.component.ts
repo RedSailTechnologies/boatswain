@@ -25,8 +25,8 @@ export class ClustersComponent implements AfterViewInit, OnInit {
     this.client.clusters({}).then(value => {
       this.clusters = value.clusters;
       this.clusters.forEach(cluster => {
-        this.client.deployments({"cluster": cluster.name}).then(value => {
-          this.deploymentData[cluster.name] = value.deployments;
+        this.client.deployments({"cluster": cluster}).then(value => {
+          this.deploymentData.set(cluster, value.deployments);
         });
       });
     });

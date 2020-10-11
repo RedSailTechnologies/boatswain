@@ -24,6 +24,6 @@ func main() {
 
 	server := kraken.New(config)
 	twirp := rpc.NewKrakenServer(server, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
-	logger.Info("starting kraken component (RELEASE THE KRAKEN!!!)")
+	logger.Info("starting kraken component...RELEASE THE KRAKEN!!!")
 	logger.Fatal("server exited", "error", http.ListenAndServe(":8080", twirp))
 }

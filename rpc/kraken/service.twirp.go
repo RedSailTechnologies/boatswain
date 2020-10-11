@@ -40,9 +40,17 @@ const _ = twirp.TwirpPackageIsVersion7
 // ================
 
 type Kraken interface {
-	Clusters(context.Context, *ClusterRequest) (*ClusterResponse, error)
+	// gets all clusters currently configured and their status
+	Clusters(context.Context, *ClustersRequest) (*ClustersResponse, error)
 
-	Deployments(context.Context, *DeploymentRequest) (*DeploymentResponse, error)
+	// gets the status for a single cluster
+	ClusterStatus(context.Context, *Cluster) (*Cluster, error)
+
+	// gets all the deployments for a particular cluster
+	Deployments(context.Context, *DeploymentsRequest) (*DeploymentsResponse, error)
+
+	// gets a
+	DeploymentStatus(context.Context, *Deployment) (*Deployment, error)
 }
 
 // ======================
@@ -51,7 +59,7 @@ type Kraken interface {
 
 type krakenProtobufClient struct {
 	client      HTTPClient
-	urls        [2]string
+	urls        [4]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -71,9 +79,11 @@ func NewKrakenProtobufClient(baseURL string, client HTTPClient, opts ...twirp.Cl
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Kraken")
-	urls := [2]string{
+	urls := [4]string{
 		serviceURL + "Clusters",
+		serviceURL + "ClusterStatus",
 		serviceURL + "Deployments",
+		serviceURL + "DeploymentStatus",
 	}
 
 	return &krakenProtobufClient{
@@ -84,26 +94,26 @@ func NewKrakenProtobufClient(baseURL string, client HTTPClient, opts ...twirp.Cl
 	}
 }
 
-func (c *krakenProtobufClient) Clusters(ctx context.Context, in *ClusterRequest) (*ClusterResponse, error) {
+func (c *krakenProtobufClient) Clusters(ctx context.Context, in *ClustersRequest) (*ClustersResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
 	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
 	ctx = ctxsetters.WithMethodName(ctx, "Clusters")
 	caller := c.callClusters
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *ClusterRequest) (*ClusterResponse, error) {
+		caller = func(ctx context.Context, req *ClustersRequest) (*ClustersResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*ClusterRequest)
+					typedReq, ok := req.(*ClustersRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*ClusterRequest) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*ClustersRequest) when calling interceptor")
 					}
 					return c.callClusters(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*ClusterResponse)
+				typedResp, ok := resp.(*ClustersResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*ClusterResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*ClustersResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -113,8 +123,8 @@ func (c *krakenProtobufClient) Clusters(ctx context.Context, in *ClusterRequest)
 	return caller(ctx, in)
 }
 
-func (c *krakenProtobufClient) callClusters(ctx context.Context, in *ClusterRequest) (*ClusterResponse, error) {
-	out := new(ClusterResponse)
+func (c *krakenProtobufClient) callClusters(ctx context.Context, in *ClustersRequest) (*ClustersResponse, error) {
+	out := new(ClustersResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -130,26 +140,26 @@ func (c *krakenProtobufClient) callClusters(ctx context.Context, in *ClusterRequ
 	return out, nil
 }
 
-func (c *krakenProtobufClient) Deployments(ctx context.Context, in *DeploymentRequest) (*DeploymentResponse, error) {
+func (c *krakenProtobufClient) ClusterStatus(ctx context.Context, in *Cluster) (*Cluster, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
 	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
-	ctx = ctxsetters.WithMethodName(ctx, "Deployments")
-	caller := c.callDeployments
+	ctx = ctxsetters.WithMethodName(ctx, "ClusterStatus")
+	caller := c.callClusterStatus
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *DeploymentRequest) (*DeploymentResponse, error) {
+		caller = func(ctx context.Context, req *Cluster) (*Cluster, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*DeploymentRequest)
+					typedReq, ok := req.(*Cluster)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*DeploymentRequest) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
 					}
-					return c.callDeployments(ctx, typedReq)
+					return c.callClusterStatus(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*DeploymentResponse)
+				typedResp, ok := resp.(*Cluster)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*DeploymentResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*Cluster) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -159,9 +169,101 @@ func (c *krakenProtobufClient) Deployments(ctx context.Context, in *DeploymentRe
 	return caller(ctx, in)
 }
 
-func (c *krakenProtobufClient) callDeployments(ctx context.Context, in *DeploymentRequest) (*DeploymentResponse, error) {
-	out := new(DeploymentResponse)
+func (c *krakenProtobufClient) callClusterStatus(ctx context.Context, in *Cluster) (*Cluster, error) {
+	out := new(Cluster)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *krakenProtobufClient) Deployments(ctx context.Context, in *DeploymentsRequest) (*DeploymentsResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
+	ctx = ctxsetters.WithMethodName(ctx, "Deployments")
+	caller := c.callDeployments
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *DeploymentsRequest) (*DeploymentsResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*DeploymentsRequest)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*DeploymentsRequest) when calling interceptor")
+					}
+					return c.callDeployments(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*DeploymentsResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*DeploymentsResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *krakenProtobufClient) callDeployments(ctx context.Context, in *DeploymentsRequest) (*DeploymentsResponse, error) {
+	out := new(DeploymentsResponse)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *krakenProtobufClient) DeploymentStatus(ctx context.Context, in *Deployment) (*Deployment, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
+	ctx = ctxsetters.WithMethodName(ctx, "DeploymentStatus")
+	caller := c.callDeploymentStatus
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Deployment) (*Deployment, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Deployment)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Deployment) when calling interceptor")
+					}
+					return c.callDeploymentStatus(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Deployment)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Deployment) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *krakenProtobufClient) callDeploymentStatus(ctx context.Context, in *Deployment) (*Deployment, error) {
+	out := new(Deployment)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -182,7 +284,7 @@ func (c *krakenProtobufClient) callDeployments(ctx context.Context, in *Deployme
 
 type krakenJSONClient struct {
 	client      HTTPClient
-	urls        [2]string
+	urls        [4]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -202,9 +304,11 @@ func NewKrakenJSONClient(baseURL string, client HTTPClient, opts ...twirp.Client
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Kraken")
-	urls := [2]string{
+	urls := [4]string{
 		serviceURL + "Clusters",
+		serviceURL + "ClusterStatus",
 		serviceURL + "Deployments",
+		serviceURL + "DeploymentStatus",
 	}
 
 	return &krakenJSONClient{
@@ -215,26 +319,26 @@ func NewKrakenJSONClient(baseURL string, client HTTPClient, opts ...twirp.Client
 	}
 }
 
-func (c *krakenJSONClient) Clusters(ctx context.Context, in *ClusterRequest) (*ClusterResponse, error) {
+func (c *krakenJSONClient) Clusters(ctx context.Context, in *ClustersRequest) (*ClustersResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
 	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
 	ctx = ctxsetters.WithMethodName(ctx, "Clusters")
 	caller := c.callClusters
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *ClusterRequest) (*ClusterResponse, error) {
+		caller = func(ctx context.Context, req *ClustersRequest) (*ClustersResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*ClusterRequest)
+					typedReq, ok := req.(*ClustersRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*ClusterRequest) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*ClustersRequest) when calling interceptor")
 					}
 					return c.callClusters(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*ClusterResponse)
+				typedResp, ok := resp.(*ClustersResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*ClusterResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*ClustersResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -244,8 +348,8 @@ func (c *krakenJSONClient) Clusters(ctx context.Context, in *ClusterRequest) (*C
 	return caller(ctx, in)
 }
 
-func (c *krakenJSONClient) callClusters(ctx context.Context, in *ClusterRequest) (*ClusterResponse, error) {
-	out := new(ClusterResponse)
+func (c *krakenJSONClient) callClusters(ctx context.Context, in *ClustersRequest) (*ClustersResponse, error) {
+	out := new(ClustersResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -261,26 +365,26 @@ func (c *krakenJSONClient) callClusters(ctx context.Context, in *ClusterRequest)
 	return out, nil
 }
 
-func (c *krakenJSONClient) Deployments(ctx context.Context, in *DeploymentRequest) (*DeploymentResponse, error) {
+func (c *krakenJSONClient) ClusterStatus(ctx context.Context, in *Cluster) (*Cluster, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
 	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
-	ctx = ctxsetters.WithMethodName(ctx, "Deployments")
-	caller := c.callDeployments
+	ctx = ctxsetters.WithMethodName(ctx, "ClusterStatus")
+	caller := c.callClusterStatus
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *DeploymentRequest) (*DeploymentResponse, error) {
+		caller = func(ctx context.Context, req *Cluster) (*Cluster, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*DeploymentRequest)
+					typedReq, ok := req.(*Cluster)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*DeploymentRequest) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
 					}
-					return c.callDeployments(ctx, typedReq)
+					return c.callClusterStatus(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*DeploymentResponse)
+				typedResp, ok := resp.(*Cluster)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*DeploymentResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*Cluster) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -290,9 +394,101 @@ func (c *krakenJSONClient) Deployments(ctx context.Context, in *DeploymentReques
 	return caller(ctx, in)
 }
 
-func (c *krakenJSONClient) callDeployments(ctx context.Context, in *DeploymentRequest) (*DeploymentResponse, error) {
-	out := new(DeploymentResponse)
+func (c *krakenJSONClient) callClusterStatus(ctx context.Context, in *Cluster) (*Cluster, error) {
+	out := new(Cluster)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *krakenJSONClient) Deployments(ctx context.Context, in *DeploymentsRequest) (*DeploymentsResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
+	ctx = ctxsetters.WithMethodName(ctx, "Deployments")
+	caller := c.callDeployments
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *DeploymentsRequest) (*DeploymentsResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*DeploymentsRequest)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*DeploymentsRequest) when calling interceptor")
+					}
+					return c.callDeployments(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*DeploymentsResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*DeploymentsResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *krakenJSONClient) callDeployments(ctx context.Context, in *DeploymentsRequest) (*DeploymentsResponse, error) {
+	out := new(DeploymentsResponse)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *krakenJSONClient) DeploymentStatus(ctx context.Context, in *Deployment) (*Deployment, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
+	ctx = ctxsetters.WithMethodName(ctx, "DeploymentStatus")
+	caller := c.callDeploymentStatus
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Deployment) (*Deployment, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Deployment)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Deployment) when calling interceptor")
+					}
+					return c.callDeploymentStatus(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Deployment)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Deployment) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *krakenJSONClient) callDeploymentStatus(ctx context.Context, in *Deployment) (*Deployment, error) {
+	out := new(Deployment)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -394,8 +590,14 @@ func (s *krakenServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	case "Clusters":
 		s.serveClusters(ctx, resp, req)
 		return
+	case "ClusterStatus":
+		s.serveClusterStatus(ctx, resp, req)
+		return
 	case "Deployments":
 		s.serveDeployments(ctx, resp, req)
+		return
+	case "DeploymentStatus":
+		s.serveDeploymentStatus(ctx, resp, req)
 		return
 	default:
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
@@ -431,7 +633,7 @@ func (s *krakenServer) serveClustersJSON(ctx context.Context, resp http.Response
 		return
 	}
 
-	reqContent := new(ClusterRequest)
+	reqContent := new(ClustersRequest)
 	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
 	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
@@ -440,20 +642,20 @@ func (s *krakenServer) serveClustersJSON(ctx context.Context, resp http.Response
 
 	handler := s.Kraken.Clusters
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *ClusterRequest) (*ClusterResponse, error) {
+		handler = func(ctx context.Context, req *ClustersRequest) (*ClustersResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*ClusterRequest)
+					typedReq, ok := req.(*ClustersRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*ClusterRequest) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*ClustersRequest) when calling interceptor")
 					}
 					return s.Kraken.Clusters(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*ClusterResponse)
+				typedResp, ok := resp.(*ClustersResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*ClusterResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*ClustersResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -462,7 +664,7 @@ func (s *krakenServer) serveClustersJSON(ctx context.Context, resp http.Response
 	}
 
 	// Call service method
-	var respContent *ClusterResponse
+	var respContent *ClustersResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -473,7 +675,7 @@ func (s *krakenServer) serveClustersJSON(ctx context.Context, resp http.Response
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *ClusterResponse and nil error while calling Clusters. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *ClustersResponse and nil error while calling Clusters. nil responses are not supported"))
 		return
 	}
 
@@ -514,7 +716,7 @@ func (s *krakenServer) serveClustersProtobuf(ctx context.Context, resp http.Resp
 		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
 		return
 	}
-	reqContent := new(ClusterRequest)
+	reqContent := new(ClustersRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
@@ -522,20 +724,20 @@ func (s *krakenServer) serveClustersProtobuf(ctx context.Context, resp http.Resp
 
 	handler := s.Kraken.Clusters
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *ClusterRequest) (*ClusterResponse, error) {
+		handler = func(ctx context.Context, req *ClustersRequest) (*ClustersResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*ClusterRequest)
+					typedReq, ok := req.(*ClustersRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*ClusterRequest) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*ClustersRequest) when calling interceptor")
 					}
 					return s.Kraken.Clusters(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*ClusterResponse)
+				typedResp, ok := resp.(*ClustersResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*ClusterResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*ClustersResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -544,7 +746,7 @@ func (s *krakenServer) serveClustersProtobuf(ctx context.Context, resp http.Resp
 	}
 
 	// Call service method
-	var respContent *ClusterResponse
+	var respContent *ClustersResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -555,7 +757,182 @@ func (s *krakenServer) serveClustersProtobuf(ctx context.Context, resp http.Resp
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *ClusterResponse and nil error while calling Clusters. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *ClustersResponse and nil error while calling Clusters. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *krakenServer) serveClusterStatus(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveClusterStatusJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveClusterStatusProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *krakenServer) serveClusterStatusJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "ClusterStatus")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(Cluster)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Kraken.ClusterStatus
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Cluster) (*Cluster, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return s.Kraken.ClusterStatus(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Cluster)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Cluster) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *Cluster
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *Cluster and nil error while calling ClusterStatus. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *krakenServer) serveClusterStatusProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "ClusterStatus")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(Cluster)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Kraken.ClusterStatus
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Cluster) (*Cluster, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return s.Kraken.ClusterStatus(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Cluster)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Cluster) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *Cluster
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *Cluster and nil error while calling ClusterStatus. nil responses are not supported"))
 		return
 	}
 
@@ -606,7 +983,7 @@ func (s *krakenServer) serveDeploymentsJSON(ctx context.Context, resp http.Respo
 		return
 	}
 
-	reqContent := new(DeploymentRequest)
+	reqContent := new(DeploymentsRequest)
 	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
 	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
@@ -615,20 +992,20 @@ func (s *krakenServer) serveDeploymentsJSON(ctx context.Context, resp http.Respo
 
 	handler := s.Kraken.Deployments
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *DeploymentRequest) (*DeploymentResponse, error) {
+		handler = func(ctx context.Context, req *DeploymentsRequest) (*DeploymentsResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*DeploymentRequest)
+					typedReq, ok := req.(*DeploymentsRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*DeploymentRequest) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*DeploymentsRequest) when calling interceptor")
 					}
 					return s.Kraken.Deployments(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*DeploymentResponse)
+				typedResp, ok := resp.(*DeploymentsResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*DeploymentResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*DeploymentsResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -637,7 +1014,7 @@ func (s *krakenServer) serveDeploymentsJSON(ctx context.Context, resp http.Respo
 	}
 
 	// Call service method
-	var respContent *DeploymentResponse
+	var respContent *DeploymentsResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -648,7 +1025,7 @@ func (s *krakenServer) serveDeploymentsJSON(ctx context.Context, resp http.Respo
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *DeploymentResponse and nil error while calling Deployments. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *DeploymentsResponse and nil error while calling Deployments. nil responses are not supported"))
 		return
 	}
 
@@ -689,7 +1066,7 @@ func (s *krakenServer) serveDeploymentsProtobuf(ctx context.Context, resp http.R
 		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
 		return
 	}
-	reqContent := new(DeploymentRequest)
+	reqContent := new(DeploymentsRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
@@ -697,20 +1074,20 @@ func (s *krakenServer) serveDeploymentsProtobuf(ctx context.Context, resp http.R
 
 	handler := s.Kraken.Deployments
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *DeploymentRequest) (*DeploymentResponse, error) {
+		handler = func(ctx context.Context, req *DeploymentsRequest) (*DeploymentsResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*DeploymentRequest)
+					typedReq, ok := req.(*DeploymentsRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*DeploymentRequest) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*DeploymentsRequest) when calling interceptor")
 					}
 					return s.Kraken.Deployments(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*DeploymentResponse)
+				typedResp, ok := resp.(*DeploymentsResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*DeploymentResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*DeploymentsResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -719,7 +1096,7 @@ func (s *krakenServer) serveDeploymentsProtobuf(ctx context.Context, resp http.R
 	}
 
 	// Call service method
-	var respContent *DeploymentResponse
+	var respContent *DeploymentsResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -730,7 +1107,182 @@ func (s *krakenServer) serveDeploymentsProtobuf(ctx context.Context, resp http.R
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *DeploymentResponse and nil error while calling Deployments. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *DeploymentsResponse and nil error while calling Deployments. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *krakenServer) serveDeploymentStatus(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveDeploymentStatusJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveDeploymentStatusProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *krakenServer) serveDeploymentStatusJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "DeploymentStatus")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(Deployment)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Kraken.DeploymentStatus
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Deployment) (*Deployment, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Deployment)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Deployment) when calling interceptor")
+					}
+					return s.Kraken.DeploymentStatus(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Deployment)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Deployment) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *Deployment
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *Deployment and nil error while calling DeploymentStatus. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *krakenServer) serveDeploymentStatusProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "DeploymentStatus")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(Deployment)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Kraken.DeploymentStatus
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Deployment) (*Deployment, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Deployment)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Deployment) when calling interceptor")
+					}
+					return s.Kraken.DeploymentStatus(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Deployment)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Deployment) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *Deployment
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *Deployment and nil error while calling DeploymentStatus. nil responses are not supported"))
 		return
 	}
 
@@ -1316,27 +1868,29 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 340 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x92, 0xc1, 0x6f, 0xaa, 0x40,
-	0x10, 0xc6, 0xc3, 0xf3, 0x3d, 0xc5, 0xf1, 0xe5, 0xbd, 0x76, 0x63, 0x13, 0x62, 0x6c, 0x4a, 0x38,
-	0x79, 0x29, 0xa4, 0x9a, 0x5e, 0x7a, 0x6c, 0x4d, 0x7a, 0xe8, 0xa1, 0x86, 0x53, 0xd3, 0xdb, 0x02,
-	0x13, 0xdd, 0x88, 0xbb, 0x74, 0x67, 0xb5, 0xf1, 0xef, 0xe9, 0x3f, 0xda, 0x08, 0x0b, 0xd2, 0x44,
-	0x4f, 0x30, 0x1f, 0xdf, 0xce, 0xfc, 0x3e, 0x76, 0x60, 0xb8, 0xd6, 0x7c, 0x8d, 0x32, 0x22, 0xd4,
-	0x3b, 0x91, 0x62, 0x58, 0x68, 0x65, 0x14, 0xfb, 0xab, 0x31, 0x23, 0x2e, 0xf2, 0x30, 0x51, 0x24,
-	0x83, 0x57, 0xe8, 0x3d, 0xe5, 0x5b, 0x32, 0xa8, 0x19, 0x83, 0xdf, 0x92, 0x6f, 0xd0, 0x73, 0x7c,
-	0x67, 0xd2, 0x8f, 0xcb, 0x77, 0x36, 0x02, 0x17, 0x65, 0x56, 0x28, 0x21, 0x8d, 0xf7, 0xab, 0xd4,
-	0x9b, 0x9a, 0x0d, 0xe1, 0x8f, 0x46, 0x9e, 0xed, 0xbd, 0x8e, 0xef, 0x4c, 0xdc, 0xb8, 0x2a, 0x82,
-	0x0b, 0xf8, 0x67, 0x1b, 0xc6, 0xf8, 0xb1, 0x45, 0x32, 0xc1, 0x1c, 0xfe, 0x37, 0x0a, 0x15, 0x4a,
-	0x12, 0xb2, 0x3b, 0x70, 0xd3, 0x4a, 0x22, 0xcf, 0xf1, 0x3b, 0x93, 0xc1, 0xf4, 0x2a, 0x6c, 0x63,
-	0x85, 0xf5, 0x81, 0xc6, 0x16, 0xbc, 0x01, 0xcc, 0xb1, 0xc8, 0xd5, 0x7e, 0x83, 0xd2, 0x9c, 0x64,
-	0x1d, 0x43, 0xff, 0xf0, 0xa4, 0x82, 0xa7, 0x68, 0x61, 0x8f, 0x02, 0xf3, 0xa0, 0xb7, 0x43, 0x4d,
-	0x42, 0xc9, 0x92, 0xb7, 0x1f, 0xd7, 0x65, 0x70, 0x0b, 0x97, 0xc7, 0xce, 0x16, 0xfa, 0x60, 0xb7,
-	0xa3, 0xed, 0x8c, 0xba, 0x0c, 0x16, 0xc0, 0xda, 0x76, 0x9b, 0xe8, 0x01, 0x06, 0x59, 0xa3, 0xd6,
-	0xa1, 0xbc, 0x9f, 0xa1, 0x5a, 0xc7, 0xda, 0xe6, 0xe9, 0x97, 0x03, 0xdd, 0x97, 0xf2, 0xaa, 0xd8,
-	0x33, 0xb8, 0x36, 0x3a, 0xb1, 0xf1, 0xe9, 0x5f, 0x52, 0x01, 0x8e, 0xae, 0xcf, 0x7c, 0xb5, 0x3c,
-	0x0b, 0x18, 0x1c, 0xc7, 0x11, 0xbb, 0x39, 0x4b, 0x62, 0xdb, 0xf9, 0xe7, 0x0d, 0x55, 0xc7, 0xc7,
-	0xfb, 0xf7, 0xd9, 0x52, 0x98, 0xd5, 0x36, 0x09, 0x53, 0xb5, 0x89, 0xac, 0xdb, 0x60, 0xba, 0x92,
-	0x2a, 0x57, 0x4b, 0x81, 0x14, 0x25, 0x8a, 0x1b, 0xfa, 0xe4, 0x42, 0x46, 0xc5, 0x7a, 0x19, 0x55,
-	0xcb, 0x97, 0x74, 0xcb, 0xad, 0x9b, 0x7d, 0x07, 0x00, 0x00, 0xff, 0xff, 0x7c, 0x00, 0xe4, 0x5c,
-	0x8d, 0x02, 0x00, 0x00,
+	// 384 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x93, 0xcf, 0x6e, 0x9b, 0x40,
+	0x10, 0xc6, 0x85, 0xff, 0xe2, 0x71, 0xab, 0xba, 0x5b, 0x57, 0x5a, 0xa1, 0xb6, 0xa2, 0x9c, 0x7c,
+	0x02, 0xd5, 0x56, 0x2f, 0x91, 0x72, 0x49, 0xe2, 0x48, 0x51, 0x0e, 0x51, 0xc8, 0x2d, 0xb7, 0x05,
+	0x46, 0x36, 0x32, 0xde, 0x25, 0xec, 0xe2, 0xc8, 0x4f, 0x93, 0x37, 0xc8, 0x33, 0x46, 0xc1, 0x8b,
+	0xc1, 0x12, 0x44, 0x39, 0xd9, 0xf3, 0xed, 0x37, 0x1f, 0xbf, 0x19, 0x58, 0x98, 0x6e, 0x32, 0xb6,
+	0x41, 0xee, 0x49, 0xcc, 0x76, 0x71, 0x88, 0x6e, 0x9a, 0x09, 0x25, 0xc8, 0x97, 0x0c, 0x23, 0xc9,
+	0xe2, 0xc4, 0x0d, 0x84, 0xe4, 0xce, 0x1d, 0x0c, 0x2f, 0x93, 0x5c, 0x2a, 0xcc, 0x08, 0x81, 0x1e,
+	0x67, 0x5b, 0xa4, 0x86, 0x6d, 0xcc, 0x46, 0x7e, 0xf1, 0x9f, 0x58, 0x60, 0x22, 0x8f, 0x52, 0x11,
+	0x73, 0x45, 0x3b, 0x85, 0x7e, 0xac, 0xc9, 0x14, 0xfa, 0x19, 0xb2, 0x68, 0x4f, 0xbb, 0xb6, 0x31,
+	0x33, 0xfd, 0x43, 0xe1, 0x7c, 0x87, 0x6f, 0x3a, 0x50, 0xfa, 0xf8, 0x94, 0xa3, 0x54, 0xce, 0x12,
+	0x26, 0x95, 0x24, 0x53, 0xc1, 0x25, 0x92, 0x7f, 0x60, 0x86, 0x5a, 0xa3, 0x86, 0xdd, 0x9d, 0x8d,
+	0xe7, 0x3f, 0xdd, 0x3a, 0x98, 0xab, 0x3b, 0xfc, 0xa3, 0xcd, 0x79, 0x31, 0x00, 0xae, 0x30, 0x4d,
+	0xc4, 0x7e, 0x8b, 0x5c, 0x35, 0xe2, 0xfe, 0x82, 0xd1, 0xfb, 0xaf, 0x4c, 0x59, 0x88, 0x9a, 0xb7,
+	0x12, 0x9a, 0x81, 0x09, 0x85, 0xe1, 0x0e, 0x33, 0x19, 0x0b, 0x4e, 0x7b, 0x45, 0x47, 0x59, 0x12,
+	0x0f, 0x86, 0xfa, 0xe1, 0xb4, 0x6f, 0x1b, 0xed, 0x88, 0xa5, 0xcb, 0x59, 0x02, 0xa9, 0x00, 0xcb,
+	0xf1, 0xeb, 0x31, 0xc6, 0xa7, 0x62, 0xee, 0xe1, 0xc7, 0x49, 0x8c, 0x5e, 0xd9, 0x19, 0x8c, 0xa3,
+	0x4a, 0xd6, 0x5b, 0xa3, 0xa7, 0x59, 0x55, 0x9f, 0x5f, 0x37, 0xcf, 0x5f, 0x3b, 0x30, 0xb8, 0x2d,
+	0xbe, 0x06, 0x72, 0x03, 0x66, 0xf9, 0x36, 0xc8, 0xef, 0x46, 0x92, 0x92, 0xdc, 0xfa, 0xd3, 0x76,
+	0xac, 0x89, 0xce, 0xe1, 0xab, 0xd6, 0x1e, 0x14, 0x53, 0xb9, 0x24, 0xcd, 0x93, 0x59, 0xcd, 0x32,
+	0xf1, 0x61, 0x5c, 0x9b, 0x93, 0xd8, 0x6d, 0xa3, 0x1c, 0x79, 0xfe, 0x7e, 0xe0, 0xd0, 0x48, 0xd7,
+	0x30, 0xa9, 0x64, 0x4d, 0xd5, 0xba, 0x23, 0xab, 0xf5, 0xe4, 0xe2, 0xff, 0xe3, 0x62, 0x15, 0xab,
+	0x75, 0x1e, 0xb8, 0xa1, 0xd8, 0x7a, 0xda, 0xa5, 0x30, 0x5c, 0x73, 0x91, 0x88, 0x55, 0x8c, 0xd2,
+	0x0b, 0x04, 0x53, 0xf2, 0x99, 0xc5, 0xdc, 0x4b, 0x37, 0x2b, 0xef, 0x70, 0xd5, 0x82, 0x41, 0x71,
+	0xc7, 0x16, 0x6f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x2c, 0x7c, 0x1e, 0xfc, 0x7b, 0x03, 0x00, 0x00,
 }

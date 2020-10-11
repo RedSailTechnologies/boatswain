@@ -4,7 +4,7 @@ WORKDIR /go/src/github.com/redsailtechnologies/boatswain
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN go build -a -o bin/app ./cmd/kraken
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bin/app ./cmd/kraken
 
 FROM base as debug
 EXPOSE 40000

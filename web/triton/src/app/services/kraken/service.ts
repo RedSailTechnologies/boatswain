@@ -17,6 +17,15 @@ interface ClusterJSON {
 }
 
 
+const ClusterToJSON = (m: Cluster): ClusterJSON => {
+    return {
+        name: m.name,
+        endpoint: m.endpoint,
+        ready: m.ready,
+        
+    };
+};
+
 const JSONToCluster = (m: Cluster | ClusterJSON): Cluster => {
     
     return {
@@ -27,33 +36,33 @@ const JSONToCluster = (m: Cluster | ClusterJSON): Cluster => {
     };
 };
 
-export interface ClusterRequest {
+export interface ClustersRequest {
     
 }
 
-interface ClusterRequestJSON {
+interface ClustersRequestJSON {
     
 }
 
 
-const ClusterRequestToJSON = (m: ClusterRequest): ClusterRequestJSON => {
+const ClustersRequestToJSON = (m: ClustersRequest): ClustersRequestJSON => {
     return {
         
     };
 };
 
-export interface ClusterResponse {
+export interface ClustersResponse {
     clusters: Cluster[];
     
 }
 
-interface ClusterResponseJSON {
+interface ClustersResponseJSON {
     clusters: ClusterJSON[];
     
 }
 
 
-const JSONToClusterResponse = (m: ClusterResponse | ClusterResponseJSON): ClusterResponse => {
+const JSONToClustersResponse = (m: ClustersResponse | ClustersResponseJSON): ClustersResponse => {
     
     return {
         clusters: (m.clusters as (Cluster | ClusterJSON)[]).map(JSONToCluster),
@@ -64,58 +73,75 @@ const JSONToClusterResponse = (m: ClusterResponse | ClusterResponseJSON): Cluste
 export interface Deployment {
     name: string;
     namespace: string;
+    ready: boolean;
     version: string;
+    cluster: Cluster;
     
 }
 
 interface DeploymentJSON {
     name: string;
     namespace: string;
+    ready: boolean;
     version: string;
+    cluster: ClusterJSON;
     
 }
 
+
+const DeploymentToJSON = (m: Deployment): DeploymentJSON => {
+    return {
+        name: m.name,
+        namespace: m.namespace,
+        ready: m.ready,
+        version: m.version,
+        cluster: ClusterToJSON(m.cluster),
+        
+    };
+};
 
 const JSONToDeployment = (m: Deployment | DeploymentJSON): Deployment => {
     
     return {
         name: m.name,
         namespace: m.namespace,
+        ready: m.ready,
         version: m.version,
+        cluster: JSONToCluster(m.cluster),
         
     };
 };
 
-export interface DeploymentRequest {
-    cluster: string;
+export interface DeploymentsRequest {
+    cluster: Cluster;
     
 }
 
-interface DeploymentRequestJSON {
-    cluster: string;
+interface DeploymentsRequestJSON {
+    cluster: ClusterJSON;
     
 }
 
 
-const DeploymentRequestToJSON = (m: DeploymentRequest): DeploymentRequestJSON => {
+const DeploymentsRequestToJSON = (m: DeploymentsRequest): DeploymentsRequestJSON => {
     return {
-        cluster: m.cluster,
+        cluster: ClusterToJSON(m.cluster),
         
     };
 };
 
-export interface DeploymentResponse {
+export interface DeploymentsResponse {
     deployments: Deployment[];
     
 }
 
-interface DeploymentResponseJSON {
+interface DeploymentsResponseJSON {
     deployments: DeploymentJSON[];
     
 }
 
 
-const JSONToDeploymentResponse = (m: DeploymentResponse | DeploymentResponseJSON): DeploymentResponse => {
+const JSONToDeploymentsResponse = (m: DeploymentsResponse | DeploymentsResponseJSON): DeploymentsResponse => {
     
     return {
         deployments: (m.deployments as (Deployment | DeploymentJSON)[]).map(JSONToDeployment),
@@ -124,9 +150,13 @@ const JSONToDeploymentResponse = (m: DeploymentResponse | DeploymentResponseJSON
 };
 
 export interface Kraken {
-    clusters: (clusterRequest: ClusterRequest) => Promise<ClusterResponse>;
+    clusters: (clustersRequest: ClustersRequest) => Promise<ClustersResponse>;
     
-    deployments: (deploymentRequest: DeploymentRequest) => Promise<DeploymentResponse>;
+    clusterStatus: (cluster: Cluster) => Promise<Cluster>;
+    
+    deployments: (deploymentsRequest: DeploymentsRequest) => Promise<DeploymentsResponse>;
+    
+    deploymentStatus: (deployment: Deployment) => Promise<Deployment>;
     
 }
 
@@ -141,33 +171,63 @@ export class DefaultKraken implements Kraken {
         this.fetch = fetch;
         this.writeCamelCase = writeCamelCase;
     }
-    clusters(clusterRequest: ClusterRequest): Promise<ClusterResponse> {
+    clusters(clustersRequest: ClustersRequest): Promise<ClustersResponse> {
         const url = this.hostname + this.pathPrefix + "Clusters";
-        let body: ClusterRequest | ClusterRequestJSON = clusterRequest;
+        let body: ClustersRequest | ClustersRequestJSON = clustersRequest;
         if (!this.writeCamelCase) {
-            body = ClusterRequestToJSON(clusterRequest);
+            body = ClustersRequestToJSON(clustersRequest);
         }
         return this.fetch(createTwirpRequest(url, body)).then((resp) => {
             if (!resp.ok) {
                 return throwTwirpError(resp);
             }
 
-            return resp.json().then(JSONToClusterResponse);
+            return resp.json().then(JSONToClustersResponse);
         });
     }
     
-    deployments(deploymentRequest: DeploymentRequest): Promise<DeploymentResponse> {
-        const url = this.hostname + this.pathPrefix + "Deployments";
-        let body: DeploymentRequest | DeploymentRequestJSON = deploymentRequest;
+    clusterStatus(cluster: Cluster): Promise<Cluster> {
+        const url = this.hostname + this.pathPrefix + "ClusterStatus";
+        let body: Cluster | ClusterJSON = cluster;
         if (!this.writeCamelCase) {
-            body = DeploymentRequestToJSON(deploymentRequest);
+            body = ClusterToJSON(cluster);
         }
         return this.fetch(createTwirpRequest(url, body)).then((resp) => {
             if (!resp.ok) {
                 return throwTwirpError(resp);
             }
 
-            return resp.json().then(JSONToDeploymentResponse);
+            return resp.json().then(JSONToCluster);
+        });
+    }
+    
+    deployments(deploymentsRequest: DeploymentsRequest): Promise<DeploymentsResponse> {
+        const url = this.hostname + this.pathPrefix + "Deployments";
+        let body: DeploymentsRequest | DeploymentsRequestJSON = deploymentsRequest;
+        if (!this.writeCamelCase) {
+            body = DeploymentsRequestToJSON(deploymentsRequest);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToDeploymentsResponse);
+        });
+    }
+    
+    deploymentStatus(deployment: Deployment): Promise<Deployment> {
+        const url = this.hostname + this.pathPrefix + "DeploymentStatus";
+        let body: Deployment | DeploymentJSON = deployment;
+        if (!this.writeCamelCase) {
+            body = DeploymentToJSON(deployment);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToDeployment);
         });
     }
     

@@ -40,11 +40,12 @@ A kubernetes-native CD tool.
 - [x] Helm charts
 - [x] Envoy proxy
 - [x] Logging
-- [ ] Docs/API Docs
-- [ ] ~~Pprof~~(lets do this later, when the need arises)
-  - [ ] Helm integration
-- [ ] All-in-one binary
+- [x] API Docs
+- [x] All-in-one binary
+- [ ] Helm integration
+- [ ] Update docs
 - [ ] Plan Future Features
+  - [ ] Configuration for leviathan/development
   - [ ] Filter/organize by NS
   - [ ] Refresh button for a cluster
   - [ ] Save user presets in a cookie

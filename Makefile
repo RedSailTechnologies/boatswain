@@ -5,10 +5,14 @@ DEBUG=false
 DOCKER_BUILDKIT=1
 DOCKER_REPO=
 DOCKER_TAG=latest
+GEN_DOC=docs/api/
 GEN_GO=rpc/
-GEN_TS=web/triton/src/app/services/
+GEN_TS=$(TRITON_PATH)src/app/services/
+LEVI_CMD=cmd/leviathan/
+LEVI_OUT=bin/
 PROJECT_NAME=null
 SERVICE_LIST=kraken
+TRITON_PATH=web/triton/
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
@@ -20,7 +24,8 @@ clean:
 	@echo Running clean
 .SILENT:
 	@rm -f main
-	@rm -rf web/triton/dist
+	@rm -rf $(TRITON_PATH)dist
+	@rm -rf $(LEVI_OUT)
 	@docker rmi -f $(DOCKER_REPO)triton:latest
 	@docker rmi -f $(DOCKER_REPO)triton:$(DOCKER_TAG)
 	@for service in $(SERVICE_LIST); do \
@@ -32,7 +37,7 @@ clean:
 client: echo
 ifeq ($(DEBUG),true)
 	@echo Serving debug triton client
-	@cd $(WORKDIR)/web/triton; npm start
+	@cd $(WORKDIR)/$(TRITON_PATH); npm start
 else
 	@echo Building triton client release container
 	@docker build web/triton --target=release --tag $(DOCKER_REPO)triton:$(DOCKER_TAG)
@@ -50,13 +55,27 @@ help:
 kraken: echo
 	@$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=kraken template
 
+## leviathan: builds the leviathan binary
+leviathan: echo
+	@echo Building leviathan server to $(LEVI_OUT)
+	@ rm -rf $(LEVI_OUT)
+	@go build -o $(LEVI_OUT)leviathan $(LEVI_CMD)main.go
+	@cd $(WORKDIR)/$(TRITON_PATH); npm run build
+	@cp -r $(TRITON_PATH)dist/triton $(LEVI_OUT)
+ifeq ($(DEBUG),true)
+	@cp $(LEVI_CMD)leviathan-debug-config.yaml $(LEVI_OUT)leviathan-debug-config.yaml
+	./bin/leviathan --config $(LEVI_OUT)leviathan-debug-config.yaml
+endif
+
 ## proto: generates the services from their proto definitions
 proto:
 	@echo Generating service code
 	@for service in $$(find services/ -mindepth 1 -maxdepth 1 -printf '%f\n'); do \
-	  mkdir -p $(GEN_GO)/$$service; mkdir -p $(GEN_GO)/$$service; \
+	  rm -rf $(GEN_GO)$$service; rm -rf $(GEN_TS)$$service; rm -rf $(GEN_DOC); \
+	  mkdir $(GEN_GO)$$service; mkdir $(GEN_TS)$$service; mkdir $(GEN_DOC); \
 	  protoc -I services/ --go_out=$(GEN_GO) --go_opt=paths=source_relative --twirp_out=$(GEN_GO) --twirp_opt=paths=source_relative \
 	    --twirp_typescript_out=version=v6:$(GEN_TS)/$$service \
+		--doc_out=$(GEN_DOC) --doc_opt=markdown,$$service.md \
 	    $$(find services/ -iname "*.proto"); \
 	done
 
