@@ -23,7 +23,7 @@ func (h defaultHelmAgent) getReleases(cfg *action.Configuration, cluster string)
 
 	releases, err := list.Run()
 	if err != nil {
-		return nil, errors.New("could not list releases")
+		return nil, err
 	}
 
 	return releases, nil

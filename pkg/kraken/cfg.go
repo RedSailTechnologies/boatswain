@@ -34,13 +34,16 @@ func (c *Config) ToHelmClient(clusterName string) (*action.Configuration, error)
 	flags := &genericclioptions.ConfigFlags{
 		APIServer:   &cluster.Endpoint,
 		BearerToken: &cluster.Token,
-		KeyFile:     &cluster.Cert,
+		// TODO AdamP - flags only supports cert files, how do we want to handle?
+		// CertFile:    &cluster.Cert,
+		Insecure: &[]bool{true}[0],
 	}
-	config := new(action.Configuration)
-	if err := config.Init(flags, "", "secrets", nil); err != nil {
+	actionConfig := new(action.Configuration)
+	if err := actionConfig.Init(flags, "", "secrets", nil); err != nil {
 		return nil, err
 	}
-	return config, nil
+
+	return actionConfig, nil
 }
 
 // ToClientset gets the client-go Clientset for this cluster given the cluster's name

@@ -68,16 +68,17 @@ func (s *Service) ClusterStatus(ctx context.Context, cluster *pb.Cluster) (*pb.C
 // Releases gets all releases based on the clusters in the request
 func (s *Service) Releases(ctx context.Context, req *pb.ReleaseRequest) (*pb.ReleaseResponse, error) {
 	releaseList := make([]*pb.Releases, 0)
-	for _, cluster := range s.config.Clusters {
+	for _, cluster := range req.Clusters {
 		config, err := s.config.ToHelmClient(cluster.Name)
 		if err != nil {
-			logger.Error("could not get clientset for cluster", "cluster", cluster.Name)
+			logger.Error("could not get clientset for cluster", "cluster", cluster.Name, "error", err)
 			return nil, twirp.InternalError("error getting cluster clientset")
 		}
 
 		// get releases for cluster
 		releases, err := s.helmAgent.getReleases(config, cluster.Name)
 		if err != nil {
+			logger.Error("could not get releases for cluster", "cluster", cluster.Name, "error", err)
 			continue
 		}
 
@@ -103,7 +104,7 @@ func addToReleaseList(list *[]*pb.Releases, search *release.Release, clusterName
 	}
 
 	for _, release := range *list {
-		if release.Name == search.Name {
+		if release.Name == search.Name && release.Chart == search.Chart.Metadata.Name {
 			release.Releases = append(release.Releases, newRelease)
 			return
 		}

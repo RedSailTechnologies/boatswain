@@ -16,12 +16,10 @@ require (
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/yaml.v2 v2.3.0
-	helm.sh/helm v2.16.12+incompatible
 	helm.sh/helm/v3 v3.3.4
 	k8s.io/api v0.18.8
 	k8s.io/apimachinery v0.18.8
 	k8s.io/cli-runtime v0.18.8
 	k8s.io/client-go v0.18.8
-	k8s.io/helm v2.16.12+incompatible // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
 )

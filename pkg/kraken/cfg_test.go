@@ -10,6 +10,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestToHelmClient(t *testing.T) {
+	config := ClusterConfig{
+		Name:     "cluster",
+		Endpoint: "www.not.real",
+		Token:    "abcdefg",
+		Cert:     "notarealcert...",
+	}
+	sut := Config{
+		[]ClusterConfig{
+			config,
+		},
+	}
+
+	validClientset, noErr := sut.ToHelmClient("cluster")
+	invalidClientset, err := sut.ToHelmClient("notreal")
+
+	assert.NotNil(t, validClientset)
+	assert.Nil(t, noErr)
+	assert.Nil(t, invalidClientset)
+	assert.Equal(t, errors.New("cluster not found"), err)
+}
+
 func TestToClientset(t *testing.T) {
 	config := ClusterConfig{
 		Name:     "cluster",
