@@ -3,7 +3,7 @@
 
 ## Table of Contents
 
-- [kraken/service.proto](#kraken/service.proto)
+- [service.proto](#service.proto)
     - [Cluster](#redsail.bosn.Cluster)
     - [ClustersRequest](#redsail.bosn.ClustersRequest)
     - [ClustersResponse](#redsail.bosn.ClustersResponse)
@@ -20,13 +20,12 @@
 
 
 
-<a name="kraken/service.proto"></a>
+<a name="service.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## kraken/service.proto
+## service.proto
 Kraken is the service managing external cluster connections.
-The api can be hit at /api/redsail.bosn.Kraken/&lt;Method&gt; if
-using a json client.
+The api can be hit at /api/redsail.bosn.Kraken/&lt;Method&gt;.
 
 
 <a name="redsail.bosn.Cluster"></a>

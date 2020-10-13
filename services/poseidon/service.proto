@@ -1,0 +1,24 @@
+/*
+Poseidon is the service concerned with managing helm repos and charts.
+The api can be hit at /api/redsail.bosn.Poseidon/<Method>.
+*/
+syntax = "proto3";
+package redsail.bosn;
+option go_package = "github.com/redsailtechnologies/boatswain/pkg/poseidon";
+
+service Poseidon {
+    // gets all the currently configured repositories
+    rpc Repos (ReposRequest) returns (ReposResponse);
+}
+
+message Repo {
+    string name = 1; // name of the repo
+    string endpoint = 2; // the endpoint for the repo
+    bool ready = 3; // if the repo is ready (checking by getting index.yaml)
+}
+
+message ReposRequest {}
+
+message ReposResponse {
+    repeated Repo repos = 1; // the list of currently configured repositories
+}

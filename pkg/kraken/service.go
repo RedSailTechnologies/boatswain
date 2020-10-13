@@ -11,7 +11,7 @@ import (
 	pb "github.com/redsailtechnologies/boatswain/rpc/kraken"
 )
 
-// Service is the implementation of the Kraken grpc service
+// Service is the implementation of the Kraken twirp service
 type Service struct {
 	config    *Config
 	kubeAgent kubeAgent

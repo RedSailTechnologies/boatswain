@@ -18,7 +18,7 @@ A kubernetes-native CD tool.
 ## Components
 * Triton
   * Angular client
-* DavyJones/Mate
+* Mate
   * Gateway/reverse proxy (Envoy?)
 * Kraken
   * Cluster management/scraper
@@ -46,8 +46,10 @@ A kubernetes-native CD tool.
 - [ ] Update docs
 - [ ] Plan Future Features
   - [ ] Configuration for leviathan/development
+  - [ ] Persistance
   - [ ] Filter/organize by NS
-  - [ ] Refresh button for a cluster
+  - [ ] Refresh buttons
+  - [ ] Strategies (blue/green, canary, etc.)
   - [ ] Save user presets in a cookie
   - [ ] Users/Auditing
   - [ ] Pipelines/tasks/triggers

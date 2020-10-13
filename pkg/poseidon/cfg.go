@@ -1,0 +1,62 @@
+package poseidon
+
+import (
+	"errors"
+	"io/ioutil"
+
+	"helm.sh/helm/v3/pkg/getter"
+	"helm.sh/helm/v3/pkg/repo"
+
+	"gopkg.in/yaml.v2"
+)
+
+// RepoConfig is the configuration struct for a helm repo
+type RepoConfig struct {
+	Name     string `yaml:"name"`
+	Endpoint string `yaml:"endpoint"`
+}
+
+// ToChartRepo takes the configuration and makes it into a working repo
+func (c *RepoConfig) ToChartRepo() (*repo.ChartRepository, error) {
+	providers := []getter.Provider{
+		getter.Provider{
+			Schemes: []string{"http", "https"},
+			New:     getter.NewHTTPGetter,
+		},
+	}
+
+	entry := &repo.Entry{
+		Name: c.Name,
+		URL:  c.Endpoint,
+		// TODO AdamP - we definitely want to support this soon!
+		InsecureSkipTLSverify: true,
+	}
+
+	return repo.NewChartRepository(entry, providers)
+}
+
+// Config is a list of configurations
+type Config struct {
+	Repos []RepoConfig `yaml:"repos"`
+}
+
+// YAML takes a relative filename and returns the config found in it
+func (c *Config) YAML(file string) error {
+	y, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	if err := yaml.UnmarshalStrict(y, c); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Config) getRepoConfig(repoName string) (*RepoConfig, error) {
+	for _, config := range c.Repos {
+		if config.Name == repoName {
+			return &config, nil
+		}
+	}
+	return nil, errors.New("repo not found")
+}

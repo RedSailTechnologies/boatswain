@@ -11,13 +11,13 @@ GEN_TS=$(TRITON_PATH)src/app/services/
 LEVI_CMD=cmd/leviathan/
 LEVI_OUT=bin/
 PROJECT_NAME=null
-SERVICE_LIST=kraken
+SERVICE_LIST=kraken poseidon
 TRITON_PATH=web/triton/
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
 ## all: builds the client and all services
-all: echo proto kraken client push
+all: echo proto kraken poseidon client push
 
 ## clean: removes binaries, images, etc
 clean:
@@ -51,7 +51,7 @@ help:
 	@echo "Usage:"
 	@sed -n 's/^##//p' $(MAKEFILE_LIST) | column -t -s ':' |  sed -e 's/^/ /'
 
-## kraken: builds the kraken base image
+## kraken: builds the kraken image
 kraken: echo
 	@$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=kraken template
 
@@ -67,16 +67,20 @@ ifeq ($(DEBUG),true)
 	./bin/leviathan --config $(LEVI_OUT)leviathan-debug-config.yaml
 endif
 
+## poseidon: builds the poseidon image
+poseidon: echo
+	@$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=poseidon template
+
 ## proto: generates the services from their proto definitions
 proto:
 	@echo Generating service code
 	@for service in $$(find services/ -mindepth 1 -maxdepth 1 -printf '%f\n'); do \
 	  rm -rf $(GEN_GO)$$service; rm -rf $(GEN_TS)$$service; rm -rf $(GEN_DOC); \
 	  mkdir $(GEN_GO)$$service; mkdir $(GEN_TS)$$service; mkdir $(GEN_DOC); \
-	  protoc -I services/ --go_out=$(GEN_GO) --go_opt=paths=source_relative --twirp_out=$(GEN_GO) --twirp_opt=paths=source_relative \
+	  protoc -I services/$$service --go_out=$(GEN_GO)$$service --go_opt=paths=source_relative --twirp_out=$(GEN_GO)$$service --twirp_opt=paths=source_relative \
 	    --twirp_typescript_out=version=v6:$(GEN_TS)/$$service \
 		--doc_out=$(GEN_DOC) --doc_opt=markdown,$$service.md \
-	    $$(find services/ -iname "*.proto"); \
+	    $$(find services/$$service -iname "*.proto"); \
 	done
 
 ## push: pushes docker images

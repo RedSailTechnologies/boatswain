@@ -16,13 +16,15 @@ import { AppRoutingModule } from './app-routing.module';
 import { ClustersComponent } from './pages/clusters/clusters.component'
 import { HomeComponent } from './pages/home/home.component';
 import { ReleasesComponent } from './pages/releases/releases.component';
+import { ReposComponent } from './pages/repos/repos.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     HomeComponent,
     ClustersComponent,
-    ReleasesComponent
+    ReleasesComponent,
+    ReposComponent
   ],
   imports: [
     AppRoutingModule,
