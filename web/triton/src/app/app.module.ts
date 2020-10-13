@@ -15,12 +15,14 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { ClustersComponent } from './pages/clusters/clusters.component'
 import { HomeComponent } from './pages/home/home.component';
+import { ReleasesComponent } from './pages/releases/releases.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     HomeComponent,
-    ClustersComponent
+    ClustersComponent,
+    ReleasesComponent
   ],
   imports: [
     AppRoutingModule,

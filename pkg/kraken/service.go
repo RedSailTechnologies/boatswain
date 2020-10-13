@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/twitchtv/twirp"
+	"helm.sh/helm/v3/pkg/release"
 
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	pb "github.com/redsailtechnologies/boatswain/rpc/kraken"
@@ -12,15 +13,17 @@ import (
 
 // Service is the implementation of the Kraken grpc service
 type Service struct {
-	config *Config
-	agent  *kubeAgent
+	config    *Config
+	kubeAgent kubeAgent
+	helmAgent helmAgent
 }
 
 // New creates the Service with the given configuration
 func New(c *Config) *Service {
 	return &Service{
-		config: c,
-		agent:  &kubeAgent{},
+		config:    c,
+		kubeAgent: defaultKubeAgent{},
+		helmAgent: defaultHelmAgent{},
 	}
 }
 
@@ -40,7 +43,7 @@ func (s *Service) Clusters(ctx context.Context, req *pb.ClustersRequest) (*pb.Cl
 		response.Clusters = append(response.Clusters, &pb.Cluster{
 			Name:     cluster.Name,
 			Endpoint: cluster.Endpoint,
-			Ready:    s.agent.GetClusterStatus(clientset, cluster.Name),
+			Ready:    s.kubeAgent.getClusterStatus(clientset, cluster.Name),
 		})
 	}
 
@@ -49,27 +52,68 @@ func (s *Service) Clusters(ctx context.Context, req *pb.ClustersRequest) (*pb.Cl
 
 // ClusterStatus gets the status of a cluster
 func (s *Service) ClusterStatus(ctx context.Context, cluster *pb.Cluster) (*pb.Cluster, error) {
-	return nil, errors.New("not implemented")
-}
-
-// Deployments gets all the deployments for a namespace
-func (s *Service) Deployments(ctx context.Context, req *pb.DeploymentsRequest) (*pb.DeploymentsResponse, error) {
-	clientset, err := s.config.ToClientset(req.Cluster.Name)
+	clientset, err := s.config.ToClientset(cluster.Name)
 	if err != nil {
-		return nil, err
+		logger.Error("could not get clientset for cluster", "cluster", cluster.Name)
+		return nil, twirp.InternalError("error getting cluster clientset")
 	}
 
-	deployments, err := s.agent.GetClusterDeployments(clientset, req.Cluster)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pb.DeploymentsResponse{
-		Deployments: deployments,
+	return &pb.Cluster{
+		Name:     cluster.Name,
+		Endpoint: cluster.Endpoint,
+		Ready:    s.kubeAgent.getClusterStatus(clientset, cluster.Name),
 	}, nil
 }
 
-// DeploymentStatus gets the status for a single deployment
-func (s *Service) DeploymentStatus(ctx context.Context, deployment *pb.Deployment) (*pb.Deployment, error) {
+// Releases gets all releases based on the clusters in the request
+func (s *Service) Releases(ctx context.Context, req *pb.ReleaseRequest) (*pb.ReleaseResponse, error) {
+	releaseList := make([]*pb.Releases, 0)
+	for _, cluster := range s.config.Clusters {
+		config, err := s.config.ToHelmClient(cluster.Name)
+		if err != nil {
+			logger.Error("could not get clientset for cluster", "cluster", cluster.Name)
+			return nil, twirp.InternalError("error getting cluster clientset")
+		}
+
+		// get releases for cluster
+		releases, err := s.helmAgent.getReleases(config, cluster.Name)
+		if err != nil {
+			continue
+		}
+
+		for _, release := range releases {
+			addToReleaseList(&releaseList, release, cluster.Name)
+		}
+	}
+	return &pb.ReleaseResponse{ReleaseLists: releaseList}, nil
+}
+
+// ReleaseStatus gets an updated status for a particular release
+func (s *Service) ReleaseStatus(ctx context.Context, release *pb.Release) (*pb.Release, error) {
 	return nil, errors.New("not implemented")
+}
+
+func addToReleaseList(list *[]*pb.Releases, search *release.Release, clusterName string) {
+	newRelease := &pb.Release{
+		Namespace:    search.Namespace,
+		AppVersion:   search.Chart.Metadata.AppVersion,
+		ChartVersion: search.Chart.Metadata.Version,
+		ClusterName:  clusterName,
+		Status:       search.Info.Status.String(),
+	}
+
+	for _, release := range *list {
+		if release.Name == search.Name {
+			release.Releases = append(release.Releases, newRelease)
+			return
+		}
+	}
+
+	*list = append(*list, &pb.Releases{
+		Name:  search.Name,
+		Chart: search.Chart.Metadata.Name,
+		Releases: []*pb.Release{
+			newRelease,
+		},
+	})
 }

@@ -70,81 +70,106 @@ const JSONToClustersResponse = (m: ClustersResponse | ClustersResponseJSON): Clu
     };
 };
 
-export interface Deployment {
-    name: string;
+export interface Release {
     namespace: string;
-    ready: boolean;
-    version: string;
-    cluster: Cluster;
+    appVersion: string;
+    chartVersion: string;
+    clusterName: string;
+    status: string;
     
 }
 
-interface DeploymentJSON {
-    name: string;
+interface ReleaseJSON {
     namespace: string;
-    ready: boolean;
-    version: string;
-    cluster: ClusterJSON;
+    app_version: string;
+    chart_version: string;
+    cluster_name: string;
+    status: string;
     
 }
 
 
-const DeploymentToJSON = (m: Deployment): DeploymentJSON => {
+const ReleaseToJSON = (m: Release): ReleaseJSON => {
+    return {
+        namespace: m.namespace,
+        app_version: m.appVersion,
+        chart_version: m.chartVersion,
+        cluster_name: m.clusterName,
+        status: m.status,
+        
+    };
+};
+
+const JSONToRelease = (m: Release | ReleaseJSON): Release => {
+    
+    return {
+        namespace: m.namespace,
+        appVersion: (((m as Release).appVersion) ? (m as Release).appVersion : (m as ReleaseJSON).app_version),
+        chartVersion: (((m as Release).chartVersion) ? (m as Release).chartVersion : (m as ReleaseJSON).chart_version),
+        clusterName: (((m as Release).clusterName) ? (m as Release).clusterName : (m as ReleaseJSON).cluster_name),
+        status: m.status,
+        
+    };
+};
+
+export interface Releases {
+    name: string;
+    chart: string;
+    releases: Release[];
+    
+}
+
+interface ReleasesJSON {
+    name: string;
+    chart: string;
+    releases: ReleaseJSON[];
+    
+}
+
+
+const JSONToReleases = (m: Releases | ReleasesJSON): Releases => {
+    
     return {
         name: m.name,
-        namespace: m.namespace,
-        ready: m.ready,
-        version: m.version,
-        cluster: ClusterToJSON(m.cluster),
+        chart: m.chart,
+        releases: (m.releases as (Release | ReleaseJSON)[]).map(JSONToRelease),
         
     };
 };
 
-const JSONToDeployment = (m: Deployment | DeploymentJSON): Deployment => {
+export interface ReleaseRequest {
+    clusters: Cluster[];
     
+}
+
+interface ReleaseRequestJSON {
+    clusters: ClusterJSON[];
+    
+}
+
+
+const ReleaseRequestToJSON = (m: ReleaseRequest): ReleaseRequestJSON => {
     return {
-        name: m.name,
-        namespace: m.namespace,
-        ready: m.ready,
-        version: m.version,
-        cluster: JSONToCluster(m.cluster),
+        clusters: m.clusters.map(ClusterToJSON),
         
     };
 };
 
-export interface DeploymentsRequest {
-    cluster: Cluster;
+export interface ReleaseResponse {
+    releaseLists: Releases[];
     
 }
 
-interface DeploymentsRequestJSON {
-    cluster: ClusterJSON;
-    
-}
-
-
-const DeploymentsRequestToJSON = (m: DeploymentsRequest): DeploymentsRequestJSON => {
-    return {
-        cluster: ClusterToJSON(m.cluster),
-        
-    };
-};
-
-export interface DeploymentsResponse {
-    deployments: Deployment[];
-    
-}
-
-interface DeploymentsResponseJSON {
-    deployments: DeploymentJSON[];
+interface ReleaseResponseJSON {
+    release_lists: ReleasesJSON[];
     
 }
 
 
-const JSONToDeploymentsResponse = (m: DeploymentsResponse | DeploymentsResponseJSON): DeploymentsResponse => {
+const JSONToReleaseResponse = (m: ReleaseResponse | ReleaseResponseJSON): ReleaseResponse => {
     
     return {
-        deployments: (m.deployments as (Deployment | DeploymentJSON)[]).map(JSONToDeployment),
+        releaseLists: ((((m as ReleaseResponse).releaseLists) ? (m as ReleaseResponse).releaseLists : (m as ReleaseResponseJSON).release_lists) as (Releases | ReleasesJSON)[]).map(JSONToReleases),
         
     };
 };
@@ -154,9 +179,9 @@ export interface Kraken {
     
     clusterStatus: (cluster: Cluster) => Promise<Cluster>;
     
-    deployments: (deploymentsRequest: DeploymentsRequest) => Promise<DeploymentsResponse>;
+    releases: (releaseRequest: ReleaseRequest) => Promise<ReleaseResponse>;
     
-    deploymentStatus: (deployment: Deployment) => Promise<Deployment>;
+    releaseStatus: (release: Release) => Promise<Release>;
     
 }
 
@@ -201,33 +226,33 @@ export class DefaultKraken implements Kraken {
         });
     }
     
-    deployments(deploymentsRequest: DeploymentsRequest): Promise<DeploymentsResponse> {
-        const url = this.hostname + this.pathPrefix + "Deployments";
-        let body: DeploymentsRequest | DeploymentsRequestJSON = deploymentsRequest;
+    releases(releaseRequest: ReleaseRequest): Promise<ReleaseResponse> {
+        const url = this.hostname + this.pathPrefix + "Releases";
+        let body: ReleaseRequest | ReleaseRequestJSON = releaseRequest;
         if (!this.writeCamelCase) {
-            body = DeploymentsRequestToJSON(deploymentsRequest);
+            body = ReleaseRequestToJSON(releaseRequest);
         }
         return this.fetch(createTwirpRequest(url, body)).then((resp) => {
             if (!resp.ok) {
                 return throwTwirpError(resp);
             }
 
-            return resp.json().then(JSONToDeploymentsResponse);
+            return resp.json().then(JSONToReleaseResponse);
         });
     }
     
-    deploymentStatus(deployment: Deployment): Promise<Deployment> {
-        const url = this.hostname + this.pathPrefix + "DeploymentStatus";
-        let body: Deployment | DeploymentJSON = deployment;
+    releaseStatus(release: Release): Promise<Release> {
+        const url = this.hostname + this.pathPrefix + "ReleaseStatus";
+        let body: Release | ReleaseJSON = release;
         if (!this.writeCamelCase) {
-            body = DeploymentToJSON(deployment);
+            body = ReleaseToJSON(release);
         }
         return this.fetch(createTwirpRequest(url, body)).then((resp) => {
             if (!resp.ok) {
                 return throwTwirpError(resp);
             }
 
-            return resp.json().then(JSONToDeployment);
+            return resp.json().then(JSONToRelease);
         });
     }
     

@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 
 	"gopkg.in/yaml.v2"
+	"helm.sh/helm/v3/pkg/action"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -20,6 +22,25 @@ type ClusterConfig struct {
 // Config is a list of configurations
 type Config struct {
 	Clusters []ClusterConfig `yaml:"clusters"`
+}
+
+// ToHelmClient gets a helm action configuration given the cluster's name
+func (c *Config) ToHelmClient(clusterName string) (*action.Configuration, error) {
+	cluster, err := c.getClusterConfig(clusterName)
+	if err != nil {
+		return nil, err
+	}
+
+	flags := &genericclioptions.ConfigFlags{
+		APIServer:   &cluster.Endpoint,
+		BearerToken: &cluster.Token,
+		KeyFile:     &cluster.Cert,
+	}
+	config := new(action.Configuration)
+	if err := config.Init(flags, "", "secrets", nil); err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // ToClientset gets the client-go Clientset for this cluster given the cluster's name

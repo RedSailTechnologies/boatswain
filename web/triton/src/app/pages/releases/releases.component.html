@@ -1,0 +1,40 @@
+<div class="page">
+    <mat-accordion multi>
+        <mat-expansion-panel class="panel" *ngFor="let releases of releasesList;">
+            <mat-expansion-panel-header>
+                <mat-panel-title>{{releases.name}}</mat-panel-title>
+                <mat-panel-description>
+                    Chart: {{releases.chart}}
+                    <!-- <button *ngIf="cluster.ready; else notReady" mat-mini-fab class="shrink-button status-online"></button> -->
+                    <!-- <ng-template #notReady>
+                        <button mat-mini-fab class="shrink-button status-offline"></button>
+                    </ng-template> -->
+                </mat-panel-description>
+            </mat-expansion-panel-header>
+            <table mat-table [dataSource]="releases.releases" matSort class="table" class="full-width">
+                <ng-container matColumnDef="namespace">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> Namespace </th>
+                    <td mat-cell *matCellDef="let element"> {{element.namespace}} </td>
+                </ng-container>
+                <ng-container matColumnDef="appVersion">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> AppVersion </th>
+                    <td mat-cell *matCellDef="let element"> {{element.appVersion}} </td>
+                </ng-container>
+                <ng-container matColumnDef="chartVersion">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> ChartVersion </th>
+                    <td mat-cell *matCellDef="let element"> {{element.chartVersion}} </td>
+                </ng-container>
+                <ng-container matColumnDef="clusterName">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> Cluster </th>
+                    <td mat-cell *matCellDef="let element"> {{element.clusterName}} </td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> Status </th>
+                    <td mat-cell *matCellDef="let element"> {{element.status}} </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="['namespace', 'appVersion', 'chartVersion', 'clusterName', 'status']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['namespace', 'appVersion', 'chartVersion', 'clusterName', 'status'];"></tr>
+            </table>
+        </mat-expansion-panel>
+    </mat-accordion>
+</div>

@@ -7,9 +7,12 @@
     - [Cluster](#redsail.bosn.Cluster)
     - [ClustersRequest](#redsail.bosn.ClustersRequest)
     - [ClustersResponse](#redsail.bosn.ClustersResponse)
-    - [Deployment](#redsail.bosn.Deployment)
-    - [DeploymentsRequest](#redsail.bosn.DeploymentsRequest)
-    - [DeploymentsResponse](#redsail.bosn.DeploymentsResponse)
+    - [Release](#redsail.bosn.Release)
+    - [ReleaseRequest](#redsail.bosn.ReleaseRequest)
+    - [ReleaseResponse](#redsail.bosn.ReleaseResponse)
+    - [Releases](#redsail.bosn.Releases)
+  
+    - [Status](#redsail.bosn.Status)
   
     - [Kraken](#redsail.bosn.Kraken)
   
@@ -68,55 +71,91 @@ using a json client.
 
 
 
-<a name="redsail.bosn.Deployment"></a>
+<a name="redsail.bosn.Release"></a>
 
-### Deployment
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | name of the deployment |
-| namespace | [string](#string) |  | namespace of the deployment |
-| ready | [bool](#bool) |  | if the deployment is ready |
-| version | [string](#string) |  | version of the deployment |
-| cluster | [Cluster](#redsail.bosn.Cluster) |  | the the cluster deployed to |
-
-
-
-
-
-
-<a name="redsail.bosn.DeploymentsRequest"></a>
-
-### DeploymentsRequest
+### Release
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| cluster | [Cluster](#redsail.bosn.Cluster) |  | the cluster to get deployments for |
+| namespace | [string](#string) |  |  |
+| app_version | [string](#string) |  |  |
+| chart_version | [string](#string) |  |  |
+| cluster_name | [string](#string) |  |  |
+| status | [string](#string) |  |  |
 
 
 
 
 
 
-<a name="redsail.bosn.DeploymentsResponse"></a>
+<a name="redsail.bosn.ReleaseRequest"></a>
 
-### DeploymentsResponse
+### ReleaseRequest
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| deployments | [Deployment](#redsail.bosn.Deployment) | repeated | the list of deployments |
+| clusters | [Cluster](#redsail.bosn.Cluster) | repeated | the clusters to get apps for |
+
+
+
+
+
+
+<a name="redsail.bosn.ReleaseResponse"></a>
+
+### ReleaseResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| release_lists | [Releases](#redsail.bosn.Releases) | repeated |  |
+
+
+
+
+
+
+<a name="redsail.bosn.Releases"></a>
+
+### Releases
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  |  |
+| chart | [string](#string) |  |  |
+| releases | [Release](#redsail.bosn.Release) | repeated |  |
 
 
 
 
 
  
+
+
+<a name="redsail.bosn.Status"></a>
+
+### Status
+the helm status of the release
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| unknown | 0 |  |
+| deployed | 1 |  |
+| uninstalled | 2 |  |
+| superseded | 3 |  |
+| failed | 4 |  |
+| uninstalling | 5 |  |
+| pending_install | 6 |  |
+| pending_upgrade | 7 |  |
+| pending_rollback | 8 |  |
+
 
  
 
@@ -132,8 +171,8 @@ using a json client.
 | ----------- | ------------ | ------------- | ------------|
 | Clusters | [ClustersRequest](#redsail.bosn.ClustersRequest) | [ClustersResponse](#redsail.bosn.ClustersResponse) | gets all clusters currently configured and their status |
 | ClusterStatus | [Cluster](#redsail.bosn.Cluster) | [Cluster](#redsail.bosn.Cluster) | gets the status for a single cluster |
-| Deployments | [DeploymentsRequest](#redsail.bosn.DeploymentsRequest) | [DeploymentsResponse](#redsail.bosn.DeploymentsResponse) | gets all the deployments for a particular cluster |
-| DeploymentStatus | [Deployment](#redsail.bosn.Deployment) | [Deployment](#redsail.bosn.Deployment) | gets a |
+| Releases | [ReleaseRequest](#redsail.bosn.ReleaseRequest) | [ReleaseResponse](#redsail.bosn.ReleaseResponse) | gets all applications for the clusters passed |
+| ReleaseStatus | [Release](#redsail.bosn.Release) | [Release](#redsail.bosn.Release) | gets the status for a single application in a single cluster |
 
  
 

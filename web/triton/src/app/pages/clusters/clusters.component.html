@@ -1,39 +1,23 @@
-<div style="margin-top: 10px;">
-    <mat-accordion multi>
-        <mat-expansion-panel class="panel" *ngFor="let cluster of clusters;">
-            <mat-expansion-panel-header>
-                <mat-panel-title>{{cluster.name}}</mat-panel-title>
-                <mat-panel-description>
-                    Endpoint: {{cluster.endpoint}}
-                    <span class="spacer"></span>
-                    Status: 
-                    <button *ngIf="cluster.ready; else notReady" mat-mini-fab class="shrink-button status-online"></button>
-                    <ng-template #notReady>
-                        <button mat-mini-fab class="shrink-button status-offline"></button>
-                    </ng-template>
-                </mat-panel-description>
-            </mat-expansion-panel-header>
-            <div *ngIf="cluster.ready">
-                <table *ngIf="deploymentData.get(cluster); else noData" mat-table [dataSource]="deploymentData.get(cluster)" matSort class="table">
-                    <ng-container matColumnDef="name">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header> Name </th>
-                        <td mat-cell *matCellDef="let element"> {{element.name}} </td>
-                    </ng-container>
-                    <ng-container matColumnDef="namespace">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header> Namespace </th>
-                        <td mat-cell *matCellDef="let element"> {{element.namespace}} </td>
-                    </ng-container>
-                    <ng-container matColumnDef="version">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header> Version </th>
-                        <td mat-cell *matCellDef="let element"> {{element.version}} </td>
-                    </ng-container>
-                    <tr mat-header-row *matHeaderRowDef="['name', 'namespace', 'version']"></tr>
-                    <tr mat-row *matRowDef="let row; columns: ['name', 'namespace', 'version'];"></tr>
-                </table>
-                <ng-template #noData>
-                    <mat-spinner color="primary" style="margin: auto;"></mat-spinner>
-                </ng-template>
-            </div>
-        </mat-expansion-panel>
-    </mat-accordion>
+<div class="page">
+    <table *ngIf="clusters;else noData" mat-table [dataSource]="clusters" class="full-width">
+        <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef> Name </th>
+            <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+        </ng-container>
+        <ng-container matColumnDef="endpoint">
+            <th mat-header-cell *matHeaderCellDef> Endpoint </th>
+            <td mat-cell *matCellDef="let element"> {{element.endpoint}} </td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef> Status </th>
+            <td mat-cell *matCellDef="let element">
+                <button mat-mini-fab class="shrink-button" [ngClass]="{'status-online':element.ready,'status-offline':!element.ready}"></button>
+            </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="['name', 'endpoint', 'status']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['name', 'endpoint', 'status'];"></tr>
+    </table>
+    <ng-template #noData>
+        <mat-spinner color="primary" style="margin: auto;"></mat-spinner>
+    </ng-template>
 </div>

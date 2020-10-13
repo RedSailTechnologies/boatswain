@@ -1,18 +1,22 @@
-.panel
-    margin-left: 5%
-    margin-right: 5%
 
 .shrink-button
-    height: 15px
-    width: 15px
-    margin: 2px
-    margin-left: 10px
+    height: 25px
+    width: 25px
+    float: left
+    vertical-align: middle
+    &::ng-deep .mat-button-wrapper
+        line-height: 20px
+        padding: 0
+        margin: 0
+        .mat-icon
+            font-size: 20px
+            padding: 0
+            margin: 0
+            float: inline-start
+
 
 .status-offline
     background-color: red
 
 .status-online
     background-color: green
-
-.table
-    width: 100%
