@@ -46,7 +46,9 @@ func (c *Config) YAML(file string) error {
 	if err != nil {
 		return err
 	}
-	if err := yaml.UnmarshalStrict(y, c); err != nil {
+
+	// TODO AdamP - need to get keyed values from a file to pass here so we can revert to strict
+	if err := yaml.Unmarshal(y, c); err != nil {
 		return err
 	}
 	return nil

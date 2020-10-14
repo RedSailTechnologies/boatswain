@@ -7,8 +7,27 @@ package redsail.bosn;
 option go_package = "github.com/redsailtechnologies/boatswain/pkg/poseidon";
 
 service Poseidon {
+    // gets all the charts for this repository
+    rpc Charts (Repo) returns (ChartsResponse);
+
     // gets all the currently configured repositories
     rpc Repos (ReposRequest) returns (ReposResponse);
+}
+
+message Chart {
+    string name = 1; // the chart name
+    repeated ChartVersion versions = 2; // the versions available for this chart
+}
+
+message ChartVersion {
+    string chart_version = 1; // the chart version
+    string app_version = 2; // the chart's default app version
+    string description = 3; // description of the chart
+    string url = 4; // the url for this specific version of the chart
+}
+
+message ChartsResponse {
+    repeated Chart charts = 1; // the list of charts
 }
 
 message Repo {

@@ -56,7 +56,7 @@ kraken: echo
 	@$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=kraken template
 
 ## leviathan: builds the leviathan binary
-leviathan: echo
+leviathan: echo proto
 	@echo Building leviathan server to $(LEVI_OUT)
 	@ rm -rf $(LEVI_OUT)
 	@go build -o $(LEVI_OUT)leviathan $(LEVI_CMD)main.go
@@ -72,11 +72,12 @@ poseidon: echo
 	@$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=poseidon template
 
 ## proto: generates the services from their proto definitions
-proto:
-	@echo Generating service code
+proto: echo
+	@echo Generating service code and docs
+	@rm -rf $(GEN_DOC); mkdir $(GEN_DOC); 
 	@for service in $$(find services/ -mindepth 1 -maxdepth 1 -printf '%f\n'); do \
-	  rm -rf $(GEN_GO)$$service; rm -rf $(GEN_TS)$$service; rm -rf $(GEN_DOC); \
-	  mkdir $(GEN_GO)$$service; mkdir $(GEN_TS)$$service; mkdir $(GEN_DOC); \
+	  rm -rf $(GEN_GO)$$service; rm -rf $(GEN_TS)$$service; \
+	  mkdir $(GEN_GO)$$service; mkdir $(GEN_TS)$$service; \
 	  protoc -I services/$$service --go_out=$(GEN_GO)$$service --go_opt=paths=source_relative --twirp_out=$(GEN_GO)$$service --twirp_opt=paths=source_relative \
 	    --twirp_typescript_out=version=v6:$(GEN_TS)/$$service \
 		--doc_out=$(GEN_DOC) --doc_opt=markdown,$$service.md \
@@ -90,7 +91,7 @@ push:
 	  docker push $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
 	done
 
-template:
+template: proto
 ifeq ($(DEBUG),true)
 	@echo Building $(PROJECT_NAME) debug container
 	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=debug --tag $(PROJECT_NAME):$(DOCKER_TAG)

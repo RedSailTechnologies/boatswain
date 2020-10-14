@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DefaultPoseidon, Poseidon, Repo } from 'src/app/services/poseidon/service';
+import { Chart, DefaultPoseidon, Poseidon, Repo } from 'src/app/services/poseidon/poseidon';
 import * as fetch from 'isomorphic-fetch';
 
 @Component({
@@ -10,14 +10,21 @@ import * as fetch from 'isomorphic-fetch';
 export class ReposComponent implements OnInit {
   private client: Poseidon;
   public repos: Repo[];
+  public charts: Map<Repo, Chart[]>;
 
   constructor() {
     this.client = new DefaultPoseidon(`${location.protocol}//${location.host}/api`, fetch['default']);
   }
 
   ngOnInit(): void {
+    this.charts = new Map<Repo, Chart[]>();
     this.client.repos({}).then(value => {
       this.repos = value.repos;
+      value.repos.forEach(repo => {
+        this.client.charts(repo).then(results => {
+          this.charts.set(repo, results.charts);
+        });
+      });
     });
   }
 

@@ -3,133 +3,113 @@
 
 ## Table of Contents
 
-- [kraken.proto](#kraken.proto)
-    - [Cluster](#redsail.bosn.Cluster)
-    - [ClustersRequest](#redsail.bosn.ClustersRequest)
-    - [ClustersResponse](#redsail.bosn.ClustersResponse)
-    - [Release](#redsail.bosn.Release)
-    - [ReleaseRequest](#redsail.bosn.ReleaseRequest)
-    - [ReleaseResponse](#redsail.bosn.ReleaseResponse)
-    - [Releases](#redsail.bosn.Releases)
+- [poseidon.proto](#poseidon.proto)
+    - [Chart](#redsail.bosn.Chart)
+    - [ChartVersion](#redsail.bosn.ChartVersion)
+    - [ChartsResponse](#redsail.bosn.ChartsResponse)
+    - [Repo](#redsail.bosn.Repo)
+    - [ReposRequest](#redsail.bosn.ReposRequest)
+    - [ReposResponse](#redsail.bosn.ReposResponse)
   
-    - [Status](#redsail.bosn.Status)
-  
-    - [Kraken](#redsail.bosn.Kraken)
+    - [Poseidon](#redsail.bosn.Poseidon)
   
 - [Scalar Value Types](#scalar-value-types)
 
 
 
-<a name="kraken.proto"></a>
+<a name="poseidon.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## kraken.proto
-Kraken is the service managing external cluster connections.
-The api can be hit at /api/redsail.bosn.Kraken/&lt;Method&gt;.
+## poseidon.proto
+Poseidon is the service concerned with managing helm repos and charts.
+The api can be hit at /api/redsail.bosn.Poseidon/&lt;Method&gt;.
 
 
-<a name="redsail.bosn.Cluster"></a>
+<a name="redsail.bosn.Chart"></a>
 
-### Cluster
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | name of the cluster |
-| endpoint | [string](#string) |  | the cluster&#39;s api server |
-| ready | [bool](#bool) |  | if the cluster is ready (checking each node for Ready status) |
-
-
-
-
-
-
-<a name="redsail.bosn.ClustersRequest"></a>
-
-### ClustersRequest
-
-
-
-
-
-
-
-<a name="redsail.bosn.ClustersResponse"></a>
-
-### ClustersResponse
+### Chart
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| clusters | [Cluster](#redsail.bosn.Cluster) | repeated | the list of clusters |
+| name | [string](#string) |  | the chart name |
+| versions | [ChartVersion](#redsail.bosn.ChartVersion) | repeated | the versions available for this chart |
 
 
 
 
 
 
-<a name="redsail.bosn.Release"></a>
+<a name="redsail.bosn.ChartVersion"></a>
 
-### Release
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| namespace | [string](#string) |  |  |
-| app_version | [string](#string) |  |  |
-| chart_version | [string](#string) |  |  |
-| cluster_name | [string](#string) |  |  |
-| status | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="redsail.bosn.ReleaseRequest"></a>
-
-### ReleaseRequest
+### ChartVersion
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| clusters | [Cluster](#redsail.bosn.Cluster) | repeated | the clusters to get apps for |
+| chart_version | [string](#string) |  | the chart version |
+| app_version | [string](#string) |  | the chart&#39;s default app version |
+| description | [string](#string) |  | description of the chart |
+| url | [string](#string) |  | the url for this specific version of the chart |
 
 
 
 
 
 
-<a name="redsail.bosn.ReleaseResponse"></a>
+<a name="redsail.bosn.ChartsResponse"></a>
 
-### ReleaseResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| release_lists | [Releases](#redsail.bosn.Releases) | repeated |  |
-
-
-
-
-
-
-<a name="redsail.bosn.Releases"></a>
-
-### Releases
+### ChartsResponse
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-| chart | [string](#string) |  |  |
-| releases | [Release](#redsail.bosn.Release) | repeated |  |
+| charts | [Chart](#redsail.bosn.Chart) | repeated | the list of charts |
+
+
+
+
+
+
+<a name="redsail.bosn.Repo"></a>
+
+### Repo
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | name of the repo |
+| endpoint | [string](#string) |  | the endpoint for the repo |
+| ready | [bool](#bool) |  | if the repo is ready (checking by getting index.yaml) |
+
+
+
+
+
+
+<a name="redsail.bosn.ReposRequest"></a>
+
+### ReposRequest
+
+
+
+
+
+
+
+<a name="redsail.bosn.ReposResponse"></a>
+
+### ReposResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| repos | [Repo](#redsail.bosn.Repo) | repeated | the list of currently configured repositories |
 
 
 
@@ -137,41 +117,20 @@ The api can be hit at /api/redsail.bosn.Kraken/&lt;Method&gt;.
 
  
 
-
-<a name="redsail.bosn.Status"></a>
-
-### Status
-the helm status of the release
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| unknown | 0 |  |
-| deployed | 1 |  |
-| uninstalled | 2 |  |
-| superseded | 3 |  |
-| failed | 4 |  |
-| uninstalling | 5 |  |
-| pending_install | 6 |  |
-| pending_upgrade | 7 |  |
-| pending_rollback | 8 |  |
-
-
  
 
  
 
 
-<a name="redsail.bosn.Kraken"></a>
+<a name="redsail.bosn.Poseidon"></a>
 
-### Kraken
+### Poseidon
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Clusters | [ClustersRequest](#redsail.bosn.ClustersRequest) | [ClustersResponse](#redsail.bosn.ClustersResponse) | gets all clusters currently configured and their status |
-| ClusterStatus | [Cluster](#redsail.bosn.Cluster) | [Cluster](#redsail.bosn.Cluster) | gets the status for a single cluster |
-| Releases | [ReleaseRequest](#redsail.bosn.ReleaseRequest) | [ReleaseResponse](#redsail.bosn.ReleaseResponse) | gets all applications for the clusters passed |
-| ReleaseStatus | [Release](#redsail.bosn.Release) | [Release](#redsail.bosn.Release) | gets the status for a single application in a single cluster |
+| Charts | [Repo](#redsail.bosn.Repo) | [ChartsResponse](#redsail.bosn.ChartsResponse) | gets all the charts for this repository |
+| Repos | [ReposRequest](#redsail.bosn.ReposRequest) | [ReposResponse](#redsail.bosn.ReposResponse) | gets all the currently configured repositories |
 
  
 

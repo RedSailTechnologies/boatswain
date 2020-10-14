@@ -6,12 +6,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/redsailtechnologies/boatswain/pkg/logger"
-
 	"github.com/twitchtv/twirp"
 
 	"github.com/redsailtechnologies/boatswain/pkg/kraken"
-	rpc "github.com/redsailtechnologies/boatswain/rpc/kraken"
+	"github.com/redsailtechnologies/boatswain/pkg/logger"
+	"github.com/redsailtechnologies/boatswain/pkg/poseidon"
+	krakenRPC "github.com/redsailtechnologies/boatswain/rpc/kraken"
+	poseidonRPC "github.com/redsailtechnologies/boatswain/rpc/poseidon"
 )
 
 func main() {
@@ -19,14 +20,25 @@ func main() {
 	flag.StringVar(&configFile, "config", "", "kraken config file path")
 	flag.Parse()
 
-	config := &kraken.Config{}
-	if err := config.YAML(configFile); err != nil {
-		logger.Fatal("could not read configuration")
+	// Kraken
+	krakenConfig := &kraken.Config{}
+	if err := krakenConfig.YAML(configFile); err != nil {
+		logger.Fatal("could not read kraken configuration")
 	}
 
-	krakenServer := kraken.New(config)
-	krakenTwirp := rpc.NewKrakenServer(krakenServer, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+	krakenServer := kraken.New(krakenConfig)
+	krakenTwirp := krakenRPC.NewKrakenServer(krakenServer, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
 
+	// Poseidon
+	poseidonConfig := &poseidon.Config{}
+	if err := poseidonConfig.YAML(configFile); err != nil {
+		logger.Fatal("could not read poseidon configuration")
+	}
+
+	poseidonServer := poseidon.New(poseidonConfig)
+	poseidonTwirp := poseidonRPC.NewPoseidonServer(poseidonServer, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+
+	// Triton
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		logger.Fatal("could not read configuration")
@@ -35,6 +47,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle(krakenTwirp.PathPrefix(), krakenTwirp)
+	mux.Handle(poseidonTwirp.PathPrefix(), poseidonTwirp)
 	mux.Handle("/", tritonServer)
 
 	logger.Info("starting leviathan server...ITS HUUUUUUUUUUGE!")

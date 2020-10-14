@@ -1,6 +1,5 @@
-import { AfterViewInit, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
-import { MatSort } from '@angular/material/sort';
-import { Cluster, DefaultKraken, Kraken } from 'src/app/services/kraken/service';
+import { Component, OnInit } from '@angular/core';
+import { Cluster, DefaultKraken, Kraken } from 'src/app/services/kraken/kraken';
 import * as fetch from 'isomorphic-fetch';
 
 @Component({
