@@ -32,6 +32,12 @@ data:
                     route:
                       cluster: kraken
                   {{- end }}
+                  {{- if has "poseidon" .Values.routing.services }}
+                  - match:
+                      prefix: "/api/redsail.bosn.Poseidon"
+                    route:
+                      cluster: poseidon
+                  {{- end }}
                   {{- if has "triton" .Values.routing.services }}
                   - match:
                       prefix: "/"
@@ -51,6 +57,18 @@ data:
         hosts:
           - socket_address:
               address: kraken
+              port_value: 80
+      {{- end }}
+      {{- if has "poseidon" .Values.routing.services }}
+      - name: poseidon
+        type: STRICT_DNS
+        connect_timeout: {{ .Values.routing.connectTimeout }}
+        dns_lookup_family: V4_ONLY
+        lb_policy: LEAST_REQUEST
+        http_protocol_options: {}
+        hosts:
+          - socket_address:
+              address: poseidon
               port_value: 80
       {{- end }}
       {{- if has "triton" .Values.routing.services }}

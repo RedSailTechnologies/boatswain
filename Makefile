@@ -65,6 +65,7 @@ leviathan: echo proto
 ifeq ($(DEBUG),true)
 	@cp $(LEVI_CMD)leviathan-debug-config.yaml $(LEVI_OUT)leviathan-debug-config.yaml
 	./bin/leviathan --config $(LEVI_OUT)leviathan-debug-config.yaml
+else
 endif
 
 ## poseidon: builds the poseidon image
@@ -75,13 +76,13 @@ poseidon: echo
 proto: echo
 	@echo Generating service code and docs
 	@rm -rf $(GEN_DOC); mkdir $(GEN_DOC); 
-	@for service in $$(find services/ -mindepth 1 -maxdepth 1 -printf '%f\n'); do \
+	@for service in $$(find services/ -mindepth 1 -maxdepth 1 -printf '%f\n' | cut -d '.' -f1); do \
 	  rm -rf $(GEN_GO)$$service; rm -rf $(GEN_TS)$$service; \
 	  mkdir $(GEN_GO)$$service; mkdir $(GEN_TS)$$service; \
-	  protoc -I services/$$service --go_out=$(GEN_GO)$$service --go_opt=paths=source_relative --twirp_out=$(GEN_GO)$$service --twirp_opt=paths=source_relative \
+	  protoc -I services/ --go_out=$(GEN_GO)$$service --go_opt=paths=source_relative --twirp_out=$(GEN_GO)$$service --twirp_opt=paths=source_relative \
 	    --twirp_typescript_out=version=v6:$(GEN_TS)/$$service \
 		--doc_out=$(GEN_DOC) --doc_opt=markdown,$$service.md \
-	    $$(find services/$$service -iname "*.proto"); \
+	    $$service.proto; \
 	done
 
 ## push: pushes docker images
@@ -91,11 +92,11 @@ push:
 	  docker push $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
 	done
 
-template: proto
+template:
 ifeq ($(DEBUG),true)
 	@echo Building $(PROJECT_NAME) debug container
 	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=debug --tag $(PROJECT_NAME):$(DOCKER_TAG)
-	@bash -c "trap 'docker kill $(PROJECT_NAME)-debug; docker rm $(PROJECT_NAME)-debug > /dev/null' 0;(docker run -p 8080:8080 -p 8081:8081 -p 40000:40000 --name $(PROJECT_NAME)-debug $(PROJECT_NAME):$(DOCKER_TAG) &) && sleep infinity"
+	@bash -c "trap 'docker kill $(PROJECT_NAME)-debug; docker rm $(PROJECT_NAME)-debug > /dev/null' 0;(docker run -p 8080:8080 -p 40000:40000 --name $(PROJECT_NAME)-debug $(PROJECT_NAME):$(DOCKER_TAG) &) && sleep infinity"
 else
 	@echo Building $(PROJECT_NAME) release container
 	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=release --tag $(DOCKER_REPO)$(PROJECT_NAME):$(DOCKER_TAG)

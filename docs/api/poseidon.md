@@ -7,6 +7,8 @@
     - [Chart](#redsail.bosn.Chart)
     - [ChartVersion](#redsail.bosn.ChartVersion)
     - [ChartsResponse](#redsail.bosn.ChartsResponse)
+    - [DownloadRequest](#redsail.bosn.DownloadRequest)
+    - [File](#redsail.bosn.File)
     - [Repo](#redsail.bosn.Repo)
     - [ReposRequest](#redsail.bosn.ReposRequest)
     - [ReposResponse](#redsail.bosn.ReposResponse)
@@ -49,6 +51,7 @@ The api can be hit at /api/redsail.bosn.Poseidon/&lt;Method&gt;.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  |  |
 | chart_version | [string](#string) |  | the chart version |
 | app_version | [string](#string) |  | the chart&#39;s default app version |
 | description | [string](#string) |  | description of the chart |
@@ -68,6 +71,39 @@ The api can be hit at /api/redsail.bosn.Poseidon/&lt;Method&gt;.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | charts | [Chart](#redsail.bosn.Chart) | repeated | the list of charts |
+
+
+
+
+
+
+<a name="redsail.bosn.DownloadRequest"></a>
+
+### DownloadRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| chart_name | [string](#string) |  |  |
+| chart_version | [string](#string) |  |  |
+| repo_name | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="redsail.bosn.File"></a>
+
+### File
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  |  |
+| contents | [bytes](#bytes) |  |  |
 
 
 
@@ -130,6 +166,7 @@ The api can be hit at /api/redsail.bosn.Poseidon/&lt;Method&gt;.
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
 | Charts | [Repo](#redsail.bosn.Repo) | [ChartsResponse](#redsail.bosn.ChartsResponse) | gets all the charts for this repository |
+| DownloadChart | [DownloadRequest](#redsail.bosn.DownloadRequest) | [File](#redsail.bosn.File) | downloads the chart |
 | Repos | [ReposRequest](#redsail.bosn.ReposRequest) | [ReposResponse](#redsail.bosn.ReposResponse) | gets all the currently configured repositories |
 
  

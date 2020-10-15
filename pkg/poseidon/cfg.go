@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 
+	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/repo"
 
@@ -14,6 +15,14 @@ import (
 type RepoConfig struct {
 	Name     string `yaml:"name"`
 	Endpoint string `yaml:"endpoint"`
+}
+
+// ToChartPathOptions returns the chart path options for helm
+func (c *RepoConfig) ToChartPathOptions() *action.ChartPathOptions {
+	return &action.ChartPathOptions{
+		InsecureSkipTLSverify: true,
+		RepoURL:               c.Endpoint,
+	}
 }
 
 // ToChartRepo takes the configuration and makes it into a working repo
@@ -37,7 +46,8 @@ func (c *RepoConfig) ToChartRepo() (*repo.ChartRepository, error) {
 
 // Config is a list of configurations
 type Config struct {
-	Repos []RepoConfig `yaml:"repos"`
+	Repos    []RepoConfig `yaml:"repos"`
+	CacheDir string       `yaml:"cacheDir"`
 }
 
 // YAML takes a relative filename and returns the config found in it

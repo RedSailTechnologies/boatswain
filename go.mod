@@ -3,6 +3,7 @@ module github.com/redsailtechnologies/boatswain
 go 1.15
 
 require (
+	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/evanphx/json-patch v4.2.0+incompatible // indirect
 	github.com/golang/protobuf v1.4.2
 	github.com/google/uuid v1.1.2
@@ -21,5 +22,7 @@ require (
 	k8s.io/apimachinery v0.18.8
 	k8s.io/cli-runtime v0.18.8
 	k8s.io/client-go v0.18.8
+	k8s.io/helm v2.16.12+incompatible
 	rsc.io/letsencrypt v0.0.3 // indirect
+	sigs.k8s.io/yaml v1.2.0
 )

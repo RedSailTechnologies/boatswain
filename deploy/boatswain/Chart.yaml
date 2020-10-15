@@ -11,6 +11,10 @@ dependencies:
     condition: kraken.enabled
     repository: "file://../kraken"
     version: "~0.1.0"
+  - name: "poseidon"
+    condition: poseidon.enabled
+    repository: "file://../poseidon"
+    version: "~0.1.0"
   - name: "mate"
     condition: mate.enabled
     repository: "file://../mate"

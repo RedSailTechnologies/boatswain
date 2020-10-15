@@ -11,6 +11,7 @@
     - [ReleaseRequest](#redsail.bosn.ReleaseRequest)
     - [ReleaseResponse](#redsail.bosn.ReleaseResponse)
     - [Releases](#redsail.bosn.Releases)
+    - [UpgradeReleaseRequest](#redsail.bosn.UpgradeReleaseRequest)
   
     - [Status](#redsail.bosn.Status)
   
@@ -78,11 +79,13 @@ The api can be hit at /api/redsail.bosn.Kraken/&lt;Method&gt;.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| namespace | [string](#string) |  |  |
-| app_version | [string](#string) |  |  |
-| chart_version | [string](#string) |  |  |
-| cluster_name | [string](#string) |  |  |
-| status | [string](#string) |  |  |
+| name | [string](#string) |  | the name of this release |
+| chart | [string](#string) |  | the chart this release deploys |
+| namespace | [string](#string) |  | the namespace for this release |
+| chart_version | [string](#string) |  | the chart version for this release |
+| app_version | [string](#string) |  | the app version for this release |
+| cluster_name | [string](#string) |  | the cluster this release applies to |
+| status | [string](#string) |  | the (helm) status of this release |
 
 
 
@@ -112,7 +115,7 @@ The api can be hit at /api/redsail.bosn.Kraken/&lt;Method&gt;.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| release_lists | [Releases](#redsail.bosn.Releases) | repeated |  |
+| release_lists | [Releases](#redsail.bosn.Releases) | repeated | the list of releases for the cluster |
 
 
 
@@ -127,9 +130,31 @@ The api can be hit at /api/redsail.bosn.Kraken/&lt;Method&gt;.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | the name of these releases |
+| chart | [string](#string) |  | the chart these releases deploy |
+| releases | [Release](#redsail.bosn.Release) | repeated | the releases |
+
+
+
+
+
+
+<a name="redsail.bosn.UpgradeReleaseRequest"></a>
+
+### UpgradeReleaseRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  |  |
 | chart | [string](#string) |  |  |
-| releases | [Release](#redsail.bosn.Release) | repeated |  |
+| namespace | [string](#string) |  |  |
+| chart_version | [string](#string) |  |  |
+| app_version | [string](#string) |  |  |
+| cluster_name | [string](#string) |  |  |
+| repo_name | [string](#string) |  |  |
+| values | [string](#string) |  |  |
 
 
 
@@ -172,6 +197,7 @@ the helm status of the release
 | ClusterStatus | [Cluster](#redsail.bosn.Cluster) | [Cluster](#redsail.bosn.Cluster) | gets the status for a single cluster |
 | Releases | [ReleaseRequest](#redsail.bosn.ReleaseRequest) | [ReleaseResponse](#redsail.bosn.ReleaseResponse) | gets all applications for the clusters passed |
 | ReleaseStatus | [Release](#redsail.bosn.Release) | [Release](#redsail.bosn.Release) | gets the status for a single application in a single cluster |
+| UpgradeRelease | [UpgradeReleaseRequest](#redsail.bosn.UpgradeReleaseRequest) | [Release](#redsail.bosn.Release) | upgrades the release with the given parameters |
 
  
 

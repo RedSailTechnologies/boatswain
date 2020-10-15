@@ -1,15 +1,20 @@
 package kraken
 
 import (
+	"bytes"
 	"errors"
 
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/release"
+
+	"github.com/redsailtechnologies/boatswain/rpc/poseidon"
 )
 
 type helmAgent interface {
 	getReleases(*action.Configuration, string) ([]*release.Release, error)
 	getReleaseStatus(*action.Configuration, string) (*release.Release, error)
+	upgradeRelease(*action.Configuration, string, *poseidon.File, string, map[string]interface{}) (*release.Release, error)
 }
 
 type defaultHelmAgent struct{}
@@ -31,4 +36,15 @@ func (h defaultHelmAgent) getReleases(cfg *action.Configuration, cluster string)
 
 func (h defaultHelmAgent) getReleaseStatus(cfg *action.Configuration, cluster string) (*release.Release, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (h defaultHelmAgent) upgradeRelease(cfg *action.Configuration, n string, f *poseidon.File, ns string, vals map[string]interface{}) (*release.Release, error) {
+	chart, err := loader.LoadArchive(bytes.NewReader(f.Contents))
+	if err != nil {
+		return nil, err
+	}
+
+	upgrade := action.NewUpgrade(cfg)
+	upgrade.Namespace = ns
+	return upgrade.Run(n, chart, vals)
 }

@@ -2,8 +2,10 @@ package kraken
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 
+	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/action"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -25,7 +27,7 @@ type Config struct {
 }
 
 // ToHelmClient gets a helm action configuration given the cluster's name
-func (c *Config) ToHelmClient(clusterName string) (*action.Configuration, error) {
+func (c *Config) ToHelmClient(clusterName string, namespace string) (*action.Configuration, error) {
 	cluster, err := c.getClusterConfig(clusterName)
 	if err != nil {
 		return nil, err
@@ -39,7 +41,7 @@ func (c *Config) ToHelmClient(clusterName string) (*action.Configuration, error)
 		Insecure: &[]bool{true}[0],
 	}
 	actionConfig := new(action.Configuration)
-	if err := actionConfig.Init(flags, "", "secrets", nil); err != nil {
+	if err := actionConfig.Init(flags, namespace, "secrets", helmLogger); err != nil {
 		return nil, err
 	}
 
@@ -84,4 +86,8 @@ func (c *Config) getClusterConfig(clusterName string) (*ClusterConfig, error) {
 		}
 	}
 	return nil, errors.New("cluster not found")
+}
+
+func helmLogger(template string, args ...interface{}) {
+	logger.Info(fmt.Sprintf(template, args...))
 }

@@ -10,6 +10,9 @@ service Poseidon {
     // gets all the charts for this repository
     rpc Charts (Repo) returns (ChartsResponse);
 
+    // downloads the chart
+    rpc DownloadChart (DownloadRequest) returns (File);
+
     // gets all the currently configured repositories
     rpc Repos (ReposRequest) returns (ReposResponse);
 }
@@ -20,14 +23,26 @@ message Chart {
 }
 
 message ChartVersion {
-    string chart_version = 1; // the chart version
-    string app_version = 2; // the chart's default app version
-    string description = 3; // description of the chart
-    string url = 4; // the url for this specific version of the chart
+    string name = 1;
+    string chart_version = 2; // the chart version
+    string app_version = 3; // the chart's default app version
+    string description = 4; // description of the chart
+    string url = 5; // the url for this specific version of the chart
 }
 
 message ChartsResponse {
     repeated Chart charts = 1; // the list of charts
+}
+
+message DownloadRequest {
+    string chart_name = 1;
+    string chart_version = 2;
+    string repo_name = 3;
+}
+
+message File {
+    string name = 1;
+    bytes contents = 2;
 }
 
 message Repo {

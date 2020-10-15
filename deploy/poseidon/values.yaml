@@ -1,19 +1,20 @@
 
-# the default envoy routing configuration
-# this shouldn't need to be chnaged under normal configurations
-routing:
-  services:
-    - triton
-    - kraken
-    - poseidon
-  connectTimeout: 0.25s
+config:
+  enabled: true
+  repos: []
+  # preconfigure repos here
+  # - name: <repo_name>
+    # endpoint: <repo_url>
+  # the name of the place poseidon stores charts locally
+  cacheDir: /home/poseidon/charts
 
 replicaCount: 1
 
 image:
-  repository: envoyproxy/envoy
-  pullPolicy: Always
-  tag: v1.16-latest
+  repository: nginx
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: ""
@@ -43,7 +44,7 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 8080
+  port: 80
 
 ingress:
   enabled: false

@@ -6,6 +6,7 @@
 *.dylib
 **/main
 **/bin
+**/temp
 
 # Test binary, built with `go test -c`
 *.test
@@ -20,6 +21,7 @@ deploy/boatswain/Chart.lock
 # Dev stuff - TODO AdamP figure out a way around this
 **/**-debug-config.yaml
 temp.yaml
+**/__debug_bin
 
 # Editor stuff
 **/.vscode/

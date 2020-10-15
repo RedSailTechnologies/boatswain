@@ -18,6 +18,9 @@ service Kraken {
 
     // gets the status for a single application in a single cluster
     rpc ReleaseStatus (Release) returns (Release);
+
+    // upgrades the release with the given parameters
+    rpc UpgradeRelease(UpgradeReleaseRequest) returns (Release);
 }
 
 message Cluster {
@@ -33,17 +36,19 @@ message ClustersResponse {
 }
 
 message Release {
-    string namespace = 1;
-    string app_version = 2;
-    string chart_version = 3;
-    string cluster_name = 4;
-    string status = 5;
+    string name = 1; // the name of this release
+    string chart = 2; // the chart this release deploys
+    string namespace = 3; // the namespace for this release
+    string chart_version = 4; // the chart version for this release
+    string app_version = 5; // the app version for this release
+    string cluster_name = 6; // the cluster this release applies to
+    string status = 7; // the (helm) status of this release
 }
 
 message Releases {
-    string name = 1;
-    string chart = 2;
-    repeated Release releases = 3;
+    string name = 1; // the name of these releases
+    string chart = 2; // the chart these releases deploy
+    repeated Release releases = 3; // the releases
 }
 
 message ReleaseRequest {
@@ -51,7 +56,18 @@ message ReleaseRequest {
 }
 
 message ReleaseResponse {
-    repeated Releases release_lists = 1;
+    repeated Releases release_lists = 1; // the list of releases for the cluster
+}
+
+message UpgradeReleaseRequest {
+    string name = 1;
+    string chart = 2;
+    string namespace = 3;
+    string chart_version = 4;
+    string app_version = 5;
+    string cluster_name = 6;
+    string repo_name = 7;
+    string values = 8;
 }
 
 // the helm status of the release

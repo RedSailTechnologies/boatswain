@@ -25,11 +25,14 @@ export class ReleasesComponent implements OnInit {
     });
   }
 
-  upgradeDialog(name: string, chart: string, cluster: Release) {
+  upgradeDialog(release: Release) {
     const dialog = this.dialog.open(UpdateDialogComponent, {
       minWidth: "33%",
       panelClass: 'update-dialog-container',
-      data: {"name": name, "chart": chart, "release": cluster}
+      data: release
+    });
+    dialog.afterClosed().subscribe(val => {
+      release = val; // TODO AdamP - this doesn't actually update the row...
     })
   }
 }

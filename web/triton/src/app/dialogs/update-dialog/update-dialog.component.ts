@@ -1,9 +1,11 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { DefaultKraken, Kraken, Release } from 'src/app/services/kraken/kraken';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { DefaultKraken, Kraken, Release, UpgradeReleaseRequest } from 'src/app/services/kraken/kraken';
 import { Chart, ChartVersion, DefaultPoseidon, Poseidon, Repo } from 'src/app/services/poseidon/poseidon';
 import { FormControl, FormGroup } from '@angular/forms';
 import * as fetch from 'isomorphic-fetch';
+import { BusyComponent } from '../busy/busy.component';
+import { MessageDialogComponent } from '../message-dialog/message-dialog.component';
 
 @Component({
   selector: 'app-update-dialog',
@@ -14,8 +16,6 @@ export class UpdateDialogComponent implements OnInit {
   private kraken: Kraken;
   private poseidon: Poseidon;
 
-  public name: string;
-  public chart: string;
   public release: Release;
 
   public repos: Repo[];
@@ -30,13 +30,14 @@ export class UpdateDialogComponent implements OnInit {
     additionalValues: new FormControl('')
   });
 
-  constructor(public dialog: MatDialogRef<UpdateDialogComponent>, @Inject(MAT_DIALOG_DATA) data) {
-    this.name = data['name'];
-    this.chart = data['chart'];
-    this.release = data['release'];
-    this.repos = data['repos'];
+  constructor(public dialog: MatDialogRef<UpdateDialogComponent>, 
+              @Inject(MAT_DIALOG_DATA) data: Release,
+              private spinner: MatDialog,
+              private error: MatDialog) {
+    this.release = data;
     this.kraken = new DefaultKraken(`${location.protocol}//${location.host}/api`, fetch['default']);
     this.poseidon = new DefaultPoseidon(`${location.protocol}//${location.host}/api`, fetch['default']);
+    console.log(location.host)
   }
 
   ngOnInit() : void {
@@ -69,8 +70,40 @@ export class UpdateDialogComponent implements OnInit {
   repoUpdated(repo: Repo) {
     this.poseidon.charts(repo).then(value => {
       this.charts = value.charts;
-      this.upgradeForm.controls['chart'].setValue(this.chart);
+      this.upgradeForm.controls['chart'].setValue(this.release.chart);
       this.upgradeForm.controls['chart'].enable();
     })
+  }
+
+  submit() {
+    let spinnerRef: MatDialogRef<BusyComponent> = this.spinner.open(BusyComponent, {
+      panelClass: 'transparent',
+      disableClose: true
+    });
+    var form = this.upgradeForm.getRawValue();
+    this.kraken.upgradeRelease(<UpgradeReleaseRequest>{
+      name: this.release.name,
+      chart: form['chart'],
+      namespace: this.release.namespace,
+      chartVersion: form['chartVersion'],
+      appVersion: form['appVersion'],
+      clusterName: this.release.clusterName,
+      repoName: form['repo'],
+      values: form['additionalValues']
+    }).then(val => {
+      console.log(val)
+      this.dialog.close(val);
+      spinnerRef.close();
+    }).catch(error => {
+      console.log(error)
+      spinnerRef.close();
+      let errorRef = this.error.open(MessageDialogComponent, {
+        panelClass: 'message-box',
+        data: {
+          "reason": "Error",
+          "message": "An error occured.\n" + error
+        }
+      })
+    });
   }
 }

@@ -2,6 +2,7 @@ package poseidon
 
 import (
 	"context"
+	"os"
 
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	pb "github.com/redsailtechnologies/boatswain/rpc/poseidon"
@@ -16,6 +17,15 @@ type Service struct {
 
 // New creates the Service with the given configuraiton
 func New(c *Config) *Service {
+	if _, err := os.Stat(c.CacheDir); os.IsNotExist(err) {
+		logger.Info("creating directory for chart cache", "dir", c.CacheDir)
+		if err := os.Mkdir(c.CacheDir, 0700); err != nil {
+			logger.Fatal("could not create chart cache directory", "error", err)
+		}
+	} else if err != nil {
+		logger.Fatal("could not check existence of chart cache directory", "error", err)
+	}
+
 	return &Service{
 		config:    c,
 		repoAgent: defaultRepoAgent{},
@@ -39,7 +49,7 @@ func (s *Service) Charts(ctx context.Context, repo *pb.Repo) (*pb.ChartsResponse
 	chartMap, err := s.repoAgent.getCharts(helmRepo)
 	if err != nil {
 		logger.Error("error getting charts", "error", err)
-		return nil, twirp.InternalError("error getting charts from helm repo")
+		return nil, twirp.NotFoundError("error getting charts from helm repo")
 	}
 
 	charts := make([]*pb.Chart, 0)
@@ -48,6 +58,7 @@ func (s *Service) Charts(ctx context.Context, repo *pb.Repo) (*pb.ChartsResponse
 
 		for _, version := range val {
 			versions = append(versions, &pb.ChartVersion{
+				Name:         key,
 				ChartVersion: version.Metadata.Version,
 				AppVersion:   version.Metadata.AppVersion,
 				Description:  version.Metadata.Description,
@@ -62,6 +73,23 @@ func (s *Service) Charts(ctx context.Context, repo *pb.Repo) (*pb.ChartsResponse
 	}
 
 	return &pb.ChartsResponse{Charts: charts}, nil
+}
+
+// DownloadChart gets the chart file from the repo
+func (s *Service) DownloadChart(ctx context.Context, req *pb.DownloadRequest) (*pb.File, error) {
+	config, err := s.config.getRepoConfig(req.RepoName)
+	if err != nil {
+		logger.Error("error getting repo config", "error", err)
+		return nil, twirp.InternalError("error getting repo config")
+	}
+
+	file, err := s.repoAgent.downloadChart(req.ChartName, req.ChartVersion, s.config.CacheDir, config.Endpoint, config.ToChartPathOptions())
+	if err != nil {
+		logger.Error("error downloading chart", "error", err)
+		return nil, twirp.InternalError("error downloading chart")
+	}
+
+	return file, nil
 }
 
 // Repos gets all helm repos configured

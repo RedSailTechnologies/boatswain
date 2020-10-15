@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "poseidon.fullname" . }}
+  namespace: {{ .Release.namespace }}
+  labels:
+    {{ include "poseidon.labels" . | nindent 4 }}
+stringData:
+  config.yaml: |
+    repos:
+    {{- range $repo := .Values.config.repos }}
+      - name: {{ $repo.name }}
+        endpoint: {{ $repo.endpoint }}
+    {{- end }}
+    cacheDir: {{ .Values.config.cacheDir }}

@@ -71,18 +71,22 @@ const JSONToClustersResponse = (m: ClustersResponse | ClustersResponseJSON): Clu
 };
 
 export interface Release {
+    name: string;
+    chart: string;
     namespace: string;
-    appVersion: string;
     chartVersion: string;
+    appVersion: string;
     clusterName: string;
     status: string;
     
 }
 
 interface ReleaseJSON {
+    name: string;
+    chart: string;
     namespace: string;
-    app_version: string;
     chart_version: string;
+    app_version: string;
     cluster_name: string;
     status: string;
     
@@ -91,9 +95,11 @@ interface ReleaseJSON {
 
 const ReleaseToJSON = (m: Release): ReleaseJSON => {
     return {
+        name: m.name,
+        chart: m.chart,
         namespace: m.namespace,
-        app_version: m.appVersion,
         chart_version: m.chartVersion,
+        app_version: m.appVersion,
         cluster_name: m.clusterName,
         status: m.status,
         
@@ -103,9 +109,11 @@ const ReleaseToJSON = (m: Release): ReleaseJSON => {
 const JSONToRelease = (m: Release | ReleaseJSON): Release => {
     
     return {
+        name: m.name,
+        chart: m.chart,
         namespace: m.namespace,
-        appVersion: (((m as Release).appVersion) ? (m as Release).appVersion : (m as ReleaseJSON).app_version),
         chartVersion: (((m as Release).chartVersion) ? (m as Release).chartVersion : (m as ReleaseJSON).chart_version),
+        appVersion: (((m as Release).appVersion) ? (m as Release).appVersion : (m as ReleaseJSON).app_version),
         clusterName: (((m as Release).clusterName) ? (m as Release).clusterName : (m as ReleaseJSON).cluster_name),
         status: m.status,
         
@@ -174,6 +182,45 @@ const JSONToReleaseResponse = (m: ReleaseResponse | ReleaseResponseJSON): Releas
     };
 };
 
+export interface UpgradeReleaseRequest {
+    name: string;
+    chart: string;
+    namespace: string;
+    chartVersion: string;
+    appVersion: string;
+    clusterName: string;
+    repoName: string;
+    values: string;
+    
+}
+
+interface UpgradeReleaseRequestJSON {
+    name: string;
+    chart: string;
+    namespace: string;
+    chart_version: string;
+    app_version: string;
+    cluster_name: string;
+    repo_name: string;
+    values: string;
+    
+}
+
+
+const UpgradeReleaseRequestToJSON = (m: UpgradeReleaseRequest): UpgradeReleaseRequestJSON => {
+    return {
+        name: m.name,
+        chart: m.chart,
+        namespace: m.namespace,
+        chart_version: m.chartVersion,
+        app_version: m.appVersion,
+        cluster_name: m.clusterName,
+        repo_name: m.repoName,
+        values: m.values,
+        
+    };
+};
+
 export interface Kraken {
     clusters: (clustersRequest: ClustersRequest) => Promise<ClustersResponse>;
     
@@ -182,6 +229,8 @@ export interface Kraken {
     releases: (releaseRequest: ReleaseRequest) => Promise<ReleaseResponse>;
     
     releaseStatus: (release: Release) => Promise<Release>;
+    
+    upgradeRelease: (upgradeReleaseRequest: UpgradeReleaseRequest) => Promise<Release>;
     
 }
 
@@ -246,6 +295,21 @@ export class DefaultKraken implements Kraken {
         let body: Release | ReleaseJSON = release;
         if (!this.writeCamelCase) {
             body = ReleaseToJSON(release);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToRelease);
+        });
+    }
+    
+    upgradeRelease(upgradeReleaseRequest: UpgradeReleaseRequest): Promise<Release> {
+        const url = this.hostname + this.pathPrefix + "UpgradeRelease";
+        let body: UpgradeReleaseRequest | UpgradeReleaseRequestJSON = upgradeReleaseRequest;
+        if (!this.writeCamelCase) {
+            body = UpgradeReleaseRequestToJSON(upgradeReleaseRequest);
         }
         return this.fetch(createTwirpRequest(url, body)).then((resp) => {
             if (!resp.ok) {

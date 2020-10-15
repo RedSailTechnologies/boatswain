@@ -24,6 +24,8 @@ import { HomeComponent } from './pages/home/home.component';
 import { ReleasesComponent } from './pages/releases/releases.component';
 import { ReposComponent } from './pages/repos/repos.component';
 import { UpdateDialogComponent } from './dialogs/update-dialog/update-dialog.component';
+import { BusyComponent } from './dialogs/busy/busy.component';
+import { MessageDialogComponent } from './dialogs/message-dialog/message-dialog.component';
 
 @NgModule({
   declarations: [
@@ -32,7 +34,9 @@ import { UpdateDialogComponent } from './dialogs/update-dialog/update-dialog.com
     ClustersComponent,
     ReleasesComponent,
     ReposComponent,
-    UpdateDialogComponent
+    UpdateDialogComponent,
+    BusyComponent,
+    MessageDialogComponent
   ],
   imports: [
     AppRoutingModule,

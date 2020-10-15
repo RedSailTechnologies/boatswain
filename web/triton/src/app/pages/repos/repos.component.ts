@@ -21,9 +21,11 @@ export class ReposComponent implements OnInit {
     this.client.repos({}).then(value => {
       this.repos = value.repos;
       value.repos.forEach(repo => {
-        this.client.charts(repo).then(results => {
-          this.charts.set(repo, results.charts);
-        });
+        if (repo.ready) {
+          this.client.charts(repo).then(results => {
+            this.charts.set(repo, results.charts);
+          });
+        }
       });
     });
   }

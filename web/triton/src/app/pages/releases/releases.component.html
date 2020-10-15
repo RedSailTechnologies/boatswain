@@ -31,16 +31,16 @@
                 <ng-container matColumnDef="upgrade">
                     <th mat-header-cell *matHeaderCellDef> Actions </th>
                     <td mat-cell *matCellDef="let element">
-                        <button mat-icon-button aria-label="upgrade {{releases.name}}">
-                            <mat-icon color="accent" matTooltip="upgrade" (click)="upgradeDialog(releases.name, releases.chart, element)">upgrade</mat-icon>
+                        <button mat-icon-button>
+                            <mat-icon color="accent" matTooltip="upgrade" (click)="upgradeDialog(element)">upgrade</mat-icon>
                         </button>
-                        <button mat-icon-button aria-label="delete {{releases.name}}">
+                        <button mat-icon-button>
                             <mat-icon color="warn" matTooltip="uninstall (not implemented)">delete</mat-icon>
                         </button>
                     </td>
                 </ng-container>
-                <tr mat-header-row *matHeaderRowDef="['namespace', 'appVersion', 'chartVersion', 'clusterName', 'status', 'upgrade']"></tr>
-                <tr mat-row *matRowDef="let row; columns: ['namespace', 'appVersion', 'chartVersion', 'clusterName', 'status', 'upgrade'];"></tr>
+                <tr mat-header-row *matHeaderRowDef="['clusterName', 'namespace', 'appVersion', 'chartVersion', 'status', 'upgrade']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['clusterName', 'namespace', 'appVersion', 'chartVersion', 'status', 'upgrade'];"></tr>
             </table>
         </mat-expansion-panel>
     </mat-accordion>

@@ -26,7 +26,18 @@ func main() {
 		logger.Fatal("could not read kraken configuration")
 	}
 
-	krakenServer := kraken.New(krakenConfig)
+	ph := "localhost"
+	pp := "8080"
+	if err := os.Setenv("POSEIDON_SERVICE_HOST", "localhost"); err != nil {
+		logger.Fatal("could not set host env")
+	}
+	if err := os.Setenv("POSEIDON_SERVICE_PORT", "8080"); err != nil {
+		logger.Fatal("could not set host port")
+	}
+	pe := "http://" + ph + ":" + pp
+	poseidonClient := poseidonRPC.NewPoseidonProtobufClient(pe, &http.Client{}, twirp.WithClientPathPrefix("/api"))
+
+	krakenServer := kraken.New(krakenConfig, poseidonClient)
 	krakenTwirp := krakenRPC.NewKrakenServer(krakenServer, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
 
 	// Poseidon
@@ -48,7 +59,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle(krakenTwirp.PathPrefix(), krakenTwirp)
 	mux.Handle(poseidonTwirp.PathPrefix(), poseidonTwirp)
-	mux.Handle("/", tritonServer)
+	mux.Handle("/", tritonServer) // TODO AdamP - fix multiplexer
 
 	logger.Info("starting leviathan server...ITS HUUUUUUUUUUGE!")
 	logger.Fatal("server exited", "error", http.ListenAndServe(":8080", mux))
