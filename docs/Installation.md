@@ -35,4 +35,24 @@ poseidon:
     # add more helm repos here
     - name: redsail
       endpoint: https://redsailtechnologies.github.io/helm
+  cacheDir: ./temp
+```
+
+## Leviathan
+Download and extract leviathan-0.1.0.zip. The leviathan binary and static web content is located there. Run leviathan with --config <your-config-filepath>, config example here:
+```
+clusters:
+  - name: <cluster-name>
+    endpoint: <api-server-endpoint>
+    token: <token>
+    cert: |
+      -----BEGIN CERTIFICATE-----
+      ...(cert data)
+      -----END CERTIFICATE-----
+
+repos:
+  - name: redsail
+    endpoint: https://redsailtechnologies.github.io/helm
+cacheDir: ./temp
+
 ```
