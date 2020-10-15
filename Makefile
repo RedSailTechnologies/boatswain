@@ -65,7 +65,6 @@ leviathan: echo proto
 ifeq ($(DEBUG),true)
 	@cp $(LEVI_CMD)leviathan-debug-config.yaml $(LEVI_OUT)leviathan-debug-config.yaml
 	./bin/leviathan --config $(LEVI_OUT)leviathan-debug-config.yaml
-else
 endif
 
 ## poseidon: builds the poseidon image
