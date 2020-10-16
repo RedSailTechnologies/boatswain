@@ -109,7 +109,7 @@ else
 endif
 
 ## test: runs all unit tests
-test: echo
+test: echo proto
 	@echo TODO - run tests here
 
 ## version: FIXME

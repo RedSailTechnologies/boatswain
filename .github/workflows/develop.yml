@@ -7,13 +7,13 @@ on:
     tags: [ 'v*' ]
 
 jobs:
-  docker:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: test setting env
-        run: echo ::set-env name=TEST::test
+        run: echo "::set-output name=TEST::test"
       - name: test getting env
-        run: echo ${{ env.TEST }}
+        run: echo ${{ outputs.TEST }}
       - name: checkout
         uses: actions/checkout@v2
       - name: setup docker
@@ -39,6 +39,6 @@ jobs:
       - name: make test
         run: make test
       - name: make build
-        run: make all
+        run: make build
         env:
           DOCKER_REPO: redsailtechnologies/bosn-
