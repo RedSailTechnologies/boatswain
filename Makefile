@@ -17,7 +17,7 @@ WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
 ## all: builds the client and all services
-all: echo proto kraken poseidon client push
+all: echo proto kraken poseidon client
 
 ## clean: removes binaries, images, etc
 clean:
@@ -34,6 +34,7 @@ clean:
 	done
 
 ## client: builds the triton client
+
 client: echo
 ifeq ($(DEBUG),true)
 	@echo Serving debug triton client
