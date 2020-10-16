@@ -2,7 +2,7 @@ name: Development CI
 
 on:
   push:
-    branches: [ '*' ]
+    branches: [ 'main', 'feature/*' ] # TODO AdamP - remove feature
 
 jobs:
   docker:
