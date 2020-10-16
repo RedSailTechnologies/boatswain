@@ -11,9 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: test setting env
+        id: set
         run: echo "::set-output name=TEST::test"
       - name: test getting env
-        run: echo ${{ outputs.TEST }}
+        run: echo ${{ steps.set.outputs.TEST }}
       - name: checkout
         uses: actions/checkout@v2
       - name: setup docker
