@@ -16,8 +16,8 @@ TRITON_PATH=web/triton/
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
-## all: builds the client and all services
-all: echo proto kraken poseidon client
+## build: builds the client and all services
+build: echo proto kraken poseidon client
 
 ## clean: removes binaries, images, etc
 clean:
@@ -34,7 +34,6 @@ clean:
 	done
 
 ## client: builds the triton client
-
 client: echo
 ifeq ($(DEBUG),true)
 	@echo Serving debug triton client
@@ -53,7 +52,7 @@ help:
 	@sed -n 's/^##//p' $(MAKEFILE_LIST) | column -t -s ':' |  sed -e 's/^/ /'
 
 ## init: downloads support packages (mostly for proto3)
-init:
+init: echo
 	@go get github.com/golang/protobuf/protoc-gen-go
 	@go get github.com/twitchtv/twirp/protoc-gen-twirp
 	@go get -u go.larrymyers.com/protoc-gen-twirp_typescript
@@ -93,7 +92,7 @@ proto: echo
 	done
 
 ## push: pushes docker images
-push:
+push: echo
 	@docker push $(DOCKER_REPO)triton:$(DOCKER_TAG)
 	@for service in $(SERVICE_LIST); do \
 	  docker push $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
@@ -109,6 +108,10 @@ else
 	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=release --tag $(DOCKER_REPO)$(PROJECT_NAME):$(DOCKER_TAG)
 endif
 
+## test: runs all unit tests
+test: echo
+	@echo TODO - run tests here
+
 ## version: FIXME
 version:
-	@echo Version 0.1.0
+	@echo v$$(git describe --tags --abbrev=0)

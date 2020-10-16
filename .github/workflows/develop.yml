@@ -3,11 +3,17 @@ name: Development CI
 on:
   push:
     branches: [ 'main', 'feature/*' ] # TODO AdamP - remove feature
+  create:
+    tags: [ 'v*' ]
 
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
+      - name: test setting env
+        run: echo ::set-env name=TEST::test
+      - name: test getting env
+        run: echo ${{ env.TEST }}
       - name: checkout
         uses: actions/checkout@v2
       - name: setup docker
@@ -28,7 +34,11 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           version: '3.x'
-      - name: install protoc plugins
+      - name: make init
         run: make init
-      - name: make all
-        run: make all DOCKER_REPO=redsailtechnologies/bosn-
+      - name: make test
+        run: make test
+      - name: make build
+        run: make all
+        env:
+          DOCKER_REPO: redsailtechnologies/bosn-
