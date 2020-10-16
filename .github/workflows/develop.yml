@@ -15,4 +15,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
       - run: make all DOCKER_REPO=redsailtechnologies/bosn-
