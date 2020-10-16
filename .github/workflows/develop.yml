@@ -13,7 +13,7 @@ jobs:
       - name: set vesrion
         id: version
         run: |
-          echo $GITHUB_EVENT_NAME;
+          echo ${{ github.event.action }};
           echo "::set-output name=TEST::"
       - name: test getting env
         run: echo ${{ steps.set.outputs.TEST }}
