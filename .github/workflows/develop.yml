@@ -8,26 +8,26 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: checkout
         uses: actions/checkout@v2
-      - name: Login to Dockerhub
+      - name: dockerhub login
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Install GO
+      - name: install go
         uses: actions/setup-go@v2
         with:
           go-version: '^1.15'
-      - name: Install Protoc
+      - name: install protoc
         uses: arduino/setup-protoc@v1
         with:
           version: '3.x'
-      - name: Install Protoc GO
-        run: go get github.com/golang/protobuf/protoc-gen-go
-      - name: Install Protoc Twirp
-        run: go get github.com/twitchtv/twirp/protoc-gen-twirp
-      - name: Install Protoc Twirp Typescript
-        run: go get -u go.larrymyers.com/protoc-gen-twirp_typescript
-      - name: Run make all
+      - name: install protoc plugins
+        run: |
+          go get github.com/golang/protobuf/protoc-gen-go;
+          go get github.com/twitchtv/twirp/protoc-gen-twirp;
+          go get -u go.larrymyers.com/protoc-gen-twirp_typescript;
+          go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc;
+      - name: make all
         run: make all DOCKER_REPO=redsailtechnologies/bosn-
