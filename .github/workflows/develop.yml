@@ -10,9 +10,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: test setting env
-        id: set
-        run: echo "::set-output name=TEST::test"
+      - name: set vesrion
+        id: version
+        run: |
+          echo ${{ github.event }};
+          echo ${{ github.event_name }};
+          echo "::set-output name=TEST::"
       - name: test getting env
         run: echo ${{ steps.set.outputs.TEST }}
       - name: checkout
