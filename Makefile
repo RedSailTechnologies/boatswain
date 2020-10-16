@@ -52,6 +52,13 @@ help:
 	@echo "Usage:"
 	@sed -n 's/^##//p' $(MAKEFILE_LIST) | column -t -s ':' |  sed -e 's/^/ /'
 
+## init: downloads support packages (mostly for proto3)
+init:
+	@go get github.com/golang/protobuf/protoc-gen-go
+	@go get github.com/twitchtv/twirp/protoc-gen-twirp
+	@go get -u go.larrymyers.com/protoc-gen-twirp_typescript
+	@go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
+
 ## kraken: builds the kraken image
 kraken: echo
 	@$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=kraken template

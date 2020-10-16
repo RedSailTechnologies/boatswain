@@ -10,6 +10,11 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+      - name: setup docker
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          install: true
       - name: dockerhub login
         uses: docker/login-action@v1
         with:
@@ -24,10 +29,6 @@ jobs:
         with:
           version: '3.x'
       - name: install protoc plugins
-        run: |
-          go get github.com/golang/protobuf/protoc-gen-go;
-          go get github.com/twitchtv/twirp/protoc-gen-twirp;
-          go get -u go.larrymyers.com/protoc-gen-twirp_typescript;
-          go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc;
+        run: make init
       - name: make all
         run: make all DOCKER_REPO=redsailtechnologies/bosn-
