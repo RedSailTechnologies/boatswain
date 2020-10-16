@@ -11,7 +11,7 @@ config:
 replicaCount: 1
 
 image:
-  repository: nginx
+  repository: docker.io/redsailtechnologies/bosn-poseidon
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
