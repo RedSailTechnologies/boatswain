@@ -1,4 +1,6 @@
 # Boatswain (bow·sn)
+![Develop](https://github.com/RedSailTechnologies/boatswain/workflows/Develop/badge.svg)
+![Release](https://github.com/RedSailTechnologies/boatswain/workflows/Release/badge.svg)
 
 ## About
 A kubernetes-native CD tool with first-class support for Helm v3.
