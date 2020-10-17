@@ -31,14 +31,14 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           version: '3.x'
-      - name: make init
+      - name: init
         run: make init
-      - name: make test
+      - name: test
         run: make test
-      - name: make build
-        run: make build DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=${{ steps.version.outputs.VERSION }}
-      - name: make push
-        run: make push DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=${{ steps.version.outputs.VERSION }}
+      - name: build and push
+        run: |
+          make build DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=${{ steps.version.outputs.VERSION }};
+          make push DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=${{ steps.version.outputs.VERSION }};
   publish:
     needs: build
     runs-on: ubuntu-latest
