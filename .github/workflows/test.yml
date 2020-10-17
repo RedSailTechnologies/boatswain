@@ -1,4 +1,4 @@
-name: Release
+name: Test
 
 on:
   pull_request:
@@ -23,7 +23,7 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           version: '3.x'
-      - name: make init
+      - name: init
         run: make init
-      - name: make test
+      - name: test
         run: make test

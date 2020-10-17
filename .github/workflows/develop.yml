@@ -33,6 +33,6 @@ jobs:
       - name: make test
         run: make test
       - name: make build
-        run: make build DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=develop
-      - name: make push
-        run: make push DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=develop
+        run: |
+          make build DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=develop;
+          make push DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=develop;
