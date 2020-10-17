@@ -39,7 +39,7 @@ clean:
 changes: 
 	@cat docs/Installation.md
 	@echo \\n## Changes:
-	@git log $$(make version-previous)..$$(make version) --oneline | xargs -i echo "*" {}
+	@git log $$(make version-previous)..$$(make version) --oneline --first-parent | xargs -i echo "*" "{}"
 
 ## client: builds the triton client
 client: echo

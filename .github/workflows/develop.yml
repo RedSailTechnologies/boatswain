@@ -32,13 +32,7 @@ jobs:
         run: make init
       - name: make test
         run: make test
-      - name: make build
-        run: make build
+      - name: make build and make push
+        run: make build && make push
         env:
           DOCKER_REPO: redsailtechnologies/bosn-
-          DOCKER_TAG: develop
-      - name: make push
-        run: make push
-        env:
-          DOCKER_REPO: redsailtechnologies/bosn-
-          DOCKER_TAG: develop

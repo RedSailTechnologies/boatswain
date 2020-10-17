@@ -35,13 +35,8 @@ jobs:
         run: make init
       - name: make test
         run: make test
-      - name: make build
-        run: make build
-        env:
-          DOCKER_REPO: redsailtechnologies/bosn-
-          DOCKER_TAG: ${{ steps.version.outputs.VERSION }}
-      - name: make push
-        run: make push
+      - name: make build and make push
+        run: make build && make push
         env:
           DOCKER_REPO: redsailtechnologies/bosn-
           DOCKER_TAG: ${{ steps.version.outputs.VERSION }}
@@ -64,28 +59,16 @@ jobs:
         with:
           repository: RedSailTechnologies/helm
           path: helm-charts
-      - name: copy new charts
-        run: ls helm-${{ steps.version.outputs.VERSION }} | xargs -i cp -f ${{ steps.version.outputs.VERSION }}/{} helm-charts/charts/
-      - name: update index
-        run: helm repo index helm-charts
-      - name: Commit files
+      - name: update charts
         run: |
+          ls helm-${{ steps.version.outputs.VERSION }} | xargs -i cp -f ${{ steps.version.outputs.VERSION }}/{} helm-charts/charts/;
+          helm repo index helm-charts;
           git config --local user.email "action@github.com";
           git config --local user.name "GitHub Action";
           cd helm-charts && git commit -m "Boatswain ${{ steps.version.outputs.VERSION }}" -a;
-      - name: Push changes
+      - name: push updated charts
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
           directory: helm-charts
-      - name: create release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.version.outputs.VERSION }}
-          release_name: ${{ steps.version.outputs.VERSION }}
-          body: ${{ steps.changes.outputs.CHANGES }}
-          draft: false
-          prerelease: false
