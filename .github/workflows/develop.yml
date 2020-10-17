@@ -2,7 +2,7 @@ name: Develop
 
 on:
   push:
-    branches: [ 'main', 'feature/*' ]
+    branches: [ 'main' ]
 
 jobs:
   build:
