@@ -1,0 +1,91 @@
+name: Release
+
+on:
+  create:
+      tags: [ 'v*' ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: set version
+        id: version
+        run: echo "::set-output name=VERSION::$(make version)"
+      - name: setup docker
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          install: true
+      - name: dockerhub login
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.15'
+      - name: install protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
+      - name: make init
+        run: make init
+      - name: make test
+        run: make test
+      - name: make build
+        run: make build
+        env:
+          DOCKER_REPO: redsailtechnologies/bosn-
+          DOCKER_TAG: ${{ steps.version.outputs.VERSION }}
+      - name: make push
+        run: make push
+        env:
+          DOCKER_REPO: redsailtechnologies/bosn-
+          DOCKER_TAG: ${{ steps.version.outputs.VERSION }}
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: set version
+        id: version
+        run: echo "::set-output name=VERSION::$(make version)"
+      - name: set changed
+        id: changes
+        run: echo "::set-output name=CHANGES::$(make changes)"
+      - name: make package
+        run: make package HELM_OUT=helm-${{ steps.version.outputs.VERSION }}
+      - name: checkout helm charts
+        uses: actions/checkout@v2
+        with:
+          repository: RedSailTechnologies/helm
+          path: helm-charts
+      - name: copy new charts
+        run: ls helm-${{ steps.version.outputs.VERSION }} | xargs -i cp -f ${{ steps.version.outputs.VERSION }}/{} helm-charts/charts/
+      - name: update index
+        run: helm repo index helm-charts
+      - name: Commit files
+        run: |
+          git config --local user.email "action@github.com";
+          git config --local user.name "GitHub Action";
+          cd helm-charts && git commit -m "Boatswain ${{ steps.version.outputs.VERSION }}" -a;
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
+          directory: helm-charts
+      - name: create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          release_name: ${{ steps.version.outputs.VERSION }}
+          body: ${{ steps.changes.outputs.CHANGES }}
+          draft: false
+          prerelease: false
