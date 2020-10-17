@@ -2,12 +2,14 @@
 
 # ENV
 DEBUG=false
+CHART_LIST=boatswain mate triton $(SERVICE_LIST)
 DOCKER_BUILDKIT=1
 DOCKER_REPO=
 DOCKER_TAG=latest
 GEN_DOC=docs/api/
 GEN_GO=rpc/
 GEN_TS=$(TRITON_PATH)src/app/services/
+HELM_OUT=bin/
 LEVI_CMD=cmd/leviathan/
 LEVI_OUT=bin/
 PROJECT_NAME=null
@@ -32,6 +34,12 @@ clean:
 	  docker rmi -f $(DOCKER_REPO)$$service:latest; \
 	  docker rmi -f $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
 	done
+
+## changes: gets all changes between two tags
+changes: 
+	@cat docs/Installation.md
+	@echo \\n## Changes:
+	@git log $$(make version-previous)..$$(make version) --oneline | xargs -i echo "*" {}
 
 ## client: builds the triton client
 client: echo
@@ -91,6 +99,15 @@ proto: echo
 	    $$service.proto; \
 	done
 
+## package: generates helm packages
+package: echo
+	@echo Packaging charts to $(HELM_OUT)
+	@mkdir -p $(HELM_OUT)
+	@helm dependency update deploy/boatswain
+	@for chart in $(CHART_LIST); do \
+		helm package deploy/$$chart --version $$(make version) --app-version $$(make version) --destination $(HELM_OUT); \
+	done
+
 ## push: pushes docker images
 push: echo
 	@docker push $(DOCKER_REPO)triton:$(DOCKER_TAG)
@@ -112,6 +129,9 @@ endif
 test: echo proto
 	@echo TODO - run tests here
 
-## version: FIXME
+## version: gets the current released version
 version:
-	@echo v$$(git describe --tags --abbrev=0)
+	@git describe --tags --abbrev=0
+
+version-previous:
+	@git describe --tags --abbrev=0 --tags $$(make version)^

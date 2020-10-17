@@ -1,23 +1,13 @@
-name: Development CI
+name: Develop
 
 on:
   push:
-    branches: [ 'main', 'feature/*' ] # TODO AdamP - remove feature
-  create:
-    tags: [ 'v*' ]
+    branches: [ 'main' ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: set vesrion
-        id: version
-        run: |
-          echo "$GITHUB_EVENT_NAME";
-          echo ${{ github.event_name }};
-          echo "::set-output name=TEST::"
-      - name: test getting env
-        run: echo ${{ steps.set.outputs.TEST }}
       - name: checkout
         uses: actions/checkout@v2
       - name: setup docker
@@ -46,3 +36,9 @@ jobs:
         run: make build
         env:
           DOCKER_REPO: redsailtechnologies/bosn-
+          DOCKER_TAG: develop
+      - name: make push
+        run: make push
+        env:
+          DOCKER_REPO: redsailtechnologies/bosn-
+          DOCKER_TAG: develop

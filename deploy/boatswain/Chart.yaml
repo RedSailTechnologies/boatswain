@@ -7,19 +7,19 @@ version: 0.1.0
 appVersion: 0.1.0
 
 dependencies:
-  - name: "kraken"
+  - name: kraken
     condition: kraken.enabled
-    repository: "file://../kraken"
-    version: "~0.1.0"
-  - name: "poseidon"
+    repository: file://../kraken
+    version: "0.1.0"
+  - name: poseidon
     condition: poseidon.enabled
-    repository: "file://../poseidon"
-    version: "~0.1.0"
-  - name: "mate"
+    repository: file://../poseidon
+    version: "0.1.0"
+  - name: mate
     condition: mate.enabled
-    repository: "file://../mate"
-    version: "~0.1.0"
-  - name: "triton"
+    repository: file://../mate
+    version: "0.1.0"
+  - name: triton
     condition: triton.enabled
-    repository: "file://../triton"
-    version: "~0.1.0"
+    repository: file://../triton
+    version: "0.1.0"

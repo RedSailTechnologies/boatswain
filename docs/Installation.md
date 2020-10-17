@@ -2,11 +2,7 @@
 
 ## Helm
 ### Basics
-Add the repo.
-
 `helm repo add redsail https://redsailtechnologies.github.io/helm`
-
-Install
 
 `helm install <name> redsail/boatswain`
 
@@ -54,5 +50,4 @@ repos:
   - name: redsail
     endpoint: https://redsailtechnologies.github.io/helm
 cacheDir: ./temp
-
 ```
