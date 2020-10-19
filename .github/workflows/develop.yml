@@ -59,4 +59,4 @@ jobs:
       - name: make init
         run: make init
       - name: make build
-        run: make kraken DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=develop PUSH=true;
+        run: make kraken DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=develop PUSH=true; && docker image ls
