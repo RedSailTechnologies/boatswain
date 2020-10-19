@@ -4,6 +4,7 @@
 DEBUG=false
 CHART_LIST=boatswain mate triton $(SERVICE_LIST)
 DOCKER_BUILDKIT=1
+DOCKER_OPTS=
 DOCKER_REPO=
 DOCKER_TAG=latest
 GEN_DOC=docs/api/
@@ -18,8 +19,8 @@ TRITON_PATH=web/triton/
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
-## build: builds the client and all services
-build: echo proto kraken poseidon client
+## all: builds the client and all services
+all: echo proto kraken poseidon client
 
 ## clean: removes binaries, images, etc
 clean:
@@ -35,21 +36,10 @@ clean:
 	  docker rmi -f $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
 	done
 
-## changes: gets all changes between two tags
 changes: 
 	@cat docs/Installation.md
 	@echo \\n## Changes:
 	@git log $$(make version-previous)..$$(make version) --oneline --first-parent | xargs -i echo "*" "{}"
-
-## client: builds the triton client
-client: echo
-ifeq ($(DEBUG),true)
-	@echo Serving debug triton client
-	@cd $(WORKDIR)/$(TRITON_PATH); npm start
-else
-	@echo Building triton client release container
-	@docker build web/triton --target=release --tag $(DOCKER_REPO)triton:$(DOCKER_TAG)
-endif
 
 echo:
 	@echo Project directory: $(WORKDIR)
@@ -108,28 +98,30 @@ package: echo
 		helm package deploy/$$chart --version $$(make version) --app-version $$(make version) --destination $(HELM_OUT); \
 	done
 
-## push: pushes docker images
-push: echo
-	@docker push $(DOCKER_REPO)triton:$(DOCKER_TAG)
-	@for service in $(SERVICE_LIST); do \
-	  docker push $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
-	done
-
 template:
 ifeq ($(DEBUG),true)
 	@echo Building $(PROJECT_NAME) debug container
-	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=debug --tag $(PROJECT_NAME):$(DOCKER_TAG)
+	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=debug --tag $(PROJECT_NAME):$(DOCKER_TAG) $(DOCKER_OPTS)
 	@bash -c "trap 'docker kill $(PROJECT_NAME)-debug; docker rm $(PROJECT_NAME)-debug > /dev/null' 0;(docker run -p 8080:8080 -p 40000:40000 --name $(PROJECT_NAME)-debug $(PROJECT_NAME):$(DOCKER_TAG) &) && sleep infinity"
 else
 	@echo Building $(PROJECT_NAME) release container
-	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=release --tag $(DOCKER_REPO)$(PROJECT_NAME):$(DOCKER_TAG)
+	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=release --tag $(DOCKER_REPO)$(PROJECT_NAME):$(DOCKER_TAG) $(DOCKER_OPTS)
 endif
 
 ## test: runs all unit tests
 test: echo proto
 	@echo TODO - run tests here
 
-## version: gets the current released version
+## triton: builds the triton client
+triton: echo
+ifeq ($(DEBUG),true)
+	@echo Serving debug triton client
+	@cd $(WORKDIR)/$(TRITON_PATH); npm start
+else
+	@echo Building triton client release container
+	@docker build web/triton --target=release --tag $(DOCKER_REPO)triton:$(DOCKER_TAG) $(DOCKER_OPTS)
+endif
+
 version:
 	@git describe --tags --abbrev=0
 
