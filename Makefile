@@ -19,8 +19,8 @@ TRITON_PATH=web/triton/
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
-## build: builds the client and all services
-build: echo proto kraken poseidon client
+## all: builds the client and all services
+all: echo proto kraken poseidon client
 
 ## clean: removes binaries, images, etc
 clean:
@@ -36,21 +36,10 @@ clean:
 	  docker rmi -f $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
 	done
 
-## changes: gets all changes between two tags
 changes: 
 	@cat docs/Installation.md
 	@echo \\n## Changes:
 	@git log $$(make version-previous)..$$(make version) --oneline --first-parent | xargs -i echo "*" "{}"
-
-## client: builds the triton client
-client: echo
-ifeq ($(DEBUG),true)
-	@echo Serving debug triton client
-	@cd $(WORKDIR)/$(TRITON_PATH); npm start
-else
-	@echo Building triton client release container
-	@docker build web/triton --target=release --tag $(DOCKER_REPO)triton:$(DOCKER_TAG) $(DOCKER_OPTS)
-endif
 
 echo:
 	@echo Project directory: $(WORKDIR)
@@ -123,7 +112,16 @@ endif
 test: echo proto
 	@echo TODO - run tests here
 
-## version: gets the current released version
+## triton: builds the triton client
+triton: echo
+ifeq ($(DEBUG),true)
+	@echo Serving debug triton client
+	@cd $(WORKDIR)/$(TRITON_PATH); npm start
+else
+	@echo Building triton client release container
+	@docker build web/triton --target=release --tag $(DOCKER_REPO)triton:$(DOCKER_TAG) $(DOCKER_OPTS)
+endif
+
 version:
 	@git describe --tags --abbrev=0
 
