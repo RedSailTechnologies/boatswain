@@ -2,7 +2,7 @@ name: Develop
 
 on:
   push:
-    branches: [ 'main', 'hotfix/*' ]
+    branches: [ 'main' ]
 
 jobs:
   test:
@@ -114,5 +114,5 @@ jobs:
           version: '3.x'
       - name: init
         run: make init
-      - name: build
-        run: make triton DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=develop
+      - name: build with --push
+        run: make triton DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=develop DOCKER_OPTS=--push
