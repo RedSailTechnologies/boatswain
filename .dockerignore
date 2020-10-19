@@ -2,6 +2,7 @@
 **/Dockerfile
 **/.dockerignore
 **/Makefile
+**/.github
 
 # ignore other repo stuff not needed
 **/web/

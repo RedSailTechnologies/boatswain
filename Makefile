@@ -13,6 +13,7 @@ HELM_OUT=bin/
 LEVI_CMD=cmd/leviathan/
 LEVI_OUT=bin/
 PROJECT_NAME=null
+PUSH=false
 SERVICE_LIST=kraken poseidon
 TRITON_PATH=web/triton/
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
@@ -123,6 +124,9 @@ ifeq ($(DEBUG),true)
 else
 	@echo Building $(PROJECT_NAME) release container
 	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=release --tag $(DOCKER_REPO)$(PROJECT_NAME):$(DOCKER_TAG)
+endif
+ifeq ($(PUSH),true)
+	@docker push $(DOCKER_REPO)$(PROJECT_NAME):$(DOCKER_TAG)
 endif
 
 ## test: runs all unit tests
