@@ -6,7 +6,6 @@ on:
 
 jobs:
   test:
-    id: test
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -34,6 +33,7 @@ jobs:
       - name: make test
         run: make test
   kraken:
+    needs: [ "test" ]
     runs-on: ubuntu-latest
     steps:
       - name: checkout
