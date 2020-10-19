@@ -6,7 +6,6 @@ on:
 
 jobs:
   kraken:
-    needs: [ "test" ]
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -34,7 +33,6 @@ jobs:
       - name: build with --push
         run: make kraken DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=develop DOCKER_OPTS=--push
   poseidon:
-    needs: [ "test" ]
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -62,7 +60,6 @@ jobs:
       - name: build with --push
         run: make poseidon DOCKER_REPO=redsailtechnologies/bosn- DOCKER_TAG=develop DOCKER_OPTS=--push
   triton:
-    needs: [ "test" ]
     runs-on: ubuntu-latest
     steps:
       - name: checkout
