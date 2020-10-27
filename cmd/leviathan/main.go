@@ -8,6 +8,7 @@ import (
 
 	"github.com/twitchtv/twirp"
 
+	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/kraken"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/poseidon"
@@ -22,7 +23,7 @@ func main() {
 
 	// Kraken
 	krakenConfig := &kraken.Config{}
-	if err := krakenConfig.YAML(configFile); err != nil {
+	if err := cfg.YAML(configFile, krakenConfig); err != nil {
 		logger.Fatal("could not read kraken configuration")
 	}
 
@@ -42,7 +43,7 @@ func main() {
 
 	// Poseidon
 	poseidonConfig := &poseidon.Config{}
-	if err := poseidonConfig.YAML(configFile); err != nil {
+	if err := cfg.YAML(configFile, poseidonConfig); err != nil {
 		logger.Fatal("could not read poseidon configuration")
 	}
 

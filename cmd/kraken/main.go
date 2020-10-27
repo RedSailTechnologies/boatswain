@@ -7,6 +7,7 @@ import (
 
 	"github.com/twitchtv/twirp"
 
+	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/kraken"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	rpc "github.com/redsailtechnologies/boatswain/rpc/kraken"
@@ -19,7 +20,7 @@ func main() {
 	flag.Parse()
 
 	config := &kraken.Config{}
-	if err := config.YAML(configFile); err != nil {
+	if err := cfg.YAML(configFile, config); err != nil {
 		logger.Fatal("could not read configuration")
 	}
 

@@ -11,7 +11,9 @@ import (
 	"helm.sh/helm/v3/pkg/release"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/redsailtechnologies/boatswain/pkg/poseidon"
 	pb "github.com/redsailtechnologies/boatswain/rpc/kraken"
+	poseidonPB "github.com/redsailtechnologies/boatswain/rpc/poseidon"
 )
 
 type mockedKubeAgent struct {
@@ -33,6 +35,10 @@ func (m *mockedHelmAgent) getReleases(cfg *action.Configuration, cluster string)
 }
 
 func (m *mockedHelmAgent) getReleaseStatus(cfg *action.Configuration, cluster string) (*release.Release, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (m *mockedHelmAgent) upgradeRelease(cfg *action.Configuration, n string, f *poseidonPB.File, ns string, vals map[string]interface{}) (*release.Release, error) {
 	return nil, errors.New("not implemented")
 }
 
@@ -70,7 +76,7 @@ func TestNew(t *testing.T) {
 				Cert:     "notreal",
 			},
 		},
-	})
+	}, &poseidon.Service{})
 	assert.NotNil(t, sut)
 }
 

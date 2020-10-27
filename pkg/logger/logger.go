@@ -11,13 +11,7 @@ var l *zap.SugaredLogger
 var once sync.Once
 
 func init() {
-	once.Do(func() {
-		z, err := zap.NewProduction()
-		if err != nil {
-			log.Fatalf("error creating logger")
-		}
-		l = z.Sugar()
-	})
+	initializeLogger()
 }
 
 // Debug log level
@@ -72,4 +66,14 @@ func Fatal(message string, args ...interface{}) {
 	} else {
 		l.Fatal(message)
 	}
+}
+
+func initializeLogger() {
+	once.Do(func() {
+		z, err := zap.NewProduction()
+		if err != nil {
+			log.Fatalf("error creating logger")
+		}
+		l = z.Sugar()
+	})
 }

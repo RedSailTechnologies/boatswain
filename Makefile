@@ -16,6 +16,7 @@ LEVI_OUT=bin/
 PROJECT_NAME=null
 SERVICE_LIST=kraken poseidon
 TRITON_PATH=web/triton/
+TEST_OUT=func
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
@@ -110,7 +111,8 @@ endif
 
 ## test: runs all unit tests
 test: echo proto
-	@echo TODO - run tests here
+	@go test ./pkg/** -cover -coverprofile coverage.out
+	@go tool cover -$(TEST_OUT)=coverage.out
 
 ## triton: builds the triton client
 triton: echo
