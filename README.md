@@ -15,7 +15,19 @@ A kubernetes-native CD tool with first-class support for Helm v3.
 * Multiple Run Configurations
   * Run locally/as a single binary.
   * Run in Kubernetes as a collection of microservices with a single entrypoint.
-  * Agnostic about other technologies used in conjuction with Kubernetes.
+* Canary strategy as first class object.
+  * First class istio support
+  * Debug canaries
+  * Pre-merge canaries
+  * Upgrades done with canaries
+* SCM Plugins
+  * AZDO integration for PRs
+  * Github actions
+  * Webhook calls/repository triggers
+* CD tools/flows
+  * Canary upgrades/testing
+  * Automatic environment promotion based on conditions
+  * Manual promotion when desired
 
 ## Components
 * Triton
@@ -29,7 +41,7 @@ A kubernetes-native CD tool with first-class support for Helm v3.
 * Kraken
   * Kube/cluster management
   * Helm commands
-  * Test running?           ##########
+  * Split off/cqrs?         ##########
 * Poseidon
   * Repo plugin
   * Helm
@@ -37,6 +49,7 @@ A kubernetes-native CD tool with first-class support for Helm v3.
 * Gyrados
   * Canary/CD flow management
   * Istio management?       ##########
+  * Test running?           ##########
 * Cthulu
   * scm plugins
     * azdo
