@@ -32,7 +32,7 @@ A kubernetes-native CD tool with first-class support for Helm v3.
 ## Components
 * Triton
   * Angular client
-  * Monitoring
+  * Observability/Run logs
   * Dev debug setup
 * Mate
   * Envoy proxy/routing
@@ -41,54 +41,32 @@ A kubernetes-native CD tool with first-class support for Helm v3.
 * Kraken
   * Kube/cluster management
   * Helm commands
-  * Split off/cqrs?         ##########
 * Poseidon
   * Repo plugin
-  * Helm
-  * Docker
+    * Helm
+    * Docker
+    * Git
 * Gyrados
   * Canary/CD flow management
-  * Istio management?       ##########
-  * Test running?           ##########
+  * Test running
 * Cthulu
   * scm plugins
     * azdo
     * github
   * triggers
-    * web calls
-    * ???
-  
-## Questions/Tradeoffs
-* Do we manage the istio/virtual service side of things?
-* Or do we let helm do it and we just allow for the steps/flow?
-  * What do we consider steps/flow?
-    * Templates?
-    * Steps/stages etc?
-    * Inputs from existing deployment/cluster-how to work in?
-  * Install a helm chart and upgrade another? Upgrade a single chart?
-    * Do we want this to be configurable, or just one chart?
-  * What options do we have and what opinions do we want?
-    * We want values from a library file.
-    * What about manually specified?
-    * File upload?
-* How do we want to do test running?
-  * Helm tests?
-  * Another chart?
-  * Run a container? (which we probably make into a pod?)
-  * What to do with results?
 
 ## Roadmap
 * 0.2
   * Config/client cleanup and performance optimization
   * Add cluster/repo functionality (through client)
   * Gyrados initial cut and design
-    * Dev canaries
-    * Deployment canaries
+    * Run/deployment objects
+    * Canary strategies/settings
 * 0.3
   * Persistent storage
   * Client side filtering/part-of views
 * 0.4
-  * Users/auth (LBAC)
+  * Users/auth (LDAP)
   * RBAC
   * Client login/cookies
 * 0.5
@@ -96,3 +74,5 @@ A kubernetes-native CD tool with first-class support for Helm v3.
     * azdo plugin
     * triggers
     * PR canaries
+* 0.6
+  * Dev/debug canaries
