@@ -15,35 +15,64 @@ A kubernetes-native CD tool with first-class support for Helm v3.
 * Multiple Run Configurations
   * Run locally/as a single binary.
   * Run in Kubernetes as a collection of microservices with a single entrypoint.
-  * Agnostic about other technologies used in conjuction with Kubernetes.
+* Canary strategy as first class object.
+  * First class istio support
+  * Debug canaries
+  * Pre-merge canaries
+  * Upgrades done with canaries
+* SCM Plugins
+  * AZDO integration for PRs
+  * Github actions
+  * Webhook calls/repository triggers
+* CD tools/flows
+  * Canary upgrades/testing
+  * Automatic environment promotion based on conditions
+  * Manual promotion when desired
 
 ## Components
 * Triton
   * Angular client
+  * Observability/Run logs
+  * Dev debug setup
 * Mate
-  * Envoy proxy
-* Kraken
-  * Cluster management/scraper
-* Poseidon
-  * Helm management plugin
+  * Envoy proxy/routing
 * Leviathan
   * Single binary version
-  
+* Kraken
+  * Kube/cluster management
+  * Helm commands
+* Poseidon
+  * Repo plugin
+    * Helm
+    * Docker
+    * Git
+* Gyrados
+  * Canary/CD flow management
+  * Test running
+* Cthulu
+  * scm plugins
+    * azdo
+    * github
+  * triggers
+
 ## Roadmap
 * 0.2
-  * Multiple ways to add values to an upgrade
-  * Install button/functionality
-  * Ways to add a cluster and repo (in client)
-  * Better configuration management
+  * Config/client cleanup and performance optimization
+  * Add cluster/repo functionality (through client)
+  * Gyrados initial cut and design
+    * Run/deployment objects
+    * Canary strategies/settings
 * 0.3
-  * Persistent storage/service cache management
-  * Smart default settings for upgrades
-  * Client side filtering/dynamic page updates
+  * Persistent storage
+  * Client side filtering/part-of views
 * 0.4
-  * Users and authentication
-  * Role based authorization
-  * Client state
+  * Users/auth (LDAP)
+  * RBAC
+  * Client login/cookies
 * 0.5
-  * Flow management
-  * Strategies
-  * Triggers
+  * Cthulu first cut
+    * azdo plugin
+    * triggers
+    * PR canaries
+* 0.6
+  * Dev/debug canaries
