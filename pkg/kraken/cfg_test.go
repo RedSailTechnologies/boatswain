@@ -51,7 +51,7 @@ func TestToClientset(t *testing.T) {
 	assert.Equal(t, errors.New("cluster not found"), err)
 }
 
-func testGetClusterConfig(t *testing.T) {
+func TestGetClusterConfig(t *testing.T) {
 	config := ClusterConfig{
 		Name:     "cluster",
 		Endpoint: "www.not.real",

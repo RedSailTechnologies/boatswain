@@ -16,9 +16,6 @@ service Kraken {
     // gets all applications for the clusters passed
     rpc Releases (ReleaseRequest) returns (ReleaseResponse);
 
-    // gets the status for a single application in a single cluster
-    rpc ReleaseStatus (Release) returns (Release);
-
     // upgrades the release with the given parameters
     rpc UpgradeRelease(UpgradeReleaseRequest) returns (Release);
 }

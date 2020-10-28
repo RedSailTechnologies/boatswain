@@ -16,7 +16,7 @@ LEVI_OUT=bin/
 PROJECT_NAME=null
 SERVICE_LIST=kraken poseidon
 TRITON_PATH=web/triton/
-TEST_OUT=func
+TEST_OUT=
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
@@ -109,10 +109,15 @@ else
 	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=release --tag $(DOCKER_REPO)$(PROJECT_NAME):$(DOCKER_TAG) $(DOCKER_OPTS)
 endif
 
-## test: runs all unit tests
+## test: runs all unit tests, set TEST_OUT=html for html coverage report
 test: echo proto
 	@go test ./pkg/** -cover -coverprofile coverage.out
-	@go tool cover -$(TEST_OUT)=coverage.out
+ifeq ($(TEST_OUT),html)
+	@go tool cover -html=coverage.out
+endif
+ifeq ($(TEST_OUT),func)
+	@go tool cover -func=coverage.out
+endif
 
 ## triton: builds the triton client
 triton: echo

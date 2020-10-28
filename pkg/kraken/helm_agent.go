@@ -2,7 +2,6 @@ package kraken
 
 import (
 	"bytes"
-	"errors"
 
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -13,7 +12,6 @@ import (
 
 type helmAgent interface {
 	getReleases(*action.Configuration, string) ([]*release.Release, error)
-	getReleaseStatus(*action.Configuration, string) (*release.Release, error)
 	upgradeRelease(*action.Configuration, string, *poseidon.File, string, map[string]interface{}) (*release.Release, error)
 }
 
@@ -32,10 +30,6 @@ func (h defaultHelmAgent) getReleases(cfg *action.Configuration, cluster string)
 	}
 
 	return releases, nil
-}
-
-func (h defaultHelmAgent) getReleaseStatus(cfg *action.Configuration, cluster string) (*release.Release, error) {
-	return nil, errors.New("not implemented")
 }
 
 func (h defaultHelmAgent) upgradeRelease(cfg *action.Configuration, n string, f *poseidon.File, ns string, vals map[string]interface{}) (*release.Release, error) {

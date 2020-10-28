@@ -196,7 +196,6 @@ the helm status of the release
 | Clusters | [ClustersRequest](#redsail.bosn.ClustersRequest) | [ClustersResponse](#redsail.bosn.ClustersResponse) | gets all clusters currently configured and their status |
 | ClusterStatus | [Cluster](#redsail.bosn.Cluster) | [Cluster](#redsail.bosn.Cluster) | gets the status for a single cluster |
 | Releases | [ReleaseRequest](#redsail.bosn.ReleaseRequest) | [ReleaseResponse](#redsail.bosn.ReleaseResponse) | gets all applications for the clusters passed |
-| ReleaseStatus | [Release](#redsail.bosn.Release) | [Release](#redsail.bosn.Release) | gets the status for a single application in a single cluster |
 | UpgradeRelease | [UpgradeReleaseRequest](#redsail.bosn.UpgradeReleaseRequest) | [Release](#redsail.bosn.Release) | upgrades the release with the given parameters |
 
  
