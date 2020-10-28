@@ -111,7 +111,7 @@ func TestDownloadChartReportsAgentErrors(t *testing.T) {
 		Repos: []RepoConfig{
 			configA,
 		},
-		CacheDir: "anything",
+		CacheDir: os.TempDir(),
 	})
 	sut.repoAgent = mockRepoAgent{}
 

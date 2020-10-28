@@ -11,6 +11,7 @@ GEN_DOC=docs/api/
 GEN_GO=rpc/
 GEN_TS=$(TRITON_PATH)src/app/services/
 HELM_OUT=bin/
+LEVI_CLIENT=true
 LEVI_CMD=cmd/leviathan/
 LEVI_OUT=bin/
 PROJECT_NAME=null
@@ -66,8 +67,10 @@ leviathan: echo proto
 	@echo Building leviathan server to $(LEVI_OUT)
 	@ rm -rf $(LEVI_OUT)
 	@go build -o $(LEVI_OUT)leviathan $(LEVI_CMD)main.go
+ifeq ($(LEVI_CLIENT),true)
 	@cd $(WORKDIR)/$(TRITON_PATH); npm run build
 	@cp -r $(TRITON_PATH)dist/triton $(LEVI_OUT)
+endif
 ifeq ($(DEBUG),true)
 	@cp $(LEVI_CMD)leviathan-debug-config.yaml $(LEVI_OUT)leviathan-debug-config.yaml
 	./bin/leviathan --config $(LEVI_OUT)leviathan-debug-config.yaml
