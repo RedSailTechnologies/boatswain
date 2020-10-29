@@ -20,7 +20,6 @@ func main() {
 	flag.Parse()
 
 	config := &kraken.Config{}
-	if err := cfg.YAML(configFile, config); err != nil {
 		logger.Warn("no configuration found or file could not be parsed", "error", err)
 	}
 

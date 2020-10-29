@@ -23,7 +23,6 @@ func main() {
 
 	// Kraken
 	krakenConfig := &kraken.Config{}
-	if err := cfg.YAML(configFile, krakenConfig); err != nil {
 		logger.Warn("could not read kraken configuration", "error", err)
 	}
 

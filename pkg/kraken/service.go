@@ -2,7 +2,6 @@ package kraken
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
 	"github.com/twitchtv/twirp"
