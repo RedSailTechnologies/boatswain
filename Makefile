@@ -11,11 +11,13 @@ GEN_DOC=docs/api/
 GEN_GO=rpc/
 GEN_TS=$(TRITON_PATH)src/app/services/
 HELM_OUT=bin/
+LEVI_CLIENT=true
 LEVI_CMD=cmd/leviathan/
 LEVI_OUT=bin/
 PROJECT_NAME=null
 SERVICE_LIST=kraken poseidon
 TRITON_PATH=web/triton/
+TEST_OUT=
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
@@ -65,8 +67,10 @@ leviathan: echo proto
 	@echo Building leviathan server to $(LEVI_OUT)
 	@ rm -rf $(LEVI_OUT)
 	@go build -o $(LEVI_OUT)leviathan $(LEVI_CMD)main.go
+ifeq ($(LEVI_CLIENT),true)
 	@cd $(WORKDIR)/$(TRITON_PATH); npm run build
 	@cp -r $(TRITON_PATH)dist/triton $(LEVI_OUT)
+endif
 ifeq ($(DEBUG),true)
 	@cp $(LEVI_CMD)leviathan-debug-config.yaml $(LEVI_OUT)leviathan-debug-config.yaml
 	./bin/leviathan --config $(LEVI_OUT)leviathan-debug-config.yaml
@@ -108,9 +112,15 @@ else
 	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=release --tag $(DOCKER_REPO)$(PROJECT_NAME):$(DOCKER_TAG) $(DOCKER_OPTS)
 endif
 
-## test: runs all unit tests
+## test: runs all unit tests, set TEST_OUT=html for html coverage report
 test: echo proto
-	@echo TODO - run tests here
+	@go test ./pkg/** -cover -coverprofile coverage.out
+ifeq ($(TEST_OUT),html)
+	@go tool cover -html=coverage.out
+endif
+ifeq ($(TEST_OUT),func)
+	@go tool cover -func=coverage.out
+endif
 
 ## triton: builds the triton client
 triton: echo

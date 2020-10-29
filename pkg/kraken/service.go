@@ -2,7 +2,6 @@ package kraken
 
 import (
 	"context"
-	"errors"
 
 	"github.com/twitchtv/twirp"
 	"helm.sh/helm/v3/pkg/release"
@@ -91,11 +90,6 @@ func (s *Service) Releases(ctx context.Context, req *pb.ReleaseRequest) (*pb.Rel
 		}
 	}
 	return &pb.ReleaseResponse{ReleaseLists: releaseList}, nil
-}
-
-// ReleaseStatus gets an updated status for a particular release
-func (s *Service) ReleaseStatus(ctx context.Context, release *pb.Release) (*pb.Release, error) {
-	return nil, errors.New("not implemented")
 }
 
 // UpgradeRelease takes an existing release and updates it

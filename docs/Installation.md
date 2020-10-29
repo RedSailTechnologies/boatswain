@@ -21,7 +21,7 @@ kraken:
   config:
     clusters:
       contexts:
-        # add the contexts you want configured from the kube config file below
+        # add the contexts you want configured from the kube config file above
         - <your kubeconfig context>
 
 poseidon:

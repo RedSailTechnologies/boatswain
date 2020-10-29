@@ -93,19 +93,6 @@ interface ReleaseJSON {
 }
 
 
-const ReleaseToJSON = (m: Release): ReleaseJSON => {
-    return {
-        name: m.name,
-        chart: m.chart,
-        namespace: m.namespace,
-        chart_version: m.chartVersion,
-        app_version: m.appVersion,
-        cluster_name: m.clusterName,
-        status: m.status,
-        
-    };
-};
-
 const JSONToRelease = (m: Release | ReleaseJSON): Release => {
     
     return {
@@ -228,8 +215,6 @@ export interface Kraken {
     
     releases: (releaseRequest: ReleaseRequest) => Promise<ReleaseResponse>;
     
-    releaseStatus: (release: Release) => Promise<Release>;
-    
     upgradeRelease: (upgradeReleaseRequest: UpgradeReleaseRequest) => Promise<Release>;
     
 }
@@ -287,21 +272,6 @@ export class DefaultKraken implements Kraken {
             }
 
             return resp.json().then(JSONToReleaseResponse);
-        });
-    }
-    
-    releaseStatus(release: Release): Promise<Release> {
-        const url = this.hostname + this.pathPrefix + "ReleaseStatus";
-        let body: Release | ReleaseJSON = release;
-        if (!this.writeCamelCase) {
-            body = ReleaseToJSON(release);
-        }
-        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
-            if (!resp.ok) {
-                return throwTwirpError(resp);
-            }
-
-            return resp.json().then(JSONToRelease);
         });
     }
     

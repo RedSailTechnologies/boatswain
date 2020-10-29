@@ -6,6 +6,7 @@ import (
 
 	"github.com/twitchtv/twirp"
 
+	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/poseidon"
 	rpc "github.com/redsailtechnologies/boatswain/rpc/poseidon"
@@ -17,7 +18,7 @@ func main() {
 	flag.Parse()
 
 	config := &poseidon.Config{}
-	if err := config.YAML(configFile); err != nil {
+	if err := cfg.YAML(configFile, config); err != nil {
 		logger.Fatal("could not read configuration")
 	}
 

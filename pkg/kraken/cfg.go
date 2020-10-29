@@ -3,10 +3,8 @@ package kraken
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
-	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/action"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
@@ -63,20 +61,6 @@ func (c *Config) ToClientset(clusterName string) (*kubernetes.Clientset, error) 
 		},
 	}
 	return kubernetes.NewForConfig(restConfig)
-}
-
-// YAML takes a relative filename and returns the config found in it
-func (c *Config) YAML(file string) error {
-	y, err := ioutil.ReadFile(file)
-	if err != nil {
-		return err
-	}
-
-	// TODO AdamP - need to get keyed values from a file to pass here so we can revert to strict
-	if err := yaml.Unmarshal(y, c); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (c *Config) getClusterConfig(clusterName string) (*ClusterConfig, error) {

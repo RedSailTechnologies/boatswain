@@ -113,7 +113,7 @@ func (s *Service) Repos(ctx context.Context, req *pb.ReposRequest) (*pb.ReposRes
 }
 
 func buildChartURL(repoURL string, chart string) string {
-	if repoURL[len(repoURL)-1] != byte('!') {
+	if repoURL[len(repoURL)-1] != byte('/') {
 		repoURL = repoURL + "/"
 	}
 	return repoURL + chart
