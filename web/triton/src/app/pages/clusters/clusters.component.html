@@ -1,4 +1,10 @@
 <div class="page">
+    <div class="right-button">
+        <button mat-raised-button color="accent" (click)="add()">
+            <mat-icon>add</mat-icon>
+            Add
+        </button>
+    </div>
     <table *ngIf="clusters;else noData" mat-table [dataSource]="clusters" class="full-width">
         <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef> Name </th>
@@ -12,6 +18,10 @@
             <th mat-header-cell *matHeaderCellDef> Status </th>
             <td mat-cell *matCellDef="let element">
                 <button mat-mini-fab class="shrink-button" [ngClass]="{'status-online':element.ready,'status-offline':!element.ready}"></button>
+                <button mat-raised-button color="accent" style="float:right;" (click)="edit(element)">
+                    <mat-icon>edit</mat-icon>
+                    Edit
+                </button>
             </td>
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="['name', 'endpoint', 'status']"></tr>

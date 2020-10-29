@@ -1,4 +1,10 @@
 <div class="page">
+    <div class="right-button">
+        <button mat-raised-button color="accent">
+            <mat-icon>add</mat-icon>
+            Add
+        </button>
+    </div>
     <mat-accordion *ngIf="charts.size > 0; else noData">
         <mat-expansion-panel class="panel" *ngFor="let repo of repos">
             <mat-expansion-panel-header>
@@ -46,6 +52,12 @@
                         </ng-template>
                     </mat-expansion-panel>
                 </mat-accordion>
+                <div class="right-button">
+                    <button mat-raised-button color="accent">
+                        <mat-icon>edit</mat-icon>
+                        Edit
+                    </button>
+                </div>
             </ng-template>
             <ng-template #notReady>
                 <button mat-button disabled>Repo Offline</button>

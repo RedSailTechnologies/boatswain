@@ -33,6 +33,8 @@ import { MessageDialogComponent } from './dialogs/message-dialog/message-dialog.
 import { ThemePickerComponent } from './utils/theme-picker/theme-picker.component';
 import { StyleManager } from './utils/theme-picker/style-manager';
 import { ThemeStorage } from './utils/theme-picker/theme-storage';
+import { ClusterDialogComponent } from './dialogs/cluster-dialog/cluster-dialog.component';
+import { RepoDialogComponent } from './dialogs/repo-dialog/repo-dialog.component';
 
 @NgModule({
   declarations: [
@@ -44,7 +46,9 @@ import { ThemeStorage } from './utils/theme-picker/theme-storage';
     UpdateDialogComponent,
     BusyComponent,
     MessageDialogComponent,
-    ThemePickerComponent
+    ThemePickerComponent,
+    ClusterDialogComponent,
+    RepoDialogComponent
   ],
   imports: [
     AppRoutingModule,

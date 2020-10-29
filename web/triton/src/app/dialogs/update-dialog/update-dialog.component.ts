@@ -37,7 +37,6 @@ export class UpdateDialogComponent implements OnInit {
     this.release = data;
     this.kraken = new DefaultKraken(`${location.protocol}//${location.host}/api`, fetch['default']);
     this.poseidon = new DefaultPoseidon(`${location.protocol}//${location.host}/api`, fetch['default']);
-    console.log(location.host)
   }
 
   ngOnInit() : void {
