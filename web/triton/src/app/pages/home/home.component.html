@@ -1,1 +1,35 @@
-<p>home works!</p>
+<mat-card class="page">
+    <p>Planned Pages:</p>
+    <ul>
+        <li>
+            Status
+            <ul>
+                <li><mat-checkbox [disabled]="true" [checked]="true"></mat-checkbox>
+                    Clusters - cluster status</li>
+                <li><mat-checkbox [disabled]="true" [checked]="true"></mat-checkbox>
+                    Repos - helm and other repository status, etc.</li>
+            </ul>
+        </li>
+        
+        <li>
+            Apps
+            <ul>
+                <li><mat-checkbox [disabled]="true" [checked]="false"></mat-checkbox>
+                    Projects - groupings of apps by the app.kubernetes.io/part-of label</li>
+                <li><mat-checkbox [disabled]="true" [checked]="false"></mat-checkbox>
+                    Applications - listing of apps by the app.kubernetes.io/name label (and status/canaries/etc)</li>
+            </ul>
+        </li>
+    
+        <li>
+            Deliveries
+            <ul>
+                <li><mat-checkbox [disabled]="true" [checked]="false"></mat-checkbox>
+                    Templates - templates of all execution objects</li>
+                <li><mat-checkbox [disabled]="true" [checked]="false"></mat-checkbox>
+                    Deliveries - executions of cd objects</li>
+            </ul>
+        </li>
+        
+    </ul>
+</mat-card>

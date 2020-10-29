@@ -1,0 +1,10 @@
+<button mat-button aria-label="select a theme" [mat-menu-trigger-for]="themeMenu">
+  <mat-icon>format_color_fill</mat-icon>
+  Theme
+</button>
+
+<mat-menu #themeMenu="matMenu" xPosition="before" class="docs-theme-picker-menu">
+    <button mat-menu-item *ngFor="let theme of themes" (click)="selectTheme(theme.name)">
+        <span>{{theme.displayName}}</span>
+    </button>
+</mat-menu>

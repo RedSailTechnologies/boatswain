@@ -1,5 +1,5 @@
 <div class="page">
-    <mat-accordion *ngIf="charts; else noData">
+    <mat-accordion *ngIf="charts.size > 0; else noData">
         <mat-expansion-panel class="panel" *ngFor="let repo of repos">
             <mat-expansion-panel-header>
                 <mat-panel-title>{{repo.name}}</mat-panel-title>
@@ -10,39 +10,43 @@
                     <button mat-mini-fab class="shrink-button" [ngClass]="{'status-online':repo.ready,'status-offline':!repo.ready}"></button>
                 </mat-panel-description>
             </mat-expansion-panel-header>
-            <mat-accordion *ngIf="repo.ready; else notReady">
-                <mat-expansion-panel *ngFor="let list of charts.get(repo);">
-                    <mat-expansion-panel-header>
-                        <mat-panel-title>{{list.name}}</mat-panel-title>
-                    </mat-expansion-panel-header>
-                    <div class="table-scroll">
-                        <table mat-table [dataSource]="list.versions" class="full-width">
-                            <ng-container matColumnDef="chartVersion">
-                                <th mat-header-cell *matHeaderCellDef> Chart Version </th>
-                                <td mat-cell *matCellDef="let element"> {{element.chartVersion}} </td>
-                            </ng-container>
-                            <ng-container matColumnDef="appVersion">
-                                <th mat-header-cell *matHeaderCellDef> App Version </th>
-                                <td mat-cell *matCellDef="let element"> {{element.appVersion}} </td>
-                            </ng-container>
-                            <ng-container matColumnDef="description">
-                                <th mat-header-cell *matHeaderCellDef> Description </th>
-                                <td mat-cell *matCellDef="let element"> {{element.description}} </td>
-                            </ng-container>
-                            <ng-container matColumnDef="url">
-                                <th mat-header-cell *matHeaderCellDef> Download </th>
-                                <td mat-cell *matCellDef="let element">
-                                    <a href="{{element.url}}" mat-button aria-label="download {{element.chartVersion}}">
-                                        <mat-icon color="accent">link</mat-icon>
-                                    </a>
-                                </td>
-                            </ng-container>
-                            <tr mat-header-row *matHeaderRowDef="['chartVersion', 'appVersion', 'description', 'url']"></tr>
-                            <tr mat-row *matRowDef="let row; columns: ['chartVersion', 'appVersion', 'description', 'url'];"></tr>
-                        </table>
-                    </div>
-                </mat-expansion-panel>
-            </mat-accordion>
+            <ng-template matExpansionPanelContent>
+                <mat-accordion *ngIf="repo.ready; else notReady">
+                    <mat-expansion-panel *ngFor="let list of charts.get(repo);">
+                        <mat-expansion-panel-header>
+                            <mat-panel-title>{{list.name}}</mat-panel-title>
+                        </mat-expansion-panel-header>
+                        <ng-template matExpansionPanelContent>
+                            <div class="table-scroll">
+                                <table mat-table [dataSource]="list.versions" class="full-width">
+                                    <ng-container matColumnDef="chartVersion">
+                                        <th mat-header-cell *matHeaderCellDef> Chart Version </th>
+                                        <td mat-cell *matCellDef="let element"> {{element.chartVersion}} </td>
+                                    </ng-container>
+                                    <ng-container matColumnDef="appVersion">
+                                        <th mat-header-cell *matHeaderCellDef> App Version </th>
+                                        <td mat-cell *matCellDef="let element"> {{element.appVersion}} </td>
+                                    </ng-container>
+                                    <ng-container matColumnDef="description">
+                                        <th mat-header-cell *matHeaderCellDef> Description </th>
+                                        <td mat-cell *matCellDef="let element"> {{element.description}} </td>
+                                    </ng-container>
+                                    <ng-container matColumnDef="url">
+                                        <th mat-header-cell *matHeaderCellDef> Download </th>
+                                        <td mat-cell *matCellDef="let element">
+                                            <a href="{{element.url}}" mat-button>
+                                                <mat-icon color="accent">link</mat-icon>
+                                            </a>
+                                        </td>
+                                    </ng-container>
+                                    <tr mat-header-row *matHeaderRowDef="['chartVersion', 'appVersion', 'description', 'url']"></tr>
+                                    <tr mat-row *matRowDef="let row; columns: ['chartVersion', 'appVersion', 'description', 'url'];"></tr>
+                                </table>
+                            </div>
+                        </ng-template>
+                    </mat-expansion-panel>
+                </mat-accordion>
+            </ng-template>
             <ng-template #notReady>
                 <button mat-button disabled>Repo Offline</button>
             </ng-template>

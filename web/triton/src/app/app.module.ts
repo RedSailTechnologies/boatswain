@@ -4,16 +4,20 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule } from '@angular/material/dialog'
+import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox'
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
-import { MatFormFieldModule } from '@angular/material/form-field'
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input'
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'
-import { MatSelectModule } from '@angular/material/select'
+import { MatSelectModule } from '@angular/material/select';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatSortModule } from '@angular/material/sort';
-import { MatTableModule } from '@angular/material/table'
+import { MatTableModule } from '@angular/material/table';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip'; 
 
@@ -26,6 +30,9 @@ import { ReposComponent } from './pages/repos/repos.component';
 import { UpdateDialogComponent } from './dialogs/update-dialog/update-dialog.component';
 import { BusyComponent } from './dialogs/busy/busy.component';
 import { MessageDialogComponent } from './dialogs/message-dialog/message-dialog.component';
+import { ThemePickerComponent } from './utils/theme-picker/theme-picker.component';
+import { StyleManager } from './utils/theme-picker/style-manager';
+import { ThemeStorage } from './utils/theme-picker/theme-storage';
 
 @NgModule({
   declarations: [
@@ -36,7 +43,8 @@ import { MessageDialogComponent } from './dialogs/message-dialog/message-dialog.
     ReposComponent,
     UpdateDialogComponent,
     BusyComponent,
-    MessageDialogComponent
+    MessageDialogComponent,
+    ThemePickerComponent
   ],
   imports: [
     AppRoutingModule,
@@ -45,20 +53,27 @@ import { MessageDialogComponent } from './dialogs/message-dialog/message-dialog.
     ReactiveFormsModule,
 
     MatButtonModule,
+    MatCardModule,
+    MatCheckboxModule,
     MatDialogModule,
     MatExpansionModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
+    MatListModule,
     MatMenuModule,
     MatProgressSpinnerModule,
     MatSelectModule,
+    MatSidenavModule,
     MatSortModule,
     MatTableModule,
     MatToolbarModule,
     MatTooltipModule
   ],
-  providers: [],
+  providers: [
+    StyleManager,
+    ThemeStorage
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

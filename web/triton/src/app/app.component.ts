@@ -9,12 +9,17 @@ import { Title } from '@angular/platform-browser';
 })
 export class AppComponent {
   public page = "";
+  public sideNav = false;
 
   constructor(router: Router, title: Title) {
       router.events.subscribe(_ => {
         this.page = this.getPage(router.url);
         title.setTitle('Boatswain - ' + this.getPage(router.url));
       });
+  }
+
+  public toggleSideNav() {
+    this.sideNav = !this.sideNav;
   }
 
   private getPage(url: string) {
