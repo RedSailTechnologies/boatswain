@@ -2,7 +2,9 @@ package kraken
 
 import (
 	"context"
+	"errors"
 
+	"github.com/google/uuid"
 	"github.com/twitchtv/twirp"
 	"helm.sh/helm/v3/pkg/release"
 	"sigs.k8s.io/yaml"
@@ -14,20 +16,71 @@ import (
 
 // Service is the implementation of the Kraken twirp service
 type Service struct {
-	config    *Config
+	clusters  []*Cluster
 	kubeAgent kubeAgent
 	helmAgent helmAgent
 	poseidon  poseidon.Poseidon
 }
 
 // New creates the Service with the given configuration
-func New(c *Config, p poseidon.Poseidon) *Service {
+func New(cfg *Config, p poseidon.Poseidon) *Service {
+	clusters := make([]*Cluster, len(cfg.Clusters))
+	for i, cluster := range cfg.Clusters {
+		clusters[i] = &Cluster{
+			&pb.Cluster{
+				Uuid:     uuid.New().String(),
+				Name:     cluster.Name,
+				Endpoint: cluster.Endpoint,
+				Token:    cluster.Token,
+				Cert:     cluster.Cert,
+			},
+		}
+	}
 	return &Service{
-		config:    c,
+		clusters:  clusters,
 		kubeAgent: defaultKubeAgent{},
 		helmAgent: defaultHelmAgent{},
 		poseidon:  p,
 	}
+}
+
+// AddCluster adds a cluster configuration
+func (s *Service) AddCluster(ctx context.Context, cluster *pb.Cluster) (*pb.Response, error) {
+	s.clusters = append(s.clusters, &Cluster{
+		&pb.Cluster{
+			Uuid:     uuid.New().String(),
+			Name:     cluster.Name,
+			Endpoint: cluster.Endpoint,
+			Token:    cluster.Token,
+			Cert:     cluster.Cert,
+		},
+	})
+	return &pb.Response{}, nil
+}
+
+// DeleteCluster deletes a cluster configuration
+func (s *Service) DeleteCluster(ctx context.Context, cluster *pb.Cluster) (*pb.Response, error) {
+	for i := range s.clusters {
+		if s.clusters[i].Uuid == cluster.Uuid {
+
+			s.clusters[i] = s.clusters[len(s.clusters)-1]
+			s.clusters = s.clusters[:len(s.clusters)-1]
+			return &pb.Response{}, nil
+		}
+	}
+	return nil, twirp.InternalError("cluster not found")
+}
+
+// EditCluster edits an existing cluster configuration
+func (s *Service) EditCluster(ctx context.Context, cluster *pb.Cluster) (*pb.Response, error) {
+	logger.Info("edit request", "cluster", cluster)
+	for i := range s.clusters {
+		if s.clusters[i].Uuid == cluster.Uuid {
+			s.clusters[i] = &Cluster{cluster}
+			return &pb.Response{}, nil
+		}
+	}
+	return nil, twirp.InternalError("cluster not found")
 }
 
 // Clusters gets all clusters configured
@@ -36,26 +89,24 @@ func (s *Service) Clusters(ctx context.Context, req *pb.ClustersRequest) (*pb.Cl
 		Clusters: make([]*pb.Cluster, 0),
 	}
 
-	for _, cluster := range s.config.Clusters {
-		clientset, err := s.config.ToClientset(cluster.Name)
+	for _, cluster := range s.clusters {
+		clientset, err := cluster.ToClientset()
 		if err != nil {
 			logger.Error("could not get clientset for cluster", "cluster", cluster.Name)
 			return nil, twirp.InternalError("error getting cluster clientset")
 		}
 
-		response.Clusters = append(response.Clusters, &pb.Cluster{
-			Name:     cluster.Name,
-			Endpoint: cluster.Endpoint,
-			Ready:    s.kubeAgent.getClusterStatus(clientset, cluster.Name),
-		})
+		cluster.Ready = s.kubeAgent.getClusterStatus(clientset, cluster.Name)
+		response.Clusters = append(response.Clusters, cluster.Cluster)
 	}
 
 	return response, nil
 }
 
 // ClusterStatus gets the status of a cluster
-func (s *Service) ClusterStatus(ctx context.Context, cluster *pb.Cluster) (*pb.Cluster, error) {
-	clientset, err := s.config.ToClientset(cluster.Name)
+func (s *Service) ClusterStatus(ctx context.Context, req *pb.Cluster) (*pb.Cluster, error) {
+	cluster := &Cluster{req}
+	clientset, err := cluster.ToClientset()
 	if err != nil {
 		logger.Error("could not get clientset for cluster", "cluster", cluster.Name)
 		return nil, twirp.InternalError("error getting cluster clientset")
@@ -72,7 +123,7 @@ func (s *Service) ClusterStatus(ctx context.Context, cluster *pb.Cluster) (*pb.C
 func (s *Service) Releases(ctx context.Context, req *pb.ReleaseRequest) (*pb.ReleaseResponse, error) {
 	releaseList := make([]*pb.Releases, 0)
 	for _, cluster := range req.Clusters {
-		config, err := s.config.ToHelmClient(cluster.Name, "")
+		config, err := (&Cluster{cluster}).ToHelmClient("")
 		if err != nil {
 			logger.Error("could not get helm client for cluster", "cluster", cluster.Name, "error", err)
 			return nil, twirp.InternalError("error getting helm client")
@@ -94,7 +145,13 @@ func (s *Service) Releases(ctx context.Context, req *pb.ReleaseRequest) (*pb.Rel
 
 // UpgradeRelease takes an existing release and updates it
 func (s *Service) UpgradeRelease(ctx context.Context, req *pb.UpgradeReleaseRequest) (*pb.Release, error) {
-	config, err := s.config.ToHelmClient(req.ClusterName, req.Namespace)
+	cluster, err := s.getClusterByName(req.ClusterName)
+	if err != nil {
+		logger.Error("could not find cluster", "cluster", req.ClusterName, "error", err)
+		return nil, twirp.InternalError("cluster not found")
+	}
+
+	config, err := cluster.ToHelmClient(req.Namespace)
 	if err != nil {
 		logger.Error("could not get helm client for cluster", "cluster", req.ClusterName, "error", err)
 		return nil, twirp.InternalError("error getting helm client")
@@ -157,4 +214,13 @@ func addToReleaseList(list *[]*pb.Releases, search *release.Release, clusterName
 			newRelease,
 		},
 	})
+}
+
+func (s *Service) getClusterByName(clusterName string) (*Cluster, error) {
+	for _, cluster := range s.clusters {
+		if cluster.Name == clusterName {
+			return cluster, nil
+		}
+	}
+	return nil, errors.New("cluster not found")
 }

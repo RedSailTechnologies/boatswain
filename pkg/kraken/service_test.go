@@ -1,6 +1,7 @@
 package kraken
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -38,28 +39,24 @@ func (m *mockedHelmAgent) upgradeRelease(cfg *action.Configuration, n string, f 
 	return nil, errors.New("not implemented")
 }
 
-var firstConfig = ClusterConfig{
-	Name:     "first",
-	Endpoint: "someendpoint",
-	Token:    "tokenA",
-	Cert:     "notreal",
-}
-var secondConfig = ClusterConfig{
-	Name:     "second",
-	Endpoint: "anotherendpoint",
-	Token:    "tokenB",
-	Cert:     "alsonotreal",
+var firstCluster = &Cluster{
+	&pb.Cluster{
+		Name:     "first",
+		Endpoint: "someendpoint",
+		Token:    "tokenA",
+		Cert:     "notreal",
+		Ready:    false,
+	},
 }
 
-var firstCluster = pb.Cluster{
-	Name:     firstConfig.Name,
-	Endpoint: firstConfig.Endpoint,
-	Ready:    false,
-}
-var secondCluster = pb.Cluster{
-	Name:     secondConfig.Name,
-	Endpoint: secondConfig.Endpoint,
-	Ready:    true,
+var secondCluster = &Cluster{
+	&pb.Cluster{
+		Name:     "second",
+		Endpoint: "anotherendpoint",
+		Token:    "tokenB",
+		Cert:     "alsonotreal",
+		Ready:    true,
+	},
 }
 
 func TestNew(t *testing.T) {
@@ -76,16 +73,69 @@ func TestNew(t *testing.T) {
 	assert.NotNil(t, sut)
 }
 
+func TestAddEditDeleteArraySizing(t *testing.T) {
+	sut := &Service{}
+
+	sut.AddCluster(context.TODO(), secondCluster.Cluster)
+	sut.AddCluster(context.TODO(), secondCluster.Cluster)
+	assert.Len(t, sut.clusters, 2)
+
+	sut.DeleteCluster(context.TODO(), sut.clusters[0].Cluster)
+	assert.Len(t, sut.clusters, 1)
+
+	sut.EditCluster(context.TODO(), sut.clusters[0].Cluster)
+	assert.Len(t, sut.clusters, 1)
+
+	sut.DeleteCluster(context.TODO(), sut.clusters[0].Cluster)
+	assert.Len(t, sut.clusters, 0)
+}
+
+func TestAddOnlyAddsCorrectFields(t *testing.T) {
+	sut := &Service{}
+	sut.AddCluster(context.TODO(), secondCluster.Cluster)
+
+	assert.Equal(t, "second", sut.clusters[0].Name)
+	assert.Equal(t, "anotherendpoint", sut.clusters[0].Endpoint)
+	assert.Equal(t, "tokenB", sut.clusters[0].Token)
+	assert.Equal(t, "alsonotreal", sut.clusters[0].Cert)
+	assert.NotEqual(t, secondCluster.Uuid, sut.clusters[0].Uuid)
+	assert.NotEqual(t, secondCluster.Ready, sut.clusters[0].Ready)
+}
+
+func TestEditCorrectlyModifies(t *testing.T) {
+	sut := &Service{}
+	sut.AddCluster(context.TODO(), secondCluster.Cluster)
+
+	copy := *sut.clusters[0]
+	copy.Name = "newname"
+	sut.EditCluster(context.TODO(), copy.Cluster)
+
+	assert.Equal(t, "newname", sut.clusters[0].Name)
+}
+
+func TestDeleteRemovesCorrectCluster(t *testing.T) {
+	sut := &Service{}
+	sut.AddCluster(context.TODO(), secondCluster.Cluster)
+	sut.AddCluster(context.TODO(), firstCluster.Cluster)
+	sut.AddCluster(context.TODO(), secondCluster.Cluster)
+
+	copy := *sut.clusters[2]
+	assert.NotEqual(t, copy.Uuid, sut.clusters[0].Uuid)
+	sut.DeleteCluster(context.TODO(), copy.Cluster)
+
+	assert.Len(t, sut.clusters, 2)
+	assert.NotEqual(t, copy.Uuid, sut.clusters[0].Uuid)
+	assert.NotEqual(t, copy.Uuid, sut.clusters[1].Uuid)
+}
+
 func TestClustersGetsAll(t *testing.T) {
 	mockAgent := mockedKubeAgent{}
 	mockAgent.On("getClusterStatus", mock.Anything, mock.Anything).Return(true)
 
 	sut := &Service{
-		config: &Config{
-			Clusters: []ClusterConfig{
-				firstConfig,
-				secondConfig,
-			},
+		clusters: []*Cluster{
+			firstCluster,
+			secondCluster,
 		},
 		kubeAgent: &mockAgent,
 	}
@@ -103,11 +153,9 @@ func TestClustersReportsCorrectStatus(t *testing.T) {
 	mockAgent.On("getClusterStatus", mock.Anything, "second").Return(false)
 
 	sut := &Service{
-		config: &Config{
-			Clusters: []ClusterConfig{
-				firstConfig,
-				secondConfig,
-			},
+		clusters: []*Cluster{
+			firstCluster,
+			secondCluster,
 		},
 		kubeAgent: &mockAgent,
 	}
@@ -121,24 +169,22 @@ func TestClustersReportsCorrectStatus(t *testing.T) {
 
 func TestClusterStatusUpdatesClusterCorrectly(t *testing.T) {
 	mockAgent := mockedKubeAgent{}
-	mockAgent.On("getClusterStatus", mock.Anything, firstConfig.Name).Return(true)
-	mockAgent.On("getClusterStatus", mock.Anything, secondConfig.Name).Return(false)
+	mockAgent.On("getClusterStatus", mock.Anything, firstCluster.Name).Return(true)
+	mockAgent.On("getClusterStatus", mock.Anything, secondCluster.Name).Return(false)
 
 	sut := &Service{
-		config: &Config{
-			Clusters: []ClusterConfig{
-				firstConfig,
-				secondConfig,
-			},
+		clusters: []*Cluster{
+			firstCluster,
+			secondCluster,
 		},
 		kubeAgent: &mockAgent,
 	}
 
-	first, err := sut.ClusterStatus(nil, &firstCluster)
+	first, err := sut.ClusterStatus(nil, firstCluster.Cluster)
 	assert.True(t, first.Ready)
 	assert.Nil(t, err)
 
-	second, err := sut.ClusterStatus(nil, &secondCluster)
+	second, err := sut.ClusterStatus(nil, secondCluster.Cluster)
 	assert.False(t, second.Ready)
 	assert.Nil(t, err)
 }
@@ -189,30 +235,25 @@ func TestReleasesSortsReleases(t *testing.T) {
 
 	mockAgent := mockedHelmAgent{}
 	sut := &Service{
-		config: &Config{
-			Clusters: []ClusterConfig{
-				firstConfig,
-				secondConfig,
-			},
+		clusters: []*Cluster{
+			firstCluster,
+			secondCluster,
 		},
 		helmAgent: &mockAgent,
 	}
 
-	// firstClient, _ := sut.config.ToHelmClient(firstConfig.Name)
-	// secondClient, _ := sut.config.ToHelmClient(secondConfig.Name)
-
-	mockAgent.On("getReleases", mock.Anything, firstConfig.Name).Return([]*release.Release{
+	mockAgent.On("getReleases", mock.Anything, firstCluster.Name).Return([]*release.Release{
 		firstRelease,
 		secondRelease,
 	}, nil)
-	mockAgent.On("getReleases", mock.Anything, secondConfig.Name).Return([]*release.Release{
+	mockAgent.On("getReleases", mock.Anything, secondCluster.Name).Return([]*release.Release{
 		thirdRelease,
 	}, nil)
 
 	response, err := sut.Releases(nil, &pb.ReleaseRequest{
 		Clusters: []*pb.Cluster{
-			&firstCluster,
-			&secondCluster,
+			firstCluster.Cluster,
+			secondCluster.Cluster,
 		},
 	})
 
@@ -226,4 +267,28 @@ func TestReleasesSortsReleases(t *testing.T) {
 	assert.Equal(t, secondRelease.Namespace, response.ReleaseLists[1].Releases[0].Namespace)
 	assert.NotEqual(t, secondRelease.Namespace, response.ReleaseLists[1].Releases[1].Namespace)
 	assert.Equal(t, thirdRelease.Chart.Metadata.AppVersion, response.ReleaseLists[1].Releases[1].AppVersion)
+}
+
+func TestGetClusterByName(t *testing.T) {
+	cluster := &Cluster{
+		&pb.Cluster{
+			Name:     "cluster",
+			Endpoint: "www.not.real",
+			Token:    "abcdefg",
+			Cert:     "notarealcert...",
+		},
+	}
+	sut := Service{
+		clusters: []*Cluster{
+			cluster,
+		},
+	}
+
+	valid, noErr := sut.getClusterByName("cluster")
+	invalid, shouldErr := sut.getClusterByName("doesn'texist")
+
+	assert.Equal(t, cluster, valid)
+	assert.Nil(t, noErr)
+	assert.Nil(t, invalid)
+	assert.Equal(t, errors.New("cluster not found"), shouldErr)
 }

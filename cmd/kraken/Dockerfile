@@ -8,7 +8,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bin/app ./cmd/kra
 FROM base as debug
 RUN go get github.com/go-delve/delve/cmd/dlv
 EXPOSE 40000
-COPY cmd/kraken/kraken-debug-config.yaml /etc/kraken/config.yaml
 ENTRYPOINT /go/bin/dlv --listen=:40000 --headless=true --api-version=2 --accept-multiclient exec --continue bin/app -- --config /etc/kraken/config.yaml
 
 FROM golang:1.15-alpine as release

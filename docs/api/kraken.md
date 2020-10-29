@@ -11,6 +11,7 @@
     - [ReleaseRequest](#redsail.bosn.ReleaseRequest)
     - [ReleaseResponse](#redsail.bosn.ReleaseResponse)
     - [Releases](#redsail.bosn.Releases)
+    - [Response](#redsail.bosn.Response)
     - [UpgradeReleaseRequest](#redsail.bosn.UpgradeReleaseRequest)
   
     - [Status](#redsail.bosn.Status)
@@ -37,8 +38,11 @@ The api can be hit at /api/redsail.bosn.Kraken/&lt;Method&gt;.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| uuid | [string](#string) |  | the unique id of the configuration |
 | name | [string](#string) |  | name of the cluster |
 | endpoint | [string](#string) |  | the cluster&#39;s api server |
+| token | [string](#string) |  | the access token used to hit the kube api server |
+| cert | [string](#string) |  | the certificate for the server, this can be grabbed from kube config with base64 -d |
 | ready | [bool](#bool) |  | if the cluster is ready (checking each node for Ready status) |
 
 
@@ -139,6 +143,16 @@ The api can be hit at /api/redsail.bosn.Kraken/&lt;Method&gt;.
 
 
 
+<a name="redsail.bosn.Response"></a>
+
+### Response
+
+
+
+
+
+
+
 <a name="redsail.bosn.UpgradeReleaseRequest"></a>
 
 ### UpgradeReleaseRequest
@@ -193,6 +207,9 @@ the helm status of the release
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
+| AddCluster | [Cluster](#redsail.bosn.Cluster) | [Response](#redsail.bosn.Response) | adds a cluster to the list of configurations |
+| DeleteCluster | [Cluster](#redsail.bosn.Cluster) | [Response](#redsail.bosn.Response) | deletes a cluster from the list of configurations |
+| EditCluster | [Cluster](#redsail.bosn.Cluster) | [Response](#redsail.bosn.Response) | edits an already existing cluster |
 | Clusters | [ClustersRequest](#redsail.bosn.ClustersRequest) | [ClustersResponse](#redsail.bosn.ClustersResponse) | gets all clusters currently configured and their status |
 | ClusterStatus | [Cluster](#redsail.bosn.Cluster) | [Cluster](#redsail.bosn.Cluster) | gets the status for a single cluster |
 | Releases | [ReleaseRequest](#redsail.bosn.ReleaseRequest) | [ReleaseResponse](#redsail.bosn.ReleaseResponse) | gets all applications for the clusters passed |
