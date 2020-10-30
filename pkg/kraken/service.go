@@ -2,6 +2,7 @@ package kraken
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/twitchtv/twirp"
@@ -61,7 +62,6 @@ func (s *Service) AddCluster(ctx context.Context, cluster *pb.Cluster) (*pb.Resp
 func (s *Service) DeleteCluster(ctx context.Context, cluster *pb.Cluster) (*pb.Response, error) {
 	for i := range s.clusters {
 		if s.clusters[i].Uuid == cluster.Uuid {
-
 			s.clusters[i] = s.clusters[len(s.clusters)-1]
 			s.clusters = s.clusters[:len(s.clusters)-1]
 			return &pb.Response{}, nil
@@ -72,7 +72,6 @@ func (s *Service) DeleteCluster(ctx context.Context, cluster *pb.Cluster) (*pb.R
 
 // EditCluster edits an existing cluster configuration
 func (s *Service) EditCluster(ctx context.Context, cluster *pb.Cluster) (*pb.Response, error) {
-	logger.Info("edit request", "cluster", cluster)
 	for i := range s.clusters {
 		if s.clusters[i].Uuid == cluster.Uuid {
 			s.clusters[i] = &Cluster{cluster}

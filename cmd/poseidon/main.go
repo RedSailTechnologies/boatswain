@@ -13,13 +13,17 @@ import (
 )
 
 func main() {
-	var configFile string
+	var configFile, cacheDir string
 	flag.StringVar(&configFile, "config", "", "poseidon config file path")
+	flag.StringVar(&cacheDir, "cache", "", "poseidon cache path")
 	flag.Parse()
 
 	config := &poseidon.Config{}
 	if err := cfg.YAML(configFile, config); err != nil {
-		logger.Fatal("could not read configuration")
+		logger.Warn("no configuration found or file could not be parsed", "error", err)
+	}
+	if cacheDir != "" {
+		config.CacheDir = cacheDir
 	}
 
 	server := poseidon.New(config)

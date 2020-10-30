@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	pb "github.com/redsailtechnologies/boatswain/rpc/poseidon"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,40 +13,46 @@ import (
 
 func testCheckIndex(t *testing.T) {
 	sut := defaultRepoAgent{}
-	config := &RepoConfig{
-		Name:     "stable",
-		Endpoint: "https://charts.helm.sh/stable",
+	repo := &Repo{
+		&pb.Repo{
+			Name:     "stable",
+			Endpoint: "https://charts.helm.sh/stable",
+		},
 	}
-	repo, _ := config.ToChartRepo()
-	assert.True(t, sut.checkIndex(repo))
+	chartRepo, _ := repo.ToChartRepo()
+	assert.True(t, sut.checkIndex(chartRepo))
 }
 
 func testDownloadChart(t *testing.T) {
-	config := &RepoConfig{
-		Name:     "stable",
-		Endpoint: "https://charts.helm.sh/stable",
+	repo := &Repo{
+		&pb.Repo{
+			Name:     "stable",
+			Endpoint: "https://charts.helm.sh/stable",
+		},
 	}
 
 	name := "envoy"
 	version := "1.0.0"
-	opts := config.ToChartPathOptions()
+	opts := repo.ToChartPathOptions()
 	out := os.TempDir()
 	defer os.Remove(out + "/envoy-1.0.0.tgz")
 
 	sut := defaultRepoAgent{}
-	file, err := sut.downloadChart(name, version, out, config.Endpoint, opts)
+	file, err := sut.downloadChart(name, version, out, repo.Endpoint, opts)
 	assert.NotNil(t, file.Contents)
 	assert.Nil(t, err)
 }
 
 func testGetCharts(t *testing.T) {
 	sut := defaultRepoAgent{}
-	config := &RepoConfig{
-		Name:     "stable",
-		Endpoint: "https://charts.helm.sh/stable",
+	repo := &Repo{
+		&pb.Repo{
+			Name:     "stable",
+			Endpoint: "https://charts.helm.sh/stable",
+		},
 	}
-	repo, _ := config.ToChartRepo()
-	out, err := sut.getCharts(repo)
+	chartRepo, _ := repo.ToChartRepo()
+	out, err := sut.getCharts(chartRepo)
 	assert.NotNil(t, out)
 	assert.Nil(t, err)
 }

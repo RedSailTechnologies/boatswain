@@ -30,7 +30,7 @@ service Kraken {
 }
 
 message Cluster {
-    string uuid = 1; // the unique id of the configuration
+    string uuid = 1; // the unique id of the cluster
     string name = 2; // name of the cluster
     string endpoint = 3; // the cluster's api server
     string token = 4; // the access token used to hit the kube api server
@@ -68,8 +68,6 @@ message ReleaseResponse {
     repeated Releases release_lists = 1; // the list of releases for the cluster
 }
 
-message Response {}
-
 message UpgradeReleaseRequest {
     string name = 1;
     string chart = 2;
@@ -93,3 +91,5 @@ enum Status {
     pending_upgrade = 7;
     pending_rollback = 8;
 }
+
+message Response {}

@@ -10,23 +10,23 @@
     </mat-toolbar>
 </div>
 <div mat-dialog-content style="margin: 10px;">
-    <form [formGroup]="clusterForm">
-        <mat-form-field appearance="standard">
+    <form [formGroup]="clusterForm"  (keydown)="enter($event)">
+        <mat-form-field appearance="fill" style="width:66%;">
             <mat-label>Name</mat-label>
             <input matInput required formControlName="name" />
         </mat-form-field>
         <br />
-        <mat-form-field appearance="standard">
+        <mat-form-field appearance="fill" style="width:100%;">
             <mat-label>Endpoint</mat-label>
             <input matInput required formControlName="endpoint" />
         </mat-form-field>
         <br />
-        <mat-form-field appearance="standard">
+        <mat-form-field appearance="fill" style="width:100%;">
             <mat-label>Token</mat-label>
             <input matInput required formControlName="token" (focus)="secretFocused('token')" />
         </mat-form-field>
         <br />
-        <mat-form-field appearance="standard" style="width:100%;resize:none;">
+        <mat-form-field appearance="fill" style="width:100%;resize:none;">
             <mat-label>Cert</mat-label>
             <textarea matInput required formControlName="cert" (focus)="secretFocused('cert')"
                       cdkTextareaAutosize

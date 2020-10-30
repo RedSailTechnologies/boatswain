@@ -8,7 +8,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bin/app ./cmd/pos
 FROM base as debug
 RUN go get github.com/go-delve/delve/cmd/dlv
 EXPOSE 40000
-COPY cmd/poseidon/poseidon-debug-config.yaml /etc/poseidon/config.yaml
 ENTRYPOINT /go/bin/dlv --listen=:40000 --headless=true --api-version=2 --accept-multiclient exec --continue bin/app -- --config /etc/poseidon/config.yaml
 
 FROM golang:1.15-alpine as release

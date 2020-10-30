@@ -46,6 +46,15 @@ type Poseidon interface {
 	// downloads the chart
 	DownloadChart(context.Context, *DownloadRequest) (*File, error)
 
+	// add a repo
+	AddRepo(context.Context, *Repo) (*EmptyResponse, error)
+
+	// delete a repo
+	DeleteRepo(context.Context, *Repo) (*EmptyResponse, error)
+
+	// Edit a repo
+	EditRepo(context.Context, *Repo) (*EmptyResponse, error)
+
 	// gets all the currently configured repositories
 	Repos(context.Context, *ReposRequest) (*ReposResponse, error)
 }
@@ -56,7 +65,7 @@ type Poseidon interface {
 
 type poseidonProtobufClient struct {
 	client      HTTPClient
-	urls        [3]string
+	urls        [6]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -76,9 +85,12 @@ func NewPoseidonProtobufClient(baseURL string, client HTTPClient, opts ...twirp.
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Poseidon")
-	urls := [3]string{
+	urls := [6]string{
 		serviceURL + "Charts",
 		serviceURL + "DownloadChart",
+		serviceURL + "AddRepo",
+		serviceURL + "DeleteRepo",
+		serviceURL + "EditRepo",
 		serviceURL + "Repos",
 	}
 
@@ -182,6 +194,144 @@ func (c *poseidonProtobufClient) callDownloadChart(ctx context.Context, in *Down
 	return out, nil
 }
 
+func (c *poseidonProtobufClient) AddRepo(ctx context.Context, in *Repo) (*EmptyResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Poseidon")
+	ctx = ctxsetters.WithMethodName(ctx, "AddRepo")
+	caller := c.callAddRepo
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Repo) (*EmptyResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Repo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Repo) when calling interceptor")
+					}
+					return c.callAddRepo(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EmptyResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EmptyResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *poseidonProtobufClient) callAddRepo(ctx context.Context, in *Repo) (*EmptyResponse, error) {
+	out := new(EmptyResponse)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *poseidonProtobufClient) DeleteRepo(ctx context.Context, in *Repo) (*EmptyResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Poseidon")
+	ctx = ctxsetters.WithMethodName(ctx, "DeleteRepo")
+	caller := c.callDeleteRepo
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Repo) (*EmptyResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Repo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Repo) when calling interceptor")
+					}
+					return c.callDeleteRepo(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EmptyResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EmptyResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *poseidonProtobufClient) callDeleteRepo(ctx context.Context, in *Repo) (*EmptyResponse, error) {
+	out := new(EmptyResponse)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *poseidonProtobufClient) EditRepo(ctx context.Context, in *Repo) (*EmptyResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Poseidon")
+	ctx = ctxsetters.WithMethodName(ctx, "EditRepo")
+	caller := c.callEditRepo
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Repo) (*EmptyResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Repo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Repo) when calling interceptor")
+					}
+					return c.callEditRepo(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EmptyResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EmptyResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *poseidonProtobufClient) callEditRepo(ctx context.Context, in *Repo) (*EmptyResponse, error) {
+	out := new(EmptyResponse)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 func (c *poseidonProtobufClient) Repos(ctx context.Context, in *ReposRequest) (*ReposResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
 	ctx = ctxsetters.WithServiceName(ctx, "Poseidon")
@@ -213,7 +363,7 @@ func (c *poseidonProtobufClient) Repos(ctx context.Context, in *ReposRequest) (*
 
 func (c *poseidonProtobufClient) callRepos(ctx context.Context, in *ReposRequest) (*ReposResponse, error) {
 	out := new(ReposResponse)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -234,7 +384,7 @@ func (c *poseidonProtobufClient) callRepos(ctx context.Context, in *ReposRequest
 
 type poseidonJSONClient struct {
 	client      HTTPClient
-	urls        [3]string
+	urls        [6]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -254,9 +404,12 @@ func NewPoseidonJSONClient(baseURL string, client HTTPClient, opts ...twirp.Clie
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Poseidon")
-	urls := [3]string{
+	urls := [6]string{
 		serviceURL + "Charts",
 		serviceURL + "DownloadChart",
+		serviceURL + "AddRepo",
+		serviceURL + "DeleteRepo",
+		serviceURL + "EditRepo",
 		serviceURL + "Repos",
 	}
 
@@ -360,6 +513,144 @@ func (c *poseidonJSONClient) callDownloadChart(ctx context.Context, in *Download
 	return out, nil
 }
 
+func (c *poseidonJSONClient) AddRepo(ctx context.Context, in *Repo) (*EmptyResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Poseidon")
+	ctx = ctxsetters.WithMethodName(ctx, "AddRepo")
+	caller := c.callAddRepo
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Repo) (*EmptyResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Repo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Repo) when calling interceptor")
+					}
+					return c.callAddRepo(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EmptyResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EmptyResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *poseidonJSONClient) callAddRepo(ctx context.Context, in *Repo) (*EmptyResponse, error) {
+	out := new(EmptyResponse)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *poseidonJSONClient) DeleteRepo(ctx context.Context, in *Repo) (*EmptyResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Poseidon")
+	ctx = ctxsetters.WithMethodName(ctx, "DeleteRepo")
+	caller := c.callDeleteRepo
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Repo) (*EmptyResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Repo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Repo) when calling interceptor")
+					}
+					return c.callDeleteRepo(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EmptyResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EmptyResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *poseidonJSONClient) callDeleteRepo(ctx context.Context, in *Repo) (*EmptyResponse, error) {
+	out := new(EmptyResponse)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *poseidonJSONClient) EditRepo(ctx context.Context, in *Repo) (*EmptyResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Poseidon")
+	ctx = ctxsetters.WithMethodName(ctx, "EditRepo")
+	caller := c.callEditRepo
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Repo) (*EmptyResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Repo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Repo) when calling interceptor")
+					}
+					return c.callEditRepo(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EmptyResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EmptyResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *poseidonJSONClient) callEditRepo(ctx context.Context, in *Repo) (*EmptyResponse, error) {
+	out := new(EmptyResponse)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 func (c *poseidonJSONClient) Repos(ctx context.Context, in *ReposRequest) (*ReposResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
 	ctx = ctxsetters.WithServiceName(ctx, "Poseidon")
@@ -391,7 +682,7 @@ func (c *poseidonJSONClient) Repos(ctx context.Context, in *ReposRequest) (*Repo
 
 func (c *poseidonJSONClient) callRepos(ctx context.Context, in *ReposRequest) (*ReposResponse, error) {
 	out := new(ReposResponse)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -495,6 +786,15 @@ func (s *poseidonServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) 
 		return
 	case "DownloadChart":
 		s.serveDownloadChart(ctx, resp, req)
+		return
+	case "AddRepo":
+		s.serveAddRepo(ctx, resp, req)
+		return
+	case "DeleteRepo":
+		s.serveDeleteRepo(ctx, resp, req)
+		return
+	case "EditRepo":
+		s.serveEditRepo(ctx, resp, req)
 		return
 	case "Repos":
 		s.serveRepos(ctx, resp, req)
@@ -833,6 +1133,531 @@ func (s *poseidonServer) serveDownloadChartProtobuf(ctx context.Context, resp ht
 	}
 	if respContent == nil {
 		s.writeError(ctx, resp, twirp.InternalError("received a nil *File and nil error while calling DownloadChart. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *poseidonServer) serveAddRepo(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveAddRepoJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveAddRepoProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *poseidonServer) serveAddRepoJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "AddRepo")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(Repo)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Poseidon.AddRepo
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Repo) (*EmptyResponse, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Repo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Repo) when calling interceptor")
+					}
+					return s.Poseidon.AddRepo(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EmptyResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EmptyResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *EmptyResponse
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmptyResponse and nil error while calling AddRepo. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *poseidonServer) serveAddRepoProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "AddRepo")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(Repo)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Poseidon.AddRepo
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Repo) (*EmptyResponse, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Repo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Repo) when calling interceptor")
+					}
+					return s.Poseidon.AddRepo(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EmptyResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EmptyResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *EmptyResponse
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmptyResponse and nil error while calling AddRepo. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *poseidonServer) serveDeleteRepo(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveDeleteRepoJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveDeleteRepoProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *poseidonServer) serveDeleteRepoJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "DeleteRepo")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(Repo)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Poseidon.DeleteRepo
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Repo) (*EmptyResponse, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Repo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Repo) when calling interceptor")
+					}
+					return s.Poseidon.DeleteRepo(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EmptyResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EmptyResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *EmptyResponse
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmptyResponse and nil error while calling DeleteRepo. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *poseidonServer) serveDeleteRepoProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "DeleteRepo")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(Repo)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Poseidon.DeleteRepo
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Repo) (*EmptyResponse, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Repo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Repo) when calling interceptor")
+					}
+					return s.Poseidon.DeleteRepo(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EmptyResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EmptyResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *EmptyResponse
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmptyResponse and nil error while calling DeleteRepo. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *poseidonServer) serveEditRepo(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveEditRepoJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveEditRepoProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *poseidonServer) serveEditRepoJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "EditRepo")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(Repo)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Poseidon.EditRepo
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Repo) (*EmptyResponse, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Repo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Repo) when calling interceptor")
+					}
+					return s.Poseidon.EditRepo(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EmptyResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EmptyResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *EmptyResponse
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmptyResponse and nil error while calling EditRepo. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *poseidonServer) serveEditRepoProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "EditRepo")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(Repo)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Poseidon.EditRepo
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Repo) (*EmptyResponse, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Repo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Repo) when calling interceptor")
+					}
+					return s.Poseidon.EditRepo(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EmptyResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EmptyResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *EmptyResponse
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmptyResponse and nil error while calling EditRepo. nil responses are not supported"))
 		return
 	}
 
@@ -1593,33 +2418,36 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 445 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x93, 0xdf, 0x8b, 0xd4, 0x30,
-	0x10, 0xc7, 0xe9, 0xed, 0x0f, 0xba, 0xb3, 0xdd, 0x55, 0xa2, 0x0f, 0xa5, 0xe7, 0xe1, 0x52, 0x5f,
-	0x16, 0x84, 0x2e, 0x9c, 0x78, 0xa2, 0x20, 0xc8, 0x29, 0x3e, 0x89, 0x48, 0x04, 0x1f, 0x7c, 0x91,
-	0x6c, 0x3b, 0xec, 0x06, 0x7b, 0x99, 0x98, 0x64, 0x3d, 0xfc, 0x5f, 0xfc, 0x93, 0xfc, 0xa3, 0xa4,
-	0x49, 0xbb, 0xf6, 0xce, 0x0a, 0xbe, 0x65, 0x32, 0x9f, 0xf9, 0xf1, 0x9d, 0x49, 0x60, 0xa9, 0xc9,
-	0xa2, 0xac, 0x48, 0x15, 0xda, 0x90, 0x23, 0x96, 0x18, 0xac, 0xac, 0x90, 0x75, 0xb1, 0x25, 0xab,
-	0xf2, 0x8f, 0x30, 0x79, 0xbd, 0x17, 0xc6, 0x31, 0x06, 0x63, 0x25, 0xae, 0x30, 0x8d, 0x56, 0xd1,
-	0x7a, 0xc6, 0xfd, 0x99, 0x5d, 0x40, 0xfc, 0x1d, 0x8d, 0x95, 0xa4, 0x6c, 0x7a, 0xb2, 0x1a, 0xad,
-	0xe7, 0xe7, 0x59, 0xd1, 0x8f, 0x2e, 0x7c, 0xe8, 0xa7, 0x80, 0xf0, 0x23, 0x9b, 0xff, 0x8c, 0x20,
-	0xe9, 0xbb, 0x06, 0x93, 0x3f, 0x82, 0x45, 0xd9, 0x30, 0x5f, 0xda, 0xb0, 0xf4, 0xc4, 0x3b, 0x93,
-	0xb2, 0x1f, 0xf8, 0x10, 0xe6, 0x42, 0xeb, 0x23, 0x32, 0xf2, 0x08, 0x08, 0xad, 0x3b, 0x60, 0x05,
-	0xf3, 0x0a, 0x6d, 0x69, 0xa4, 0x76, 0x0d, 0x30, 0xf6, 0x40, 0xff, 0x8a, 0xdd, 0x85, 0xd1, 0xc1,
-	0xd4, 0xe9, 0xc4, 0x7b, 0x9a, 0x63, 0xfe, 0x12, 0x96, 0xbe, 0x3b, 0xcb, 0xd1, 0x6a, 0x52, 0x16,
-	0xd9, 0x63, 0x98, 0xfa, 0xb2, 0x36, 0x8d, 0xbc, 0xcc, 0x7b, 0x03, 0x32, 0x79, 0x8b, 0xe4, 0x06,
-	0xee, 0xbc, 0xa1, 0x6b, 0x55, 0x93, 0xa8, 0x38, 0x7e, 0x3b, 0xa0, 0x75, 0xec, 0x0c, 0x20, 0x68,
-	0xe9, 0xa9, 0x9c, 0xf9, 0x9b, 0xf7, 0xff, 0x2d, 0xf5, 0x14, 0x66, 0x06, 0x35, 0x85, 0x14, 0x41,
-	0x68, 0xdc, 0x5c, 0x34, 0x19, 0xf2, 0x0b, 0x18, 0xbf, 0x95, 0x35, 0x0e, 0x0e, 0x32, 0x83, 0xb8,
-	0x24, 0xe5, 0x50, 0x39, 0xeb, 0x13, 0x27, 0xfc, 0x68, 0xe7, 0xef, 0x60, 0xcc, 0x51, 0xd3, 0xbf,
-	0xe2, 0x50, 0x55, 0x9a, 0xa4, 0x72, 0x6d, 0x43, 0x47, 0x9b, 0xdd, 0x87, 0x89, 0x41, 0x51, 0xfd,
-	0xf0, 0x8d, 0xc4, 0x3c, 0x18, 0xf9, 0x12, 0x92, 0x26, 0x9b, 0x6d, 0x65, 0xe7, 0xcf, 0x61, 0xd1,
-	0xda, 0xed, 0x1c, 0xd7, 0x4d, 0x98, 0xa6, 0x6e, 0x8c, 0xec, 0xe6, 0x18, 0x1b, 0x96, 0x07, 0xe0,
-	0xfc, 0x57, 0x04, 0xf1, 0x87, 0xf6, 0x61, 0xb2, 0x17, 0x30, 0x0d, 0x0b, 0x61, 0x03, 0x11, 0xd9,
-	0x83, 0x81, 0x65, 0xfc, 0x29, 0x79, 0x09, 0x8b, 0x6e, 0x1b, 0xe1, 0x21, 0x9f, 0xdd, 0xc4, 0x6f,
-	0xad, 0x2a, 0xbb, 0x55, 0xc1, 0x4f, 0xf5, 0x15, 0x4c, 0xbc, 0x0e, 0x96, 0xfd, 0x5d, 0xbe, 0x13,
-	0x9b, 0x9d, 0x0e, 0xfa, 0x42, 0x17, 0x97, 0xcf, 0x3e, 0x3f, 0xdd, 0x49, 0xb7, 0x3f, 0x6c, 0x8b,
-	0x92, 0xae, 0x36, 0x2d, 0xe8, 0xb0, 0xdc, 0x2b, 0xaa, 0x69, 0x27, 0xd1, 0x6e, 0xb6, 0x24, 0x9c,
-	0xbd, 0x16, 0x52, 0x6d, 0xf4, 0xd7, 0xdd, 0xa6, 0xfb, 0x93, 0xdb, 0xa9, 0xff, 0x94, 0x4f, 0x7e,
-	0x07, 0x00, 0x00, 0xff, 0xff, 0x59, 0x25, 0x39, 0xc6, 0xa6, 0x03, 0x00, 0x00,
+	// 496 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0xcf, 0x6f, 0xd3, 0x30,
+	0x14, 0x56, 0x7f, 0x92, 0xbe, 0xa6, 0x1d, 0x32, 0x1c, 0xa2, 0x8c, 0x89, 0x2a, 0x5c, 0x2a, 0x21,
+	0xa5, 0xd2, 0x10, 0x43, 0x0c, 0x4d, 0x82, 0xb1, 0x71, 0x44, 0x28, 0x48, 0x1c, 0xb8, 0x40, 0x1a,
+	0x3f, 0xb5, 0x16, 0xa9, 0x6d, 0x62, 0x87, 0x69, 0x77, 0xfe, 0x0c, 0xfe, 0x58, 0x64, 0x27, 0x2e,
+	0x49, 0xc9, 0x61, 0xda, 0xcd, 0xef, 0xf9, 0xfb, 0x3e, 0xbf, 0xf7, 0x7d, 0x51, 0x60, 0x2e, 0x85,
+	0x42, 0x46, 0x05, 0x8f, 0x65, 0x21, 0xb4, 0x20, 0x7e, 0x81, 0x54, 0xa5, 0x2c, 0x8f, 0xd7, 0x42,
+	0xf1, 0xe8, 0x33, 0x8c, 0xde, 0x6f, 0xd3, 0x42, 0x13, 0x02, 0x43, 0x9e, 0xee, 0x30, 0xe8, 0x2d,
+	0x7a, 0xcb, 0x49, 0x62, 0xcf, 0xe4, 0x0c, 0xbc, 0x5f, 0x58, 0x28, 0x26, 0xb8, 0x0a, 0xfa, 0x8b,
+	0xc1, 0x72, 0x7a, 0x1a, 0xc6, 0x4d, 0x76, 0x6c, 0xa9, 0x5f, 0x2a, 0x48, 0xb2, 0xc7, 0x46, 0x7f,
+	0x7a, 0xe0, 0x37, 0xaf, 0x3a, 0xc5, 0x9f, 0xc1, 0x2c, 0x33, 0x98, 0x6f, 0x35, 0x2d, 0xe8, 0xdb,
+	0x4b, 0x3f, 0x6b, 0x12, 0x9f, 0xc2, 0x34, 0x95, 0x72, 0x0f, 0x19, 0x58, 0x08, 0xa4, 0x52, 0x3a,
+	0xc0, 0x02, 0xa6, 0x14, 0x55, 0x56, 0x30, 0xa9, 0x0d, 0x60, 0x68, 0x01, 0xcd, 0x16, 0x79, 0x08,
+	0x83, 0xb2, 0xc8, 0x83, 0x91, 0xbd, 0x31, 0xc7, 0xe8, 0x02, 0xe6, 0x76, 0x3a, 0x95, 0xa0, 0x92,
+	0x82, 0x2b, 0x24, 0xcf, 0x61, 0x6c, 0x9f, 0x55, 0x41, 0xcf, 0xae, 0xf9, 0xa8, 0x63, 0xcd, 0xa4,
+	0x86, 0x44, 0x05, 0x1c, 0x5d, 0x89, 0x1b, 0x9e, 0x8b, 0x94, 0x26, 0xf8, 0xb3, 0x44, 0xa5, 0xc9,
+	0x09, 0x40, 0xb5, 0x4b, 0x63, 0xcb, 0x89, 0xed, 0x7c, 0xbc, 0xf3, 0xaa, 0xc7, 0x30, 0x29, 0x50,
+	0x8a, 0x4a, 0xa2, 0x5a, 0xd4, 0x33, 0x0d, 0xa3, 0x10, 0x9d, 0xc1, 0xf0, 0x03, 0xcb, 0xb1, 0xd3,
+	0xc8, 0x10, 0xbc, 0x4c, 0x70, 0x8d, 0x5c, 0x2b, 0x2b, 0xec, 0x27, 0xfb, 0x3a, 0xfa, 0x0e, 0xc3,
+	0x04, 0xa5, 0x30, 0xbc, 0xb2, 0x64, 0xd4, 0xf1, 0xcc, 0x79, 0xaf, 0xd5, 0x6f, 0x6b, 0x21, 0xa7,
+	0x52, 0x30, 0xae, 0xdd, 0x0c, 0xae, 0x26, 0x8f, 0x61, 0x54, 0x60, 0x4a, 0x6f, 0xad, 0xc9, 0x5e,
+	0x52, 0x15, 0xd1, 0x1c, 0x7c, 0xf3, 0x82, 0xaa, 0xad, 0x88, 0x5e, 0xc3, 0xac, 0xae, 0x6b, 0x6f,
+	0x97, 0x86, 0x26, 0x85, 0xb3, 0x96, 0xb4, 0xad, 0x35, 0xd8, 0xa4, 0x02, 0x44, 0x47, 0x30, 0xbb,
+	0xde, 0x49, 0x7d, 0xeb, 0xa8, 0xa7, 0xbf, 0x07, 0xe0, 0x7d, 0xaa, 0xbf, 0x5e, 0x72, 0x0e, 0xe3,
+	0x2a, 0x35, 0xd2, 0x21, 0x11, 0x3e, 0xe9, 0x48, 0xec, 0xdf, 0x0c, 0x97, 0x30, 0x73, 0x91, 0x55,
+	0x5f, 0xfb, 0x49, 0x1b, 0x7e, 0x90, 0x67, 0x78, 0xf0, 0x82, 0xb5, 0xfe, 0x1c, 0x1e, 0xbc, 0xa3,
+	0xb4, 0x72, 0xb3, 0x63, 0x80, 0xe3, 0x76, 0xaf, 0xb5, 0x08, 0xb9, 0x00, 0xb8, 0xc2, 0x1c, 0x35,
+	0xde, 0x8f, 0xfe, 0x06, 0xbc, 0x6b, 0xca, 0xf4, 0xfd, 0xc8, 0x6f, 0x61, 0x64, 0x03, 0x21, 0xe1,
+	0xff, 0x4c, 0x97, 0xda, 0xa1, 0x42, 0x2b, 0xc1, 0xcb, 0x57, 0x5f, 0x5f, 0x6e, 0x98, 0xde, 0x96,
+	0xeb, 0x38, 0x13, 0xbb, 0x55, 0x0d, 0xd4, 0x98, 0x6d, 0xb9, 0xc8, 0xc5, 0x86, 0xa1, 0x5a, 0xad,
+	0x45, 0xaa, 0xd5, 0x4d, 0xca, 0xf8, 0x4a, 0xfe, 0xd8, 0xac, 0xdc, 0x0f, 0x67, 0x3d, 0xb6, 0x7f,
+	0x9c, 0x17, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x2b, 0x02, 0xe5, 0x19, 0x83, 0x04, 0x00, 0x00,
 }

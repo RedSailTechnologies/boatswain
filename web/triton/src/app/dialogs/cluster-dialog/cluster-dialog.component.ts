@@ -12,8 +12,8 @@ import { MessageDialogComponent } from '../message-dialog/message-dialog.compone
   styleUrls: ['./cluster-dialog.component.sass']
 })
 export class ClusterDialogComponent implements OnInit {
-  private client: Kraken
-  private cluster: Cluster
+  private client: Kraken;
+  private cluster: Cluster;
   public clusterForm: FormGroup = new FormGroup({
     name: new FormControl(''),
     endpoint: new FormControl(''),
@@ -40,6 +40,12 @@ export class ClusterDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
+  }
+
+  enter($event): void {
+    if ($event.keyCode == 13 && this.clusterForm.valid) {
+      this.submit()
+    };
   }
 
   submit(): void {

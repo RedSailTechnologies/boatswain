@@ -38,7 +38,7 @@ The api can be hit at /api/redsail.bosn.Kraken/&lt;Method&gt;.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| uuid | [string](#string) |  | the unique id of the configuration |
+| uuid | [string](#string) |  | the unique id of the cluster |
 | name | [string](#string) |  | name of the cluster |
 | endpoint | [string](#string) |  | the cluster&#39;s api server |
 | token | [string](#string) |  | the access token used to hit the kube api server |

@@ -1,19 +1,29 @@
-<div class="page">
+<div class="page" *ngIf="repos; else noData">
     <div class="right-button">
-        <button mat-raised-button color="accent">
+        <button mat-raised-button color="accent" (click)="add()">
             <mat-icon>add</mat-icon>
             Add
         </button>
     </div>
-    <mat-accordion *ngIf="charts.size > 0; else noData">
+    <mat-accordion>
         <mat-expansion-panel class="panel" *ngFor="let repo of repos">
             <mat-expansion-panel-header>
                 <mat-panel-title>{{repo.name}}</mat-panel-title>
                 <mat-panel-description>
-                    Endpoint: {{repo.endpoint}}
                     <span class="spacer"></span>
+                    Endpoint: {{repo.endpoint}}
+                    <span style="width:100px;"></span>
                     Status: 
                     <button mat-mini-fab class="shrink-button" [ngClass]="{'status-online':repo.ready,'status-offline':!repo.ready}"></button>
+                    <span style="width:100px;"></span>
+                    <button mat-raised-button color="accent" class="action-button" (click)="edit(repo);$event.stopPropagation();">
+                        <mat-icon>edit</mat-icon>
+                        Edit
+                    </button>
+                    <button mat-raised-button color="warn" class="action-button" (click)="delete(repo);$event.stopPropagation();">
+                        <mat-icon>delete</mat-icon>
+                        Delete
+                    </button>
                 </mat-panel-description>
             </mat-expansion-panel-header>
             <ng-template matExpansionPanelContent>
@@ -52,19 +62,14 @@
                         </ng-template>
                     </mat-expansion-panel>
                 </mat-accordion>
-                <div class="right-button">
-                    <button mat-raised-button color="accent">
-                        <mat-icon>edit</mat-icon>
-                        Edit
-                    </button>
-                </div>
+
             </ng-template>
             <ng-template #notReady>
                 <button mat-button disabled>Repo Offline</button>
             </ng-template>
         </mat-expansion-panel>
     </mat-accordion>
-    <ng-template #noData>
-        <mat-spinner color="primary" style="margin: auto;"></mat-spinner>
-    </ng-template>
 </div>
+<ng-template #noData>
+    <mat-spinner color="primary" class="page-spinner"></mat-spinner>
+</ng-template>

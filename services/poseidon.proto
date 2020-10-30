@@ -13,6 +13,15 @@ service Poseidon {
     // downloads the chart
     rpc DownloadChart (DownloadRequest) returns (File);
 
+    // add a repo
+    rpc AddRepo (Repo) returns (EmptyResponse);
+
+    // delete a repo
+    rpc DeleteRepo (Repo) returns (EmptyResponse);
+
+    // Edit a repo
+    rpc EditRepo (Repo) returns (EmptyResponse);
+
     // gets all the currently configured repositories
     rpc Repos (ReposRequest) returns (ReposResponse);
 }
@@ -23,7 +32,7 @@ message Chart {
 }
 
 message ChartVersion {
-    string name = 1;
+    string name = 1; // the name of the chart
     string chart_version = 2; // the chart version
     string app_version = 3; // the chart's default app version
     string description = 4; // description of the chart
@@ -35,20 +44,21 @@ message ChartsResponse {
 }
 
 message DownloadRequest {
-    string chart_name = 1;
-    string chart_version = 2;
-    string repo_name = 3;
+    string chart_name = 1; // the name of the chart to download
+    string chart_version = 2; // the version to download
+    string repo_name = 3; // the repo to download the chart from
 }
 
 message File {
-    string name = 1;
-    bytes contents = 2;
+    string name = 1; // the filename
+    bytes contents = 2; // the contents of that file
 }
 
 message Repo {
-    string name = 1; // name of the repo
-    string endpoint = 2; // the endpoint for the repo
-    bool ready = 3; // if the repo is ready (checking by getting index.yaml)
+    string uuid = 1; // the unique id of the repo
+    string name = 2; // name of the repo
+    string endpoint = 3; // the endpoint for the repo
+    bool ready = 4; // if the repo is ready (checking by getting index.yaml)
 }
 
 message ReposRequest {}
@@ -56,3 +66,5 @@ message ReposRequest {}
 message ReposResponse {
     repeated Repo repos = 1; // the list of currently configured repositories
 }
+
+message EmptyResponse {}

@@ -63,7 +63,7 @@ func TestChartsErrorsOnNonexistentRepo(t *testing.T) {
 		Repos: []RepoConfig{
 			RepoConfig{
 				Name:     "bad",
-				Endpoint: "repo.com",
+				Endpoint: "https://repo.com",
 			},
 		},
 		CacheDir: os.TempDir(),
@@ -95,7 +95,7 @@ func TestDownloadChartErrorsOnBadConfig(t *testing.T) {
 		Repos: []RepoConfig{
 			RepoConfig{
 				Name:     "bad",
-				Endpoint: "repo.com",
+				Endpoint: "http://repo.com",
 			},
 		},
 		CacheDir: os.TempDir(),
@@ -131,6 +131,117 @@ func TestDownloadChartReportsAgentErrors(t *testing.T) {
 	assert.Nil(t, aErr)
 	assert.Nil(t, b)
 	assert.Equal(t, twirp.InternalError("error downloading chart"), bErr)
+}
+
+func TestAddEditDeleteArraySizing(t *testing.T) {
+	repoA := &pb.Repo{
+		Name:     "a",
+		Endpoint: "https://aend",
+	}
+	repoB := &pb.Repo{
+		Name:     "b",
+		Endpoint: "http://bend",
+	}
+
+	sut := &Service{}
+
+	sut.AddRepo(context.TODO(), repoA)
+	sut.AddRepo(context.TODO(), repoB)
+	assert.Len(t, sut.repos, 2)
+
+	sut.DeleteRepo(context.TODO(), sut.repos[0].Repo)
+	assert.Len(t, sut.repos, 1)
+
+	sut.EditRepo(context.TODO(), sut.repos[0].Repo)
+	assert.Len(t, sut.repos, 1)
+
+	sut.DeleteRepo(context.TODO(), sut.repos[0].Repo)
+	assert.Len(t, sut.repos, 0)
+}
+
+func TestAddSetsNewId(t *testing.T) {
+	sut := &Service{}
+	sut.AddRepo(context.TODO(), &pb.Repo{
+		Uuid:     "",
+		Name:     "test",
+		Endpoint: "http://notreal.domain",
+	})
+	assert.NotEqual(t, "", sut.repos[0].Uuid)
+}
+
+func TestEditCorrectlyModifies(t *testing.T) {
+	sut := &Service{}
+	sut.AddRepo(context.TODO(), &pb.Repo{
+		Name:     "start",
+		Endpoint: "http://endpoint",
+	})
+
+	orig := sut.repos[0]
+	copy := &Repo{
+		&pb.Repo{
+			Uuid:     orig.Uuid,
+			Name:     orig.Name,
+			Endpoint: orig.Endpoint,
+		},
+	}
+	copy.Name = "newname"
+
+	assert.NotEqual(t, copy.Name, sut.repos[0].Name)
+	sut.EditRepo(context.TODO(), copy.Repo)
+
+	assert.Equal(t, "newname", sut.repos[0].Name)
+}
+
+func TestDeleteRemovesCorrectRepo(t *testing.T) {
+	sut := &Service{}
+	sut.AddRepo(context.TODO(), &pb.Repo{
+		Name:     "first",
+		Endpoint: "https://1endpoint",
+	})
+	sut.AddRepo(context.TODO(), &pb.Repo{
+		Name:     "second",
+		Endpoint: "http://2endpoint",
+	})
+	sut.AddRepo(context.TODO(), &pb.Repo{
+		Name:     "second",
+		Endpoint: "http://2endpoint",
+	})
+
+	delete := *sut.repos[1]
+	assert.NotEqual(t, delete.Uuid, sut.repos[2].Uuid)
+	sut.DeleteRepo(context.TODO(), delete.Repo)
+
+	assert.Len(t, sut.repos, 2)
+	assert.NotEqual(t, delete.Uuid, sut.repos[0].Uuid)
+	assert.NotEqual(t, delete.Uuid, sut.repos[1].Uuid)
+}
+
+func TestAddEditCheckEndpointSchema(t *testing.T) {
+	sut := &Service{}
+	resp, err := sut.AddRepo(context.TODO(), &pb.Repo{
+		Name:     "start",
+		Endpoint: "endpoint",
+	})
+	assert.Nil(t, resp)
+	assert.NotNil(t, err)
+
+	sut.AddRepo(context.TODO(), &pb.Repo{
+		Name:     "start",
+		Endpoint: "https://endpoint",
+	})
+	orig := sut.repos[0]
+	copy := &Repo{
+		&pb.Repo{
+			Uuid:     orig.Uuid,
+			Name:     orig.Name,
+			Endpoint: orig.Endpoint,
+		},
+	}
+	copy.Endpoint = "bad.com"
+
+	resp, err = sut.EditRepo(context.TODO(), copy.Repo)
+	assert.Nil(t, resp)
+	assert.NotNil(t, err)
 }
 
 func TestReposCallsAgent(t *testing.T) {

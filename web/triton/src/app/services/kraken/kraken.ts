@@ -181,22 +181,6 @@ const JSONToReleaseResponse = (m: ReleaseResponse | ReleaseResponseJSON): Releas
     };
 };
 
-export interface Response {
-    
-}
-
-interface ResponseJSON {
-    
-}
-
-
-const JSONToResponse = (m: Response | ResponseJSON): Response => {
-    
-    return {
-        
-    };
-};
-
 export interface UpgradeReleaseRequest {
     name: string;
     chart: string;
@@ -232,6 +216,22 @@ const UpgradeReleaseRequestToJSON = (m: UpgradeReleaseRequest): UpgradeReleaseRe
         cluster_name: m.clusterName,
         repo_name: m.repoName,
         values: m.values,
+        
+    };
+};
+
+export interface Response {
+    
+}
+
+interface ResponseJSON {
+    
+}
+
+
+const JSONToResponse = (m: Response | ResponseJSON): Response => {
+    
+    return {
         
     };
 };

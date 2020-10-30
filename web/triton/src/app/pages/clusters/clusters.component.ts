@@ -62,7 +62,7 @@ export class ClustersComponent implements OnInit {
     }).afterClosed().subscribe((result: Boolean) => {
       if (result) {
         this.client.deleteCluster(element).catch(_ => {
-          this.snackBar.open(`Cluster could not be deleted`, "Dismiss", {
+          this.snackBar.open(`${element.name} could not be deleted`, "Dismiss", {
             duration: 5 * 1000,
             panelClass: ["warn-snack"]
           })
@@ -70,7 +70,7 @@ export class ClustersComponent implements OnInit {
           this.refreshClusters()
         });
       }
-    })
+    });
   }
 
   refreshClusters() : void {

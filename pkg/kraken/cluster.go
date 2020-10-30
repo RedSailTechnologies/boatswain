@@ -11,7 +11,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// Cluster is just a type alias to the generated code so we can extend it here
+// Cluster is a type def to include the protobuf definition so we can extend it
 type Cluster struct {
 	*pb.Cluster
 }

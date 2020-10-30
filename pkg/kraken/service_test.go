@@ -106,8 +106,20 @@ func TestEditCorrectlyModifies(t *testing.T) {
 	sut := &Service{}
 	sut.AddCluster(context.TODO(), secondCluster.Cluster)
 
-	copy := *sut.clusters[0]
+	orig := sut.clusters[0]
+	copy := &Cluster{
+		&pb.Cluster{
+			Uuid:     orig.Uuid,
+			Name:     orig.Name,
+			Endpoint: orig.Endpoint,
+			Token:    orig.Token,
+			Cert:     orig.Cert,
+			Ready:    orig.Ready,
+		},
+	}
 	copy.Name = "newname"
+
+	assert.NotEqual(t, copy.Name, sut.clusters[0].Name)
 	sut.EditCluster(context.TODO(), copy.Cluster)
 
 	assert.Equal(t, "newname", sut.clusters[0].Name)
@@ -119,13 +131,13 @@ func TestDeleteRemovesCorrectCluster(t *testing.T) {
 	sut.AddCluster(context.TODO(), firstCluster.Cluster)
 	sut.AddCluster(context.TODO(), secondCluster.Cluster)
 
-	copy := *sut.clusters[2]
-	assert.NotEqual(t, copy.Uuid, sut.clusters[0].Uuid)
-	sut.DeleteCluster(context.TODO(), copy.Cluster)
+	delete := *sut.clusters[2]
+	assert.NotEqual(t, delete.Uuid, sut.clusters[0].Uuid)
+	sut.DeleteCluster(context.TODO(), delete.Cluster)
 
 	assert.Len(t, sut.clusters, 2)
-	assert.NotEqual(t, copy.Uuid, sut.clusters[0].Uuid)
-	assert.NotEqual(t, copy.Uuid, sut.clusters[1].Uuid)
+	assert.NotEqual(t, delete.Uuid, sut.clusters[0].Uuid)
+	assert.NotEqual(t, delete.Uuid, sut.clusters[1].Uuid)
 }
 
 func TestClustersGetsAll(t *testing.T) {
