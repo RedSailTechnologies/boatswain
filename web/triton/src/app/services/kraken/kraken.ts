@@ -3,15 +3,21 @@ import {createTwirpRequest, throwTwirpError, Fetch} from './twirp';
 
 
 export interface Cluster {
+    uuid: string;
     name: string;
     endpoint: string;
+    token: string;
+    cert: string;
     ready: boolean;
     
 }
 
 interface ClusterJSON {
+    uuid: string;
     name: string;
     endpoint: string;
+    token: string;
+    cert: string;
     ready: boolean;
     
 }
@@ -19,8 +25,11 @@ interface ClusterJSON {
 
 const ClusterToJSON = (m: Cluster): ClusterJSON => {
     return {
+        uuid: m.uuid,
         name: m.name,
         endpoint: m.endpoint,
+        token: m.token,
+        cert: m.cert,
         ready: m.ready,
         
     };
@@ -29,8 +38,11 @@ const ClusterToJSON = (m: Cluster): ClusterJSON => {
 const JSONToCluster = (m: Cluster | ClusterJSON): Cluster => {
     
     return {
+        uuid: m.uuid,
         name: m.name,
         endpoint: m.endpoint,
+        token: m.token,
+        cert: m.cert,
         ready: m.ready,
         
     };
@@ -208,7 +220,29 @@ const UpgradeReleaseRequestToJSON = (m: UpgradeReleaseRequest): UpgradeReleaseRe
     };
 };
 
+export interface Response {
+    
+}
+
+interface ResponseJSON {
+    
+}
+
+
+const JSONToResponse = (m: Response | ResponseJSON): Response => {
+    
+    return {
+        
+    };
+};
+
 export interface Kraken {
+    addCluster: (cluster: Cluster) => Promise<Response>;
+    
+    deleteCluster: (cluster: Cluster) => Promise<Response>;
+    
+    editCluster: (cluster: Cluster) => Promise<Response>;
+    
     clusters: (clustersRequest: ClustersRequest) => Promise<ClustersResponse>;
     
     clusterStatus: (cluster: Cluster) => Promise<Cluster>;
@@ -230,6 +264,51 @@ export class DefaultKraken implements Kraken {
         this.fetch = fetch;
         this.writeCamelCase = writeCamelCase;
     }
+    addCluster(cluster: Cluster): Promise<Response> {
+        const url = this.hostname + this.pathPrefix + "AddCluster";
+        let body: Cluster | ClusterJSON = cluster;
+        if (!this.writeCamelCase) {
+            body = ClusterToJSON(cluster);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToResponse);
+        });
+    }
+    
+    deleteCluster(cluster: Cluster): Promise<Response> {
+        const url = this.hostname + this.pathPrefix + "DeleteCluster";
+        let body: Cluster | ClusterJSON = cluster;
+        if (!this.writeCamelCase) {
+            body = ClusterToJSON(cluster);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToResponse);
+        });
+    }
+    
+    editCluster(cluster: Cluster): Promise<Response> {
+        const url = this.hostname + this.pathPrefix + "EditCluster";
+        let body: Cluster | ClusterJSON = cluster;
+        if (!this.writeCamelCase) {
+            body = ClusterToJSON(cluster);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToResponse);
+        });
+    }
+    
     clusters(clustersRequest: ClustersRequest): Promise<ClustersResponse> {
         const url = this.hostname + this.pathPrefix + "Clusters";
         let body: ClustersRequest | ClustersRequestJSON = clustersRequest;

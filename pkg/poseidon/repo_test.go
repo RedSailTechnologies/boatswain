@@ -3,15 +3,18 @@ package poseidon
 import (
 	"testing"
 
+	pb "github.com/redsailtechnologies/boatswain/rpc/poseidon"
 	"github.com/stretchr/testify/assert"
 	"helm.sh/helm/v3/pkg/repo"
 )
 
 func TestToChartPathOptionsUsesCorrectEndpoint(t *testing.T) {
 	endpoint := "http://ahelmrepo.notreal/"
-	sut := &RepoConfig{
-		Name:     "helm-repo",
-		Endpoint: endpoint,
+	sut := &Repo{
+		&pb.Repo{
+			Name:     "helm-repo",
+			Endpoint: endpoint,
+		},
 	}
 	cpo := sut.ToChartPathOptions()
 	assert.True(t, cpo.InsecureSkipTLSverify)
@@ -21,10 +24,13 @@ func TestToChartPathOptionsUsesCorrectEndpoint(t *testing.T) {
 func TestToChartRepoUsesConfig(t *testing.T) {
 	name := "helm-repo"
 	endpoint := "http://ahelmrepo.notreal/"
-	sut := &RepoConfig{
-		Name:     name,
-		Endpoint: endpoint,
+	sut := &Repo{
+		&pb.Repo{
+			Name:     name,
+			Endpoint: endpoint,
+		},
 	}
+
 	out, err := sut.ToChartRepo()
 	if err != nil {
 		t.Error("error converting config to chart repo")
@@ -38,16 +44,20 @@ func TestToChartRepoUsesConfig(t *testing.T) {
 }
 
 func TestGetRepoConfig(t *testing.T) {
-	a := RepoConfig{
-		Name:     "repoA",
-		Endpoint: "endpoint.com",
+	a := &Repo{
+		&pb.Repo{
+			Name:     "repoA",
+			Endpoint: "endpoint.com",
+		},
 	}
-	b := RepoConfig{
-		Name:     "RepoB",
-		Endpoint: "anotherendpoint.com",
+	b := &Repo{
+		&pb.Repo{
+			Name:     "RepoB",
+			Endpoint: "anotherendpoint.com",
+		},
 	}
-	sut := &Config{
-		Repos: []RepoConfig{
+	sut := &Service{
+		repos: []*Repo{
 			a,
 			b,
 		},

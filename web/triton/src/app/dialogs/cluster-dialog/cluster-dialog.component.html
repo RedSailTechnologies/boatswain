@@ -1,0 +1,43 @@
+<div mat-dialog-title>
+    <mat-toolbar color="secondary">
+        <span>
+            {{title}}
+        </span>
+        <span class="spacer"></span>
+        <button mat-icon-button mat-dialog-close aria-label="close" tabindex="-1">
+            <mat-icon color="warn">close</mat-icon>
+        </button>
+    </mat-toolbar>
+</div>
+<div mat-dialog-content style="margin: 10px;">
+    <form [formGroup]="clusterForm"  (keydown)="enter($event)">
+        <mat-form-field appearance="fill" style="width:66%;">
+            <mat-label>Name</mat-label>
+            <input matInput required formControlName="name" />
+        </mat-form-field>
+        <br />
+        <mat-form-field appearance="fill" style="width:100%;">
+            <mat-label>Endpoint</mat-label>
+            <input matInput required formControlName="endpoint" />
+        </mat-form-field>
+        <br />
+        <mat-form-field appearance="fill" style="width:100%;">
+            <mat-label>Token</mat-label>
+            <input matInput required formControlName="token" (focus)="secretFocused('token')" />
+        </mat-form-field>
+        <br />
+        <mat-form-field appearance="fill" style="width:100%;resize:none;">
+            <mat-label>Cert</mat-label>
+            <textarea matInput required formControlName="cert" (focus)="secretFocused('cert')"
+                      cdkTextareaAutosize
+                      cdkAutosizeMinRows="10"
+                      cdkAutosizeMaxRows="10"
+                      placeholder="Enter cert here..."></textarea>
+        </mat-form-field>
+    </form>
+    <br />
+</div>
+<div mat-dialog-actions  style="margin: 10px;">
+    <button mat-raised-button color="accent" style="width:49%;" (click)="submit()" [disabled]="!this.clusterForm.valid">Submit</button>
+    <button mat-raised-button mat-dialog-close color="warn" style="width:49%;">Cancel</button>
+</div>

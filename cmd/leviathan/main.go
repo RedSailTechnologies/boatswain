@@ -17,14 +17,15 @@ import (
 )
 
 func main() {
-	var configFile string
-	flag.StringVar(&configFile, "config", "", "kraken config file path")
+	var configFile, cacheDir string
+	flag.StringVar(&configFile, "config", "", "leviathan config file path")
+	flag.StringVar(&cacheDir, "cache", "", "poseidon cache path")
 	flag.Parse()
 
 	// Kraken
 	krakenConfig := &kraken.Config{}
 	if err := cfg.YAML(configFile, krakenConfig); err != nil {
-		logger.Fatal("could not read kraken configuration")
+		logger.Warn("could not read kraken configuration", "error", err)
 	}
 
 	ph := "localhost"
@@ -44,7 +45,10 @@ func main() {
 	// Poseidon
 	poseidonConfig := &poseidon.Config{}
 	if err := cfg.YAML(configFile, poseidonConfig); err != nil {
-		logger.Fatal("could not read poseidon configuration")
+		logger.Warn("could not read poseidon configuration", "error", err)
+	}
+	if cacheDir != "" {
+		poseidonConfig.CacheDir = cacheDir
 	}
 
 	poseidonServer := poseidon.New(poseidonConfig)
@@ -53,7 +57,7 @@ func main() {
 	// Triton
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		logger.Fatal("could not read configuration")
+		logger.Fatal("could not get current directory")
 	}
 	tritonServer := http.FileServer(http.Dir(dir + "/triton"))
 

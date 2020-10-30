@@ -1,0 +1,18 @@
+<div mat-dialog-title>
+    <mat-toolbar color="secondary">
+        <span>
+            {{reason}}
+        </span>
+        <span class="spacer"></span>
+        <button mat-icon-button aria-label="close" tabindex="-1" [mat-dialog-close]="false">
+            <mat-icon color="warn">close</mat-icon>
+        </button>
+    </mat-toolbar>
+</div>
+<div mat-dialog-content style="margin-left: 20px; margin-right: 20px">
+    {{message}}
+</div>
+<div mat-dialog-actions style="justify-content: center;margin-bottom: 10px">
+    <button mat-raised-button color="accent" tabindex="-1" [mat-dialog-close]="true">Yes</button>
+    <button mat-raised-button color="warn" tabindex="-1" [mat-dialog-close]="false">No</button>
+</div>

@@ -8,6 +8,7 @@
     - [ChartVersion](#redsail.bosn.ChartVersion)
     - [ChartsResponse](#redsail.bosn.ChartsResponse)
     - [DownloadRequest](#redsail.bosn.DownloadRequest)
+    - [EmptyResponse](#redsail.bosn.EmptyResponse)
     - [File](#redsail.bosn.File)
     - [Repo](#redsail.bosn.Repo)
     - [ReposRequest](#redsail.bosn.ReposRequest)
@@ -51,7 +52,7 @@ The api can be hit at /api/redsail.bosn.Poseidon/&lt;Method&gt;.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
+| name | [string](#string) |  | the name of the chart |
 | chart_version | [string](#string) |  | the chart version |
 | app_version | [string](#string) |  | the chart&#39;s default app version |
 | description | [string](#string) |  | description of the chart |
@@ -85,9 +86,19 @@ The api can be hit at /api/redsail.bosn.Poseidon/&lt;Method&gt;.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| chart_name | [string](#string) |  |  |
-| chart_version | [string](#string) |  |  |
-| repo_name | [string](#string) |  |  |
+| chart_name | [string](#string) |  | the name of the chart to download |
+| chart_version | [string](#string) |  | the version to download |
+| repo_name | [string](#string) |  | the repo to download the chart from |
+
+
+
+
+
+
+<a name="redsail.bosn.EmptyResponse"></a>
+
+### EmptyResponse
+
 
 
 
@@ -102,8 +113,8 @@ The api can be hit at /api/redsail.bosn.Poseidon/&lt;Method&gt;.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  |  |
-| contents | [bytes](#bytes) |  |  |
+| name | [string](#string) |  | the filename |
+| contents | [bytes](#bytes) |  | the contents of that file |
 
 
 
@@ -118,6 +129,7 @@ The api can be hit at /api/redsail.bosn.Poseidon/&lt;Method&gt;.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| uuid | [string](#string) |  | the unique id of the repo |
 | name | [string](#string) |  | name of the repo |
 | endpoint | [string](#string) |  | the endpoint for the repo |
 | ready | [bool](#bool) |  | if the repo is ready (checking by getting index.yaml) |
@@ -167,6 +179,9 @@ The api can be hit at /api/redsail.bosn.Poseidon/&lt;Method&gt;.
 | ----------- | ------------ | ------------- | ------------|
 | Charts | [Repo](#redsail.bosn.Repo) | [ChartsResponse](#redsail.bosn.ChartsResponse) | gets all the charts for this repository |
 | DownloadChart | [DownloadRequest](#redsail.bosn.DownloadRequest) | [File](#redsail.bosn.File) | downloads the chart |
+| AddRepo | [Repo](#redsail.bosn.Repo) | [EmptyResponse](#redsail.bosn.EmptyResponse) | add a repo |
+| DeleteRepo | [Repo](#redsail.bosn.Repo) | [EmptyResponse](#redsail.bosn.EmptyResponse) | delete a repo |
+| EditRepo | [Repo](#redsail.bosn.Repo) | [EmptyResponse](#redsail.bosn.EmptyResponse) | Edit a repo |
 | Repos | [ReposRequest](#redsail.bosn.ReposRequest) | [ReposResponse](#redsail.bosn.ReposResponse) | gets all the currently configured repositories |
 
  

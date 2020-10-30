@@ -1,17 +1,12 @@
 <mat-toolbar color="primary">
-    <button mat-button aria-label="Main menu" [matMenuTriggerFor]="menu">
+    <button mat-button aria-label="Main menu" (click)="toggleSideNav()">
         <mat-icon>menu</mat-icon>
     </button>
-    <mat-menu #menu="matMenu">
-        <button mat-menu-item routerLink="" routerLinkActive="active">Home</button>
-        <button mat-menu-item routerLink="clusters" routerLinkActive="active">Clusters</button>
-        <button mat-menu-item routerLink="releases" routerLinkActive="active">Releases</button>
-        <button mat-menu-item routerLink="repos" routerLinkActive="active">Repositories</button>
-    </mat-menu>
     <span>Boatswain (bow·sn) Triton</span>
     <span class="spacer"></span>
     <span>{{page}}</span>    
     <span class="spacer"></span>
+    <app-theme-picker></app-theme-picker>
     <a href="" mat-button aria-label="Documentation">
         <mat-icon>help</mat-icon>
         Documentation
@@ -21,4 +16,32 @@
         Github
     </a>
 </mat-toolbar>
-<router-outlet></router-outlet>
+<mat-sidenav-container style="float: none;height:100%">
+    <mat-sidenav mode="side" [opened]="sideNav">
+        <div style="margin: 0 20px 0 20px">
+            <mat-nav-list>
+                <br/>
+                Home
+                <a mat-list-item routerLink="" routerLinkActive="active" aria-label="home" (click)="toggleSideNav()">Home</a>
+                <mat-divider></mat-divider>
+                <br/>
+                Status
+                <a mat-list-item routerLink="clusters" routerLinkActive="active" aria-label="clusters" (click)="toggleSideNav()">Clusters</a>
+                <a mat-list-item routerLink="repos" routerLinkActive="active" aria-label="repos" (click)="toggleSideNav()">Repos</a>
+                <mat-divider></mat-divider>
+                <br/>
+                Apps
+                <a mat-list-item aria-label="projects">Projects</a>
+                <a mat-list-item aria-label="applications">Applications</a>
+                <mat-divider></mat-divider>
+                <br/>
+                Delivery
+                <a mat-list-item aria-label="deliveries">Deliveries</a>
+                <a mat-list-item aria-label="templates">Templates</a>
+            </mat-nav-list>
+        </div>
+    </mat-sidenav>
+    <mat-sidenav-content>
+        <router-outlet></router-outlet>
+    </mat-sidenav-content>
+</mat-sidenav-container>

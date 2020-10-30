@@ -1,5 +1,11 @@
-<div class="page">
-    <table *ngIf="clusters;else noData" mat-table [dataSource]="clusters" class="full-width">
+<div class="page" *ngIf="clusters;else noData">
+    <div class="right-button">
+        <button mat-raised-button color="accent" (click)="add()">
+            <mat-icon>add</mat-icon>
+            Add
+        </button>
+    </div>
+    <table mat-table [dataSource]="clusters" class="full-width">
         <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef> Name </th>
             <td mat-cell *matCellDef="let element"> {{element.name}} </td>
@@ -12,12 +18,20 @@
             <th mat-header-cell *matHeaderCellDef> Status </th>
             <td mat-cell *matCellDef="let element">
                 <button mat-mini-fab class="shrink-button" [ngClass]="{'status-online':element.ready,'status-offline':!element.ready}"></button>
+                <button mat-raised-button color="warn" class="action-button" (click)="delete(element)">
+                    <mat-icon>delete</mat-icon>
+                    Delete
+                </button>
+                <button mat-raised-button color="accent" class="action-button" (click)="edit(element)">
+                    <mat-icon>edit</mat-icon>
+                    Edit
+                </button>
             </td>
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="['name', 'endpoint', 'status']"></tr>
         <tr mat-row *matRowDef="let row; columns: ['name', 'endpoint', 'status'];"></tr>
     </table>
-    <ng-template #noData>
-        <mat-spinner color="primary" style="margin: auto;"></mat-spinner>
-    </ng-template>
 </div>
+<ng-template #noData>
+    <mat-spinner color="primary" class="page-spinner"></mat-spinner>
+</ng-template>

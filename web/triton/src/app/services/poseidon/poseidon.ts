@@ -121,6 +121,7 @@ const JSONToFile = (m: File | FileJSON): File => {
 };
 
 export interface Repo {
+    uuid: string;
     name: string;
     endpoint: string;
     ready: boolean;
@@ -128,6 +129,7 @@ export interface Repo {
 }
 
 interface RepoJSON {
+    uuid: string;
     name: string;
     endpoint: string;
     ready: boolean;
@@ -137,6 +139,7 @@ interface RepoJSON {
 
 const RepoToJSON = (m: Repo): RepoJSON => {
     return {
+        uuid: m.uuid,
         name: m.name,
         endpoint: m.endpoint,
         ready: m.ready,
@@ -147,6 +150,7 @@ const RepoToJSON = (m: Repo): RepoJSON => {
 const JSONToRepo = (m: Repo | RepoJSON): Repo => {
     
     return {
+        uuid: m.uuid,
         name: m.name,
         endpoint: m.endpoint,
         ready: m.ready,
@@ -188,10 +192,32 @@ const JSONToReposResponse = (m: ReposResponse | ReposResponseJSON): ReposRespons
     };
 };
 
+export interface EmptyResponse {
+    
+}
+
+interface EmptyResponseJSON {
+    
+}
+
+
+const JSONToEmptyResponse = (m: EmptyResponse | EmptyResponseJSON): EmptyResponse => {
+    
+    return {
+        
+    };
+};
+
 export interface Poseidon {
     charts: (repo: Repo) => Promise<ChartsResponse>;
     
     downloadChart: (downloadRequest: DownloadRequest) => Promise<File>;
+    
+    addRepo: (repo: Repo) => Promise<EmptyResponse>;
+    
+    deleteRepo: (repo: Repo) => Promise<EmptyResponse>;
+    
+    editRepo: (repo: Repo) => Promise<EmptyResponse>;
     
     repos: (reposRequest: ReposRequest) => Promise<ReposResponse>;
     
@@ -235,6 +261,51 @@ export class DefaultPoseidon implements Poseidon {
             }
 
             return resp.json().then(JSONToFile);
+        });
+    }
+    
+    addRepo(repo: Repo): Promise<EmptyResponse> {
+        const url = this.hostname + this.pathPrefix + "AddRepo";
+        let body: Repo | RepoJSON = repo;
+        if (!this.writeCamelCase) {
+            body = RepoToJSON(repo);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToEmptyResponse);
+        });
+    }
+    
+    deleteRepo(repo: Repo): Promise<EmptyResponse> {
+        const url = this.hostname + this.pathPrefix + "DeleteRepo";
+        let body: Repo | RepoJSON = repo;
+        if (!this.writeCamelCase) {
+            body = RepoToJSON(repo);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToEmptyResponse);
+        });
+    }
+    
+    editRepo(repo: Repo): Promise<EmptyResponse> {
+        const url = this.hostname + this.pathPrefix + "EditRepo";
+        let body: Repo | RepoJSON = repo;
+        if (!this.writeCamelCase) {
+            body = RepoToJSON(repo);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToEmptyResponse);
         });
     }
     

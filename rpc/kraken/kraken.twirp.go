@@ -40,6 +40,15 @@ const _ = twirp.TwirpPackageIsVersion7
 // ================
 
 type Kraken interface {
+	// adds a cluster to the list of configurations
+	AddCluster(context.Context, *Cluster) (*Response, error)
+
+	// deletes a cluster from the list of configurations
+	DeleteCluster(context.Context, *Cluster) (*Response, error)
+
+	// edits an already existing cluster
+	EditCluster(context.Context, *Cluster) (*Response, error)
+
 	// gets all clusters currently configured and their status
 	Clusters(context.Context, *ClustersRequest) (*ClustersResponse, error)
 
@@ -59,7 +68,7 @@ type Kraken interface {
 
 type krakenProtobufClient struct {
 	client      HTTPClient
-	urls        [4]string
+	urls        [7]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -79,7 +88,10 @@ func NewKrakenProtobufClient(baseURL string, client HTTPClient, opts ...twirp.Cl
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Kraken")
-	urls := [4]string{
+	urls := [7]string{
+		serviceURL + "AddCluster",
+		serviceURL + "DeleteCluster",
+		serviceURL + "EditCluster",
 		serviceURL + "Clusters",
 		serviceURL + "ClusterStatus",
 		serviceURL + "Releases",
@@ -92,6 +104,144 @@ func NewKrakenProtobufClient(baseURL string, client HTTPClient, opts ...twirp.Cl
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
 		opts:        clientOpts,
 	}
+}
+
+func (c *krakenProtobufClient) AddCluster(ctx context.Context, in *Cluster) (*Response, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
+	ctx = ctxsetters.WithMethodName(ctx, "AddCluster")
+	caller := c.callAddCluster
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Cluster) (*Response, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return c.callAddCluster(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Response)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *krakenProtobufClient) callAddCluster(ctx context.Context, in *Cluster) (*Response, error) {
+	out := new(Response)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *krakenProtobufClient) DeleteCluster(ctx context.Context, in *Cluster) (*Response, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
+	ctx = ctxsetters.WithMethodName(ctx, "DeleteCluster")
+	caller := c.callDeleteCluster
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Cluster) (*Response, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return c.callDeleteCluster(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Response)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *krakenProtobufClient) callDeleteCluster(ctx context.Context, in *Cluster) (*Response, error) {
+	out := new(Response)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *krakenProtobufClient) EditCluster(ctx context.Context, in *Cluster) (*Response, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
+	ctx = ctxsetters.WithMethodName(ctx, "EditCluster")
+	caller := c.callEditCluster
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Cluster) (*Response, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return c.callEditCluster(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Response)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *krakenProtobufClient) callEditCluster(ctx context.Context, in *Cluster) (*Response, error) {
+	out := new(Response)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
 }
 
 func (c *krakenProtobufClient) Clusters(ctx context.Context, in *ClustersRequest) (*ClustersResponse, error) {
@@ -125,7 +275,7 @@ func (c *krakenProtobufClient) Clusters(ctx context.Context, in *ClustersRequest
 
 func (c *krakenProtobufClient) callClusters(ctx context.Context, in *ClustersRequest) (*ClustersResponse, error) {
 	out := new(ClustersResponse)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -171,7 +321,7 @@ func (c *krakenProtobufClient) ClusterStatus(ctx context.Context, in *Cluster) (
 
 func (c *krakenProtobufClient) callClusterStatus(ctx context.Context, in *Cluster) (*Cluster, error) {
 	out := new(Cluster)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -217,7 +367,7 @@ func (c *krakenProtobufClient) Releases(ctx context.Context, in *ReleaseRequest)
 
 func (c *krakenProtobufClient) callReleases(ctx context.Context, in *ReleaseRequest) (*ReleaseResponse, error) {
 	out := new(ReleaseResponse)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -263,7 +413,7 @@ func (c *krakenProtobufClient) UpgradeRelease(ctx context.Context, in *UpgradeRe
 
 func (c *krakenProtobufClient) callUpgradeRelease(ctx context.Context, in *UpgradeReleaseRequest) (*Release, error) {
 	out := new(Release)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[6], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -284,7 +434,7 @@ func (c *krakenProtobufClient) callUpgradeRelease(ctx context.Context, in *Upgra
 
 type krakenJSONClient struct {
 	client      HTTPClient
-	urls        [4]string
+	urls        [7]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -304,7 +454,10 @@ func NewKrakenJSONClient(baseURL string, client HTTPClient, opts ...twirp.Client
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Kraken")
-	urls := [4]string{
+	urls := [7]string{
+		serviceURL + "AddCluster",
+		serviceURL + "DeleteCluster",
+		serviceURL + "EditCluster",
 		serviceURL + "Clusters",
 		serviceURL + "ClusterStatus",
 		serviceURL + "Releases",
@@ -317,6 +470,144 @@ func NewKrakenJSONClient(baseURL string, client HTTPClient, opts ...twirp.Client
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
 		opts:        clientOpts,
 	}
+}
+
+func (c *krakenJSONClient) AddCluster(ctx context.Context, in *Cluster) (*Response, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
+	ctx = ctxsetters.WithMethodName(ctx, "AddCluster")
+	caller := c.callAddCluster
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Cluster) (*Response, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return c.callAddCluster(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Response)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *krakenJSONClient) callAddCluster(ctx context.Context, in *Cluster) (*Response, error) {
+	out := new(Response)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *krakenJSONClient) DeleteCluster(ctx context.Context, in *Cluster) (*Response, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
+	ctx = ctxsetters.WithMethodName(ctx, "DeleteCluster")
+	caller := c.callDeleteCluster
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Cluster) (*Response, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return c.callDeleteCluster(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Response)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *krakenJSONClient) callDeleteCluster(ctx context.Context, in *Cluster) (*Response, error) {
+	out := new(Response)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *krakenJSONClient) EditCluster(ctx context.Context, in *Cluster) (*Response, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Kraken")
+	ctx = ctxsetters.WithMethodName(ctx, "EditCluster")
+	caller := c.callEditCluster
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *Cluster) (*Response, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return c.callEditCluster(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Response)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *krakenJSONClient) callEditCluster(ctx context.Context, in *Cluster) (*Response, error) {
+	out := new(Response)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
 }
 
 func (c *krakenJSONClient) Clusters(ctx context.Context, in *ClustersRequest) (*ClustersResponse, error) {
@@ -350,7 +641,7 @@ func (c *krakenJSONClient) Clusters(ctx context.Context, in *ClustersRequest) (*
 
 func (c *krakenJSONClient) callClusters(ctx context.Context, in *ClustersRequest) (*ClustersResponse, error) {
 	out := new(ClustersResponse)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -396,7 +687,7 @@ func (c *krakenJSONClient) ClusterStatus(ctx context.Context, in *Cluster) (*Clu
 
 func (c *krakenJSONClient) callClusterStatus(ctx context.Context, in *Cluster) (*Cluster, error) {
 	out := new(Cluster)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -442,7 +733,7 @@ func (c *krakenJSONClient) Releases(ctx context.Context, in *ReleaseRequest) (*R
 
 func (c *krakenJSONClient) callReleases(ctx context.Context, in *ReleaseRequest) (*ReleaseResponse, error) {
 	out := new(ReleaseResponse)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -488,7 +779,7 @@ func (c *krakenJSONClient) UpgradeRelease(ctx context.Context, in *UpgradeReleas
 
 func (c *krakenJSONClient) callUpgradeRelease(ctx context.Context, in *UpgradeReleaseRequest) (*Release, error) {
 	out := new(Release)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[6], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -587,6 +878,15 @@ func (s *krakenServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	switch method {
+	case "AddCluster":
+		s.serveAddCluster(ctx, resp, req)
+		return
+	case "DeleteCluster":
+		s.serveDeleteCluster(ctx, resp, req)
+		return
+	case "EditCluster":
+		s.serveEditCluster(ctx, resp, req)
+		return
 	case "Clusters":
 		s.serveClusters(ctx, resp, req)
 		return
@@ -604,6 +904,531 @@ func (s *krakenServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
 		return
 	}
+}
+
+func (s *krakenServer) serveAddCluster(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveAddClusterJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveAddClusterProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *krakenServer) serveAddClusterJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "AddCluster")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(Cluster)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Kraken.AddCluster
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Cluster) (*Response, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return s.Kraken.AddCluster(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Response)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *Response
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *Response and nil error while calling AddCluster. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *krakenServer) serveAddClusterProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "AddCluster")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(Cluster)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Kraken.AddCluster
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Cluster) (*Response, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return s.Kraken.AddCluster(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Response)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *Response
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *Response and nil error while calling AddCluster. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *krakenServer) serveDeleteCluster(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveDeleteClusterJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveDeleteClusterProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *krakenServer) serveDeleteClusterJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "DeleteCluster")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(Cluster)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Kraken.DeleteCluster
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Cluster) (*Response, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return s.Kraken.DeleteCluster(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Response)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *Response
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *Response and nil error while calling DeleteCluster. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *krakenServer) serveDeleteClusterProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "DeleteCluster")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(Cluster)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Kraken.DeleteCluster
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Cluster) (*Response, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return s.Kraken.DeleteCluster(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Response)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *Response
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *Response and nil error while calling DeleteCluster. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *krakenServer) serveEditCluster(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveEditClusterJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveEditClusterProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *krakenServer) serveEditClusterJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "EditCluster")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(Cluster)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Kraken.EditCluster
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Cluster) (*Response, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return s.Kraken.EditCluster(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Response)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *Response
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *Response and nil error while calling EditCluster. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *krakenServer) serveEditClusterProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "EditCluster")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(Cluster)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Kraken.EditCluster
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *Cluster) (*Response, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*Cluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*Cluster) when calling interceptor")
+					}
+					return s.Kraken.EditCluster(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*Response)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *Response
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *Response and nil error while calling EditCluster. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
 }
 
 func (s *krakenServer) serveClusters(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
@@ -1868,42 +2693,46 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 584 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x54, 0xc1, 0x6e, 0xd3, 0x40,
-	0x10, 0xc5, 0x4d, 0xe3, 0x38, 0x13, 0x27, 0x31, 0x4b, 0x5a, 0x59, 0xa1, 0x85, 0xe0, 0x5e, 0x22,
-	0x0e, 0x89, 0xda, 0x8a, 0x13, 0xe2, 0x42, 0x85, 0x10, 0xa2, 0x2a, 0x92, 0x11, 0x1c, 0xb8, 0x44,
-	0x1b, 0x7b, 0x70, 0xac, 0xb8, 0xbb, 0xcb, 0xae, 0xdd, 0xaa, 0xbf, 0xc3, 0x8d, 0xdf, 0xe1, 0x7f,
-	0x90, 0x50, 0xd6, 0x6b, 0x37, 0x45, 0xee, 0x01, 0x6e, 0xdc, 0x32, 0x6f, 0xde, 0x4e, 0x9e, 0xf7,
-	0xbd, 0x59, 0x70, 0xd7, 0x92, 0xae, 0x91, 0xcd, 0x84, 0xe4, 0x39, 0x27, 0xae, 0xc4, 0x58, 0xd1,
-	0x34, 0x9b, 0x2d, 0xb9, 0x62, 0xc1, 0x07, 0xe8, 0x9c, 0x65, 0x85, 0xca, 0x51, 0x12, 0x02, 0xbb,
-	0x8c, 0x5e, 0xa2, 0x6f, 0x4d, 0xac, 0x69, 0x37, 0xd4, 0xbf, 0xc9, 0x18, 0x1c, 0x64, 0xb1, 0xe0,
-	0x29, 0xcb, 0xfd, 0x1d, 0x8d, 0xd7, 0x35, 0x19, 0x41, 0x5b, 0x22, 0x8d, 0x6f, 0xfc, 0xd6, 0xc4,
-	0x9a, 0x3a, 0x61, 0x59, 0x04, 0x0f, 0x61, 0x68, 0x06, 0xaa, 0x10, 0xbf, 0x15, 0xa8, 0xf2, 0xe0,
-	0x0d, 0x78, 0xb7, 0x90, 0x12, 0x9c, 0x29, 0x24, 0xc7, 0xe0, 0x44, 0x06, 0xf3, 0xad, 0x49, 0x6b,
-	0xda, 0x3b, 0xd9, 0x9b, 0x6d, 0x0b, 0x9b, 0x99, 0x13, 0x61, 0x4d, 0x0b, 0x7e, 0x5a, 0xd0, 0x09,
-	0x31, 0x43, 0xaa, 0xb0, 0x51, 0xeb, 0x08, 0xda, 0xd1, 0x8a, 0xca, 0x4a, 0x68, 0x59, 0x90, 0x03,
-	0xe8, 0x6e, 0xba, 0x4a, 0xd0, 0x08, 0xb5, 0xd2, 0x6e, 0x78, 0x0b, 0x90, 0x23, 0xe8, 0x6b, 0xda,
-	0xe2, 0x0a, 0xa5, 0x4a, 0x39, 0xf3, 0x77, 0x35, 0xc3, 0xd5, 0xe0, 0xe7, 0x12, 0x23, 0x4f, 0xa1,
-	0x47, 0x85, 0xa8, 0x29, 0x6d, 0x4d, 0x01, 0x2a, 0x44, 0x45, 0x78, 0x06, 0xae, 0x51, 0xb9, 0xd0,
-	0xaa, 0x6c, 0xcd, 0xe8, 0x19, 0xec, 0x62, 0x23, 0x6e, 0x1f, 0x6c, 0x95, 0xd3, 0xbc, 0x50, 0x7e,
-	0x47, 0x37, 0x4d, 0x15, 0x24, 0xe0, 0x98, 0x6f, 0x52, 0x7f, 0xf1, 0x51, 0xc7, 0xe0, 0x48, 0x73,
-	0xca, 0x6f, 0x35, 0xdd, 0x9e, 0x99, 0x19, 0xd6, 0xb4, 0xe0, 0x0c, 0x06, 0x15, 0x58, 0xda, 0xf2,
-	0x2f, 0x16, 0x5c, 0xc0, 0xb0, 0x1e, 0x62, 0x8c, 0x7c, 0x09, 0x7d, 0xf3, 0x1f, 0x8b, 0x2c, 0x55,
-	0x79, 0x35, 0x6a, 0xbf, 0x51, 0x8f, 0x0a, 0x5d, 0x43, 0x3e, 0xdf, 0x70, 0x83, 0x5f, 0x16, 0xec,
-	0x7d, 0x12, 0x89, 0xa4, 0x31, 0xfe, 0x21, 0xee, 0xbf, 0x33, 0xf8, 0x31, 0x74, 0x25, 0x0a, 0x5e,
-	0xf6, 0x4b, 0x8f, 0x9d, 0x0d, 0x50, 0xb9, 0x7f, 0x45, 0xb3, 0x02, 0x95, 0xef, 0x94, 0xee, 0x97,
-	0xd5, 0xf3, 0xef, 0x16, 0xd8, 0x1f, 0x75, 0x10, 0x48, 0x0f, 0x3a, 0x05, 0x5b, 0x33, 0x7e, 0xcd,
-	0xbc, 0x07, 0xc4, 0x05, 0x27, 0x46, 0x91, 0xf1, 0x1b, 0x8c, 0x3d, 0x8b, 0x0c, 0xa1, 0x57, 0xb0,
-	0x94, 0xa9, 0x9c, 0x66, 0x19, 0xc6, 0xde, 0x0e, 0x19, 0x00, 0xa8, 0x42, 0xa0, 0x54, 0x18, 0x63,
-	0xec, 0xb5, 0x08, 0x80, 0xfd, 0x95, 0xa6, 0x9b, 0xde, 0x2e, 0xf1, 0xc0, 0xad, 0xc9, 0x29, 0x4b,
-	0xbc, 0x36, 0x79, 0x04, 0x43, 0x81, 0x2c, 0x4e, 0x59, 0xb2, 0x30, 0xb8, 0x67, 0x6f, 0x83, 0x45,
-	0x69, 0x80, 0xd7, 0x21, 0x23, 0xf0, 0x2a, 0x50, 0xf2, 0x2c, 0x5b, 0xd2, 0x68, 0xed, 0x39, 0x27,
-	0x3f, 0x76, 0xc0, 0x7e, 0xaf, 0x5f, 0x10, 0xf2, 0x0e, 0x9c, 0x6a, 0x93, 0xc9, 0x61, 0x63, 0x58,
-	0xaa, 0xa5, 0x1f, 0x3f, 0xb9, 0xaf, 0x6d, 0x72, 0xf3, 0x0a, 0xfa, 0x06, 0x33, 0x17, 0xd0, 0x1c,
-	0xbe, 0x71, 0x33, 0x4c, 0xde, 0x6e, 0xed, 0xcd, 0x41, 0x73, 0xf6, 0x8d, 0x90, 0xc3, 0x7b, 0xba,
-	0x46, 0xc7, 0x39, 0x0c, 0xee, 0x26, 0x90, 0x1c, 0xdd, 0x3d, 0xd0, 0x98, 0xcf, 0x71, 0xf3, 0xbe,
-	0xbd, 0x7e, 0xf1, 0xe5, 0x34, 0x49, 0xf3, 0x55, 0xb1, 0x9c, 0x45, 0xfc, 0x72, 0x6e, 0x28, 0x39,
-	0x46, 0x2b, 0xc6, 0x33, 0x9e, 0xa4, 0xa8, 0xe6, 0x4b, 0x4e, 0x73, 0x75, 0x4d, 0x53, 0x36, 0x17,
-	0xeb, 0x64, 0x5e, 0xbe, 0xcc, 0x4b, 0x5b, 0x3f, 0xcd, 0xa7, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff,
-	0x1e, 0x53, 0x8c, 0xf4, 0xaa, 0x05, 0x00, 0x00,
+	// 654 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x55, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0xc5, 0x4d, 0xe3, 0xb8, 0x93, 0xa4, 0x31, 0x4b, 0x5b, 0x59, 0xa1, 0x85, 0xe2, 0x5e, 0x2a,
+	0x0e, 0x89, 0xda, 0x8a, 0x53, 0x01, 0x09, 0x4a, 0x85, 0x10, 0x55, 0x0f, 0x41, 0x70, 0xe0, 0x12,
+	0x6d, 0xbc, 0x83, 0x6b, 0xc5, 0xdd, 0x5d, 0xbc, 0xeb, 0x56, 0xfd, 0x08, 0x7e, 0x82, 0x4f, 0xe2,
+	0x1b, 0xf8, 0x0d, 0x24, 0x64, 0xef, 0xda, 0x4d, 0xc1, 0x3d, 0xd0, 0x1b, 0xb7, 0x9d, 0x37, 0x6f,
+	0xc6, 0x6f, 0xf6, 0xed, 0xae, 0xa1, 0x37, 0xcf, 0xe8, 0x1c, 0xf9, 0x48, 0x66, 0x42, 0x0b, 0xd2,
+	0xcb, 0x90, 0x29, 0x9a, 0xa4, 0xa3, 0x99, 0x50, 0x3c, 0xfc, 0xe6, 0x40, 0xe7, 0x28, 0xcd, 0x95,
+	0xc6, 0x8c, 0x10, 0x58, 0xce, 0xf3, 0x84, 0x05, 0xce, 0xb6, 0xb3, 0xbb, 0x32, 0x29, 0xd7, 0x05,
+	0xc6, 0xe9, 0x39, 0x06, 0x4b, 0x06, 0x2b, 0xd6, 0x64, 0x08, 0x1e, 0x72, 0x26, 0x45, 0xc2, 0x75,
+	0xd0, 0x2a, 0xf1, 0x3a, 0x26, 0x6b, 0xd0, 0xd6, 0x62, 0x8e, 0x3c, 0x58, 0x2e, 0x13, 0x26, 0x28,
+	0xba, 0x44, 0x98, 0xe9, 0xa0, 0x6d, 0xba, 0x14, 0xeb, 0x82, 0x99, 0x21, 0x65, 0x57, 0x81, 0xbb,
+	0xed, 0xec, 0x7a, 0x13, 0x13, 0x84, 0xf7, 0x61, 0x60, 0xe5, 0xa8, 0x09, 0x7e, 0xcd, 0x51, 0xe9,
+	0xf0, 0x18, 0xfc, 0x6b, 0x48, 0x49, 0xc1, 0x15, 0x92, 0x3d, 0xf0, 0x22, 0x8b, 0x05, 0xce, 0x76,
+	0x6b, 0xb7, 0xbb, 0xbf, 0x3e, 0x5a, 0x9c, 0x6b, 0x64, 0x2b, 0x26, 0x35, 0x2d, 0xfc, 0xe1, 0x40,
+	0x67, 0x82, 0x29, 0x52, 0x85, 0xf5, 0x54, 0xce, 0xc2, 0x54, 0x6b, 0xd0, 0x8e, 0xce, 0x68, 0xa6,
+	0xed, 0xa8, 0x26, 0x20, 0x9b, 0xb0, 0x52, 0x64, 0x95, 0xa4, 0x11, 0xda, 0x61, 0xaf, 0x01, 0xb2,
+	0x03, 0xfd, 0x92, 0x36, 0xbd, 0xc0, 0x4c, 0x25, 0xa2, 0x9a, 0xba, 0x57, 0x82, 0x9f, 0x0c, 0x46,
+	0x1e, 0x43, 0x97, 0x4a, 0x59, 0x53, 0xcc, 0x1e, 0x00, 0x95, 0xb2, 0x22, 0x3c, 0x81, 0x9e, 0x55,
+	0x39, 0x2d, 0x55, 0xb9, 0x25, 0xa3, 0x6b, 0xb1, 0xd3, 0x42, 0xdc, 0x06, 0xb8, 0x4a, 0x53, 0x9d,
+	0xab, 0xa0, 0x53, 0x26, 0x6d, 0x14, 0xc6, 0xe0, 0xd9, 0x99, 0xd4, 0x3f, 0x0c, 0xb5, 0x07, 0x5e,
+	0x66, 0xab, 0x82, 0x56, 0xd3, 0xee, 0xd9, 0x9e, 0x93, 0x9a, 0x16, 0x1e, 0xc1, 0x6a, 0x05, 0x1a,
+	0x5b, 0xee, 0x62, 0xc1, 0x29, 0x0c, 0xea, 0x26, 0xd6, 0xc8, 0x43, 0xe8, 0xdb, 0x6f, 0x4c, 0xd3,
+	0x44, 0xe9, 0xaa, 0xd5, 0x46, 0xa3, 0x1e, 0x35, 0xe9, 0x59, 0xf2, 0x49, 0xc1, 0x0d, 0x7f, 0x39,
+	0xb0, 0xfe, 0x51, 0xc6, 0x19, 0x65, 0xf8, 0x87, 0xb8, 0xff, 0xce, 0xe0, 0x87, 0xb0, 0x92, 0xa1,
+	0x14, 0x26, 0x6f, 0x3c, 0xf6, 0x0a, 0xa0, 0x72, 0xff, 0x82, 0xa6, 0x39, 0xaa, 0xc0, 0x33, 0xee,
+	0x9b, 0x28, 0x84, 0xc2, 0x7d, 0xb3, 0x91, 0x4f, 0xbf, 0x3b, 0xe0, 0x7e, 0x28, 0x0f, 0x05, 0xe9,
+	0x42, 0x27, 0xe7, 0x73, 0x2e, 0x2e, 0xb9, 0x7f, 0x8f, 0xf4, 0xc0, 0x63, 0x28, 0x53, 0x71, 0x85,
+	0xcc, 0x77, 0xc8, 0x00, 0xba, 0x39, 0x4f, 0xb8, 0xd2, 0x34, 0x4d, 0x91, 0xf9, 0x4b, 0x64, 0x15,
+	0x40, 0xe5, 0x12, 0x33, 0x85, 0x0c, 0x99, 0xdf, 0x22, 0x00, 0xee, 0x17, 0x9a, 0x14, 0xb9, 0x65,
+	0xe2, 0x43, 0xaf, 0x26, 0x27, 0x3c, 0xf6, 0xdb, 0xe4, 0x01, 0x0c, 0x24, 0x72, 0x96, 0xf0, 0x78,
+	0x6a, 0x71, 0xdf, 0x5d, 0x04, 0x73, 0x63, 0x86, 0xdf, 0x21, 0x6b, 0xe0, 0x57, 0x60, 0x26, 0xd2,
+	0x74, 0x46, 0xa3, 0xb9, 0xef, 0xed, 0xff, 0x6c, 0x81, 0xfb, 0xbe, 0x7c, 0x8c, 0xc8, 0x21, 0xc0,
+	0x2b, 0xc6, 0xaa, 0xa7, 0xa7, 0xf9, 0xe8, 0x0c, 0xff, 0x3a, 0x06, 0xf6, 0xd4, 0xbc, 0x84, 0xfe,
+	0x1b, 0x4c, 0x51, 0xe3, 0x1d, 0xeb, 0x9f, 0x43, 0xf7, 0x98, 0x25, 0xfa, 0x8e, 0xd5, 0xef, 0xc0,
+	0xab, 0x1e, 0x24, 0xb2, 0xd5, 0x58, 0x5a, 0xbd, 0x5d, 0xc3, 0x47, 0xb7, 0xa5, 0x6d, 0xab, 0x17,
+	0xd0, 0xb7, 0x98, 0xf5, 0xee, 0x16, 0x29, 0xcd, 0x30, 0x79, 0xbb, 0x70, 0xfd, 0x37, 0x9b, 0xaf,
+	0xb0, 0x15, 0xb2, 0x75, 0x4b, 0xd6, 0xea, 0x38, 0x81, 0xd5, 0x9b, 0x17, 0x89, 0xec, 0xdc, 0x2c,
+	0x68, 0xbc, 0x66, 0xc3, 0xe6, 0x67, 0xe3, 0xf5, 0xb3, 0xcf, 0x07, 0x71, 0xa2, 0xcf, 0xf2, 0xd9,
+	0x28, 0x12, 0xe7, 0x63, 0x4b, 0xd1, 0x18, 0x9d, 0x71, 0x91, 0x8a, 0x38, 0x41, 0x35, 0x9e, 0x09,
+	0xaa, 0xd5, 0x25, 0x4d, 0xf8, 0x58, 0xce, 0xe3, 0xb1, 0xf9, 0x3f, 0xcd, 0xdc, 0xf2, 0x07, 0x75,
+	0xf0, 0x3b, 0x00, 0x00, 0xff, 0xff, 0x14, 0x21, 0x5d, 0xa3, 0xb0, 0x06, 0x00, 0x00,
 }

@@ -72,8 +72,7 @@ ifeq ($(LEVI_CLIENT),true)
 	@cp -r $(TRITON_PATH)dist/triton $(LEVI_OUT)
 endif
 ifeq ($(DEBUG),true)
-	@cp $(LEVI_CMD)leviathan-debug-config.yaml $(LEVI_OUT)leviathan-debug-config.yaml
-	./bin/leviathan --config $(LEVI_OUT)leviathan-debug-config.yaml
+	./bin/leviathan --cache ./bin/temp
 endif
 
 ## poseidon: builds the poseidon image
