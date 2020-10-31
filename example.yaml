@@ -1,0 +1,189 @@
+#############
+### NOTES ###
+#############
+# Everything in an array other than the clusters list can be substituted for a template, to
+# include: deployments, tests, triggers, and strategies.
+
+# This means that a delivery can be an aggregation of a bunch of different templates, overwriting
+# and specifying values as needed either by an input file or parameters from triggers
+
+# .Inputs vs .Parameters
+# Inputs come from merging a template with another file when setting up a delivery, or specified
+# when calling a template from another template. An easy way to think of them are compile-time variables.
+# Parameters on the other hand are decidedly runtime variables-coming from trigger inputs or manually
+# specified values at runtime.
+
+
+################
+### METADATA ###
+################
+
+# the name of this delivery
+name: sample-app-canary
+
+# the version of this delivery, note this won't impact parts of the delivery
+# unless they use it and just needs to be a unique key for the particular
+# run of the delivery
+version: {{ .Parameters.version }}
+
+# found with app.kubernetes.io/name labels for the name and
+# app.kubernetes.io/part-of for the project
+application: 
+  name: sample-app
+  project: samples
+
+# the names of clusters currently configured in bosn
+# note these can be added through the ui or specified as a configuration file on installing bosn
+clusters:
+  - dev
+  - staging
+
+# deployments are one of the objects we can use in a strategy, meant for long-lived apps/changes
+deployments:
+  - name: sample-app # the name of the deployment, used with helm and with bosn output
+    helm: # can only specify either helm or docker
+      chart: sample-app # the name of the chart for the deployment
+      repo: myrepo # the name of the helm repo, note this must be configured in bosn
+      version: {{ .Params.sampleAppChartVersion }} # the version of the chart, note the template syntax
+  - name: sample-routing
+    helm:
+      chart: sample-routing
+      repo: myrepo
+      version: 1.0
+  # the name of another template in boatswain
+  - template: default-deployment
+    # this replaces the .Inputs object in the template called, templating must be quoted like below
+    arguments: "{{ .Inputs }}"
+
+# tests are another object we can use in a strategy, not meant to be long lived, but otherwise are
+# similar to deployments in their specs but different in how they're handled
+tests:
+  # tests can be specified much like a deployment, the expectation here is that
+  # this is a job or collection of jobs, and after the install with wait the tests should be done
+  - name: sample-app-tests
+    helm:
+      chart: sample-app-tests
+      repo: myrepo
+      version: {{ .Params.testVersion }}
+  
+  # tests can also be specified as just a single container, which bosn will make into a job when run
+  - name: sample-app-load
+    docker:
+      image: docker.io/myrepo/sample-app-load
+      tag: {{ .Params.testVersion }}
+
+
+#################
+### EXECUTION ###
+#################
+
+# triggers are what start the strategy's execution
+triggers:
+  - or:
+    - delivery: another-app-canary # deliveries can trigger other deliveries
+      trigger: deploy-sample-app # the name of the trigger step, see below
+    - and:
+      - artifact: sample-app # an artifact can be a docker or helm artifact
+        type: helm # helm or docker
+        version: ".*" # regex to determine the version that triggers this
+        param: sampleAppChartVersion
+      - artifact: sample-app-load
+        type: docker
+        tag: ".*"
+        param: testVersion
+    # trigger a delivery by the rpc/json call, calling this delivery anme and sending required params
+    - web:
+        params: []
+    # trigger a delivery by requiring a person or group's approval, may be a part of any condition, meant for
+    # requiring approval for a delivery with or without other conditions
+    - approval:
+        groups:
+          - group-name # groups that can approve/start this trigger
+        users: [] # same for groups but with users
+        # with an approval we can specify what params the user must set when approving or may overwrite
+        params:
+          # approval params can be required or not, when required the approver must set them
+          - name: paramA
+            required: true
+          # wheras a non-required parameter will simply override the parameter if the approver sets it
+          - name: paramB
+            required: false
+    # trigger a delivery manually, which can only be a part of top level or conditions, meant for starting
+    # deliveries manually
+    - manual:
+        groups: []
+        users:
+          - some.body
+          - i.used
+          - to.know
+        params: [] # with a manual trigger the person triggering must specify all required parameters
+
+# strategy is the backbone of the execution flow that specifies how deployments and tests are run
+strategy:
+  # start is a special object here and must always be the first object in this array
+  - start:
+      # run a deployment from above
+      - deployment: sample-app
+        helm:
+          type: upgrade # install or upgrade
+          values:
+            # specify the values individually
+            raw:
+              someValue: {{ .Inputs.sampleApp.someValue }}
+              # ...
+          wait: true # whether to deploy helm with the wait flag, defaults to true
+          test: false # whether to run helm tests against this deployment, defaults to false
+
+      # also run this deployment, note that within a strategy entry no guarantee is made about execution,
+      # so this chart could be installed before the chart above
+      - deployment: sample-routing
+        helm:
+          values:
+            # use part or all of a library chart as values
+            library:
+              chart: sample-routing-values
+              repo: myrepo
+              version: 1.0
+              files:
+                - sample-app.yaml
+          wait: false
+          test: false
+
+  # following start we specify two conditions: success and failure (or optionally any for both)
+  # they are executed based on the previous entry's output but neither are required, however
+  # if a previous entry fails and no failure is marked for this entry, execution stops
+  - success:
+      - test: sample-app-load
+        # docker gets run as a helm job technically, but we give some of the same options
+        # as a normal docker run command
+        docker:
+          entrypoint: ./load-tests.sh
+          env:
+            someEnv: {{ .Inputs.sampleAppLoad.someEnv }}
+          rm: true
+    failure:
+      # failures have special values for helm and docker
+      - deployment: sample-app
+        helm:
+          # whether or not to uninstall the deployment in question
+          # note that this takes precedence over rollback!
+          uninstall: true
+      - deployment: sample-routing
+        helm:
+          rollback: 2 # helm version to rollback to
+  
+  # run this step no matter what the previous condition was if the previous condition was run
+  - any:
+      - test: sample-app-tests
+        helm:
+          values: {}
+          wait: true # the default for tests as its expected they'll be removed on completion
+
+      # send a trigger with this name, all other deliveries that listen to this pipeline's name
+      # and for this trigger name will have that portion of their triggers met for execution
+      - trigger: deploy-next-app
+  
+  # run this step always, regardless of whether the previous condition was run
+  - always:
+      - deployment: sample-app
+        helm: 

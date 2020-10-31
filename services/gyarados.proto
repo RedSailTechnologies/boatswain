@@ -1,0 +1,28 @@
+/*
+TODO
+*/
+syntax = "proto3";
+package redsail.bosn;
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/gyrados";
+
+message Deployment {
+    string name = 1;
+    DockerDeployment docker = 2;
+    HelmDeployment helm = 3;
+}
+
+message DockerDeployment {
+    string image = 1;
+    string tag = 2;
+}
+
+message HelmDeployment {
+    string chart = 1;
+    string repo = 2;
+    string version = 3;
+}
+
+message Template {
+    string template = 1;
+    string arguments = 2;
+}
