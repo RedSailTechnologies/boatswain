@@ -7,7 +7,7 @@
 `helm install <name> redsail/boatswain`
 
 ### Reasonable Defaults
-Below is a small set of reasonable configuration. You can also use `--set-file kraken.config.clusters.kubeConfig=<full kubeconfig path>` in the helm install in conjunction with the contexts setting below to automatically add clusters to the configuration.
+Entities can be added upon installation, so no default configuration is needed. If you do want to have things pre-populated, below is a small set of reasonable configurations. You can also use `--set-file kraken.config.clusters.kubeConfig=<full kubeconfig path>` in the helm install in conjunction with the contexts setting below to automatically add clusters to the configuration.
 ```
 mate:
   ingress:
@@ -35,19 +35,4 @@ poseidon:
 ```
 
 ## Leviathan
-Download and extract leviathan-0.1.0.zip. The leviathan binary and static web content is located there. Run leviathan with --config <your-config-filepath>, config example here:
-```
-clusters:
-  - name: <cluster-name>
-    endpoint: <api-server-endpoint>
-    token: <token>
-    cert: |
-      -----BEGIN CERTIFICATE-----
-      ...(cert data)
-      -----END CERTIFICATE-----
-
-repos:
-  - name: redsail
-    endpoint: https://redsailtechnologies.github.io/helm
-cacheDir: ./temp
-```
+Download and extract leviathan-0.1.0.zip. The leviathan binary and static web content is located there. Running leviathan requires no special configuration unless you want to specify configuration as above. Note for leviathan everything under config for the services above is all at the top level of the yaml.

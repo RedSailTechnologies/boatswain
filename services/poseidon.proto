@@ -4,7 +4,7 @@ The api can be hit at /api/redsail.bosn.Poseidon/<Method>.
 */
 syntax = "proto3";
 package redsail.bosn;
-option go_package = "github.com/redsailtechnologies/boatswain/pkg/poseidon";
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/poseidon";
 
 service Poseidon {
     // gets all the charts for this repository
