@@ -1,66 +1,93 @@
 package gyarados
 
 import (
-	"bytes"
 	"errors"
-	"html/template"
-	"reflect"
 
 	pb "github.com/redsailtechnologies/boatswain/rpc/gyarados"
-	"sigs.k8s.io/yaml"
 )
 
-// Deployments is the plural for Deployment
-type Deployments struct {
-	Deployments []*Deployment
-}
-
-// Tests is the plural for Test
-type Tests struct {
-	Tests []*Deployment
-}
-
-// Deployment is what we take in a delivery and create
+// Deployment is a metadata object for what is created in a deployment
 type Deployment struct {
 	*pb.Deployment
-	*pb.Template
 }
 
-func (d *Deployment) SubstituteTemplates(*[]*DeliverySpec) error {
-	return nil
-}
+// Validate checks to see if the deployment is valid
+func (d Deployment) Validate() error {
+	var err error
 
-func (d *Deployment) SubsituteValues(v *map[string]interface{}) error {
-	return subVals(d, v)
-}
+	if err = d.specOrTemplateTests(); err != nil {
+		return err
+	}
 
-func subVals(n interface{}, v *map[string]interface{}) error {
-	val := reflect.ValueOf(n)
-	for key, val := range n {
-		t, err := template.New("").Parse(val.(string))
-		if err == nil {
-			buff := new(bytes.Buffer)
-			err = t.Execute(buff, v)
+	if d.Name != "" {
+		if err = d.specTests(); err != nil {
+			return err
+		}
+		if err = d.dockerOrHelmTests(); err != nil {
+			return err
+		}
+		if err = d.dockerTests(); err != nil {
+			return err
+		}
+		if err = d.helmTests(); err != nil {
+			return err
+		}
+	} else {
+		if err = d.templateTests(); err != nil {
+			return err
 		}
 	}
-}
-
-func (d *Deployment) Validate() error {
 	return nil
 }
 
-func (d *Deployment) YAML(in []byte) error {
-	// parse/set the template on its own as it won't get set otherwise
-	template := pb.Template{}
-	if err := yaml.UnmarshalStrict([]byte(in), &template); err == nil {
-		d.Template = &template
-		return nil
+func (d Deployment) specOrTemplateTests() error {
+	if d.Name == "" && d.Template == "" {
+		return errors.New("deployment name or a template is required")
 	}
+	if d.Name != "" && d.Template != "" {
+		return errors.New("deployment cannot be both specified and templated")
+	}
+	return nil
+}
 
-	deployment := pb.Deployment{}
-	if err := yaml.UnmarshalStrict([]byte(in), &deployment); err == nil {
-		d.Deployment = &deployment
-		return nil
+func (d Deployment) specTests() error {
+	if d.Arguments != "" {
+		return errors.New("arguments cannot be set when specifying a deployment")
 	}
-	return errors.New("could not unmarshal yaml as a deployment or a template")
+	return nil
+}
+
+func (d Deployment) templateTests() error {
+	if d.Docker != nil || d.Helm != nil {
+		return errors.New("template cannot specify anything but template name and arguments")
+	}
+	return nil
+}
+
+func (d Deployment) dockerOrHelmTests() error {
+	if d.Docker != nil && d.Helm != nil {
+		return errors.New("a deployment must be either helm or docker, not both")
+	}
+	if d.Docker == nil && d.Helm == nil {
+		return errors.New("a deployment must be helm or docker, one is required")
+	}
+	return nil
+}
+
+func (d Deployment) dockerTests() error {
+	if d.Docker != nil {
+		if d.Docker.Image == "" || d.Docker.Tag == "" {
+			return errors.New("docker image and tag must be specified")
+		}
+	}
+	return nil
+}
+
+func (d Deployment) helmTests() error {
+	if d.Helm != nil {
+		if d.Helm.Chart == "" || d.Helm.Repo == "" || d.Helm.Version == "" {
+			return errors.New("helm chart, repo, and version must all be specified")
+		}
+	}
+	return nil
 }

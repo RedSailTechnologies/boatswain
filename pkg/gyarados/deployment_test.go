@@ -3,93 +3,135 @@ package gyarados
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/yaml"
-
 	pb "github.com/redsailtechnologies/boatswain/rpc/gyarados"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestValuesSubstituteCorrectly(t *testing.T) {
-	template := `
-name: "{{ .Delivery.name }}"
+func TestDeploymentValidateInvalidYAML(t *testing.T) {
+	inputs := []string{
+		// can't specify a deployment and make it a template
+		`
+name: adeployment
+template: deploymenttemplate
 helm:
-  chart: "{{ .Inputs.chart.name }}"
-  repo: "{{ .Parameters.repo }}"
-`
-
-	vals := make(map[string]interface{})
-	err := yaml.Unmarshal([]byte(`
-Delivery:
-  name: aname
-Inputs:
-  chart:
-    name: chartname
-Parameters:
-  repo: myrepo
-`), &vals)
-	if err != nil {
-		t.Error(err)
-	}
-
-	sut := &Deployment{}
-	err = sut.YAML([]byte(template))
-	if err != nil {
-		t.Error(err)
-	}
-
-	assert.Nil(t, sut.SubsituteValues(&vals))
-	assert.Equal(t, "aname", sut.Deployment.Name)
-	assert.Equal(t, "chartname", sut.Deployment.Helm.Chart)
-	assert.Equal(t, "myrepo", sut.Deployment.Helm.Repo)
-}
-
-func TestValidUnmarshal(t *testing.T) {
-	inputs := []string{`
-name: docker-deployment
+  chart: achart
+  repo: arepo
+  version: "0.1.0"
+`,
+		// can't specify arguments without a template
+		`
+name: adeployment
 docker:
-  image: dockerimage
-  tag: atag
-`, `
-name: helm-deployment
+  image: docker.io/image
+  tag: latest
+arguments: |
+  someargs: someotherargs
+  moreargs: that should fail
+`,
+		// must specify either a deployment name or a template
+		`
 helm:
-  chart: ahelmchart
-  repo: myrepo
+  chart: somechart
+  repo: somerepo
+  version: "0.1.0"
+`,
+		// with a deployment spec must have either helm or docker
+		`
+name: adeployment
+`,
+		// a template must not contain a helm or docker section
+		`
+template: atemplate
+helm:
+  chart: somechart
+  repo: somerepo
+  version: 1.0
+`,
+		`
+template: atemplate
+docker:
+  image: docker.io/image
+  tag: latest
+`,
+		// cannot specify a docker and helm spec
+		`
+name: adeployment
+docker:
+  image: docker.io/image
+  tag: latest
+helm:
+  chart: achart
+  repo: arepo
   version: 0.1.0
-`, `
-template: sometemplate
-arguments: "{{ .Parameters.value }}"
+`,
+		// a helm spec must have all elements
+		`
+name: adeployment
+helm:
+  chart: achart
+  repo: arepo
+`,
+		`
+name: adeployment
+helm:
+  chart: achart
+  version: 0.1.0
+`,
+		`
+name: adeployment
+helm:
+  repo: arepo
+  version: 0.1.0
+`,
+		// a docker spec must have all elements
+		`
+name: adeployment
+docker:
+  image: docker.io/image
+`,
+		`
+name: adeployment
+docker:
+  tag: latest
 `,
 	}
 
-	for _, str := range inputs {
-		sut := &Deployment{&pb.Deployment{}, &pb.Template{}}
-		err := sut.YAML([]byte(str))
-		assert.Nil(t, err)
-		if str[1:9] != "template" {
-			assert.NotEqual(t, "", sut.Deployment.Name)
-		} else {
-			assert.NotEqual(t, "", sut.Template.Template)
-			assert.NotEqual(t, "", sut.Template.Arguments)
-		}
+	for _, input := range inputs {
+		sut := &Deployment{&pb.Deployment{}}
+		YAML(sut, input)
+		assert.NotNil(t, sut.Validate(), input)
 	}
 }
 
-func TestInvalidUnmarshal(t *testing.T) {
-	inputs := []string{`
-name: invalid:
-`, `
-name: valid
- docker:
-   image: invalidSpacing
-`, `
-template: {{ .Template.without.quotes }}
+func TestDeploymentValidateValidYAML(t *testing.T) {
+	inputs := []string{
+		// a normal helm deployment
+		`
+name: adeployment
+helm:
+  chart: achart
+  repo: arepo
+  version: "0.1.0"
+`,
+		// a normal docker deployment
+		`
+name: adeployment
+docker:
+  image: docker.io/tag
+  tag: latest
+`,
+		// a normal template
+		`
+template: sometemplate
+args: |
+  a: b
+  c: d
 `,
 	}
 
-	for _, str := range inputs {
-		sut := &Deployment{&pb.Deployment{}, &pb.Template{}}
-		err := sut.YAML([]byte(str))
-		assert.NotNil(t, err)
-		assert.Equal(t, "", sut.Name)
+	for _, input := range inputs {
+		sut := &Deployment{&pb.Deployment{}}
+		YAML(sut, input)
+		assert.Nil(t, sut.Validate(), input)
 	}
 }

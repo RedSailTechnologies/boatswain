@@ -5,24 +5,119 @@ syntax = "proto3";
 package redsail.bosn;
 option go_package = "github.com/redsailtechnologies/boatswain/rpc/gyrados";
 
-message Deployment {
-    string name = 1;
-    DockerDeployment docker = 2;
-    HelmDeployment helm = 3;
-}
+message Delivery {
+    message Application {
+        string name = 1;
+        string project = 2;
+    }
 
-message DockerDeployment {
-    string image = 1;
-    string tag = 2;
-}
-
-message HelmDeployment {
-    string chart = 1;
-    string repo = 2;
+    string uuid = 1;
+    string name = 2;
     string version = 3;
+    Application application = 4;
+    repeated string clusters = 5;
+    repeated Deployment deployments = 6;
+    repeated Deployment tests = 7;
+    repeated Trigger triggers = 8;
+    repeated Step strategy = 9;
+}
+
+message Deployment {
+    message Docker {
+        string image = 1;
+        string tag = 2;
+    }
+
+    message Helm {
+        string chart = 1;
+        string repo = 2;
+        string version = 3;
+    }
+
+    string uuid = 1;
+    string name = 2;
+    Docker docker = 3;
+    Helm helm = 4;
+    string template = 5;
+    string arguments = 6;
+}
+
+message Trigger {
+    message Approval {
+        repeated string groups = 1;
+        repeated string users = 2;
+        repeated string params = 3;
+    }
+
+    message Delivery {
+        string name = 1;
+        string trigger = 2;
+    }
+
+    message Web {
+        string name = 1;
+        repeated string params = 2;
+    }
+
+    string uuid = 1;
+    string name = 2;
+    Approval approval = 5;
+    Delivery delivery = 6;
+    Approval manual = 7;
+    Web web = 8;
+    string template = 9;
+    string arguments = 10;
+}
+
+message Step {
+    message StepAction {
+        message Docker {
+            string entrypoint = 1;
+            bool rm = 2;
+            string env = 3;
+        }
+        message Helm {
+            enum HelmAction {
+                install = 0;
+                upgrade = 1;
+                rollback = 2;
+                uninstall = 3;
+            }
+
+            HelmAction type = 1;
+            bool wait = 2;
+            bool test = 3;
+            string values = 4;
+        }
+    
+        string uuid = 1;
+        string deployment = 2;
+        string test = 3;
+        Docker docker = 4;
+        Helm helm = 5;
+    }
+
+    string uuid = 1;
+    string name = 2;
+    string displayName = 3;
+    repeated StepAction success = 4;
+    repeated StepAction failure = 5;
+    repeated StepAction any = 6;
+    repeated StepAction always = 7;
+    string hold = 8;
+    string template = 9;
+    string arguments = 10;
 }
 
 message Template {
-    string template = 1;
-    string arguments = 2;
+    enum TemplateType {
+        deployment = 0;
+        step = 1;
+        trigger = 2;
+    }
+
+    string uuid = 1;
+    string name = 2;
+    TemplateType type = 3;
+    string yaml = 4;
 }
