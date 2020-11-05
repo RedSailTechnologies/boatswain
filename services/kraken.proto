@@ -4,7 +4,7 @@ The api can be hit at /api/redsail.bosn.Kraken/<Method>.
 */
 syntax = "proto3";
 package redsail.bosn;
-option go_package = "github.com/redsailtechnologies/boatswain/pkg/kraken";
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/kraken";
 
 service Kraken {
     // adds a cluster to the list of configurations
