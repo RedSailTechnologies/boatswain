@@ -20,6 +20,8 @@ message Delivery {
     repeated Deployment tests = 7;
     repeated Trigger triggers = 8;
     repeated Step strategy = 9;
+    string template = 10;
+    string arguments = 11;
 }
 
 message Deployment {

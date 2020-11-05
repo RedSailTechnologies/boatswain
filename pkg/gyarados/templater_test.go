@@ -163,6 +163,72 @@ name: {{ .Gotpl.without.dollarsign }}
 	}
 }
 
+func TestValidDeliveryUnmarshal(t *testing.T) {
+	inputs := []string{`
+name: adelivery
+version: 0.1.0
+application:
+  name: anapp
+  project: mycoolproject
+clusters:
+  - dev
+  - staging
+deployments:
+  - template: some-deployment-template
+tests:
+  - template: some-test-template
+triggers:
+  - web:
+      name: adelivery-ci-trigger
+      params:
+        - buildNum
+`,
+		`
+template: anothertemplate
+arguments: |
+  lots: of
+  args: for
+  a: whole
+  delivery: you
+  would: think
+  and:
+    some: might
+    be: nested
+`,
+	}
+
+	for i, str := range inputs {
+		sut := &Delivery{&pb.Delivery{}}
+		err := YAML(sut, str)
+		assert.Nil(t, err)
+		if i < 1 {
+			assert.NotEqual(t, "", sut.Name)
+		} else {
+			assert.NotEqual(t, "", sut.Template)
+		}
+	}
+}
+
+func TestInvalidDeliveryUnmarshal(t *testing.T) {
+	inputs := []string{`
+name: invalid:
+`, `
+name: valid
+ application:
+   name: invalidSpacing
+`, `
+name: {{ .Gotpl.without.dollarsign }}
+`,
+	}
+
+	for _, str := range inputs {
+		sut := &Delivery{&pb.Delivery{}}
+		err := YAML(sut, str)
+		assert.NotNil(t, err)
+		assert.Equal(t, "", sut.Name)
+	}
+}
+
 func TestValidStepUnmarshal(t *testing.T) {
 	inputs := []string{`
 name: step1

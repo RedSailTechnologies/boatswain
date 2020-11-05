@@ -22,8 +22,7 @@
 name: sample-app-canary
 
 # the version of this delivery, note this won't impact parts of the delivery
-# unless they use it and just needs to be a unique key for the particular
-# run of the delivery
+# unless they use it but it should probably be unique for each delivery
 version: ${{ .Parameters.version }}
 
 # found with app.kubernetes.io/name labels for the name and

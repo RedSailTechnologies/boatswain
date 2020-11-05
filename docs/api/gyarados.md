@@ -50,6 +50,8 @@ TODO
 | tests | [Deployment](#redsail.bosn.Deployment) | repeated |  |
 | triggers | [Trigger](#redsail.bosn.Trigger) | repeated |  |
 | strategy | [Step](#redsail.bosn.Step) | repeated |  |
+| template | [string](#string) |  |  |
+| arguments | [string](#string) |  |  |
 
 
 

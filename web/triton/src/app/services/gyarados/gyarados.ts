@@ -12,6 +12,8 @@ export interface Delivery {
     tests: Deployment[];
     triggers: Trigger[];
     strategy: Step[];
+    template: string;
+    arguments: string;
     
 }
 
@@ -25,6 +27,8 @@ interface DeliveryJSON {
     tests: DeploymentJSON[];
     triggers: TriggerJSON[];
     strategy: StepJSON[];
+    template: string;
+    arguments: string;
     
 }
 
