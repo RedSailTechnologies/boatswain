@@ -62,17 +62,16 @@ A kubernetes-native CD tool with first-class support for Helm v3.
   * Gyrados initial cut and design
     * Run/deployment objects
     * Canary strategies/settings
-* 0.3
   * Persistent storage
   * Client side filtering/part-of views
-* 0.4
+* 0.3
   * Users/auth (LDAP)
   * RBAC
   * Client login/cookies
-* 0.5
+* 0.4
   * Cthulu first cut
     * azdo plugin
     * triggers
     * PR canaries
-* 0.6
+* 0.5
   * Dev/debug canaries
