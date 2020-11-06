@@ -33,7 +33,7 @@ export class ApplicationsComponent implements OnInit {
       console.log("could not update applications after 5 retries");
       this.retries = 0;
       this.applications = new Array<Application>();
-      this.snackBar.open(`Error getting repos`, "Dismiss", {
+      this.snackBar.open(`Error getting applications`, "Dismiss", {
         duration: 5 * 1000,
         panelClass: ["warn-snack"]
       });

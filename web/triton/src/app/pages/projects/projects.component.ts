@@ -12,7 +12,7 @@ export class ProjectsComponent implements OnInit {
   private client: Kraken;
   private retries = 0;
   public applications: Application[];
-  projects: Project[] = [];
+  projects: Project[];
 
   constructor(private snackBar: MatSnackBar) {
     this.client = new DefaultKraken(`${location.protocol}//${location.host}/api`, fetch['default']);
@@ -35,7 +35,7 @@ export class ProjectsComponent implements OnInit {
       console.log("could not update applications after 5 retries");
       this.retries = 0;
       this.applications = new Array<Application>();
-      this.snackBar.open(`Error getting repos`, "Dismiss", {
+      this.snackBar.open(`Error getting projects`, "Dismiss", {
         duration: 5 * 1000,
         panelClass: ["warn-snack"]
       });
