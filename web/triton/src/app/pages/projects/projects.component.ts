@@ -11,8 +11,8 @@ import * as fetch from 'isomorphic-fetch';
 export class ProjectsComponent implements OnInit {
   private client: Kraken;
   private retries = 0;
-  public applications: Application[];
-  projects: Project[];
+  private applications: Application[];
+  public projects: Project[];
 
   constructor(private snackBar: MatSnackBar) {
     this.client = new DefaultKraken(`${location.protocol}//${location.host}/api`, fetch['default']);
@@ -43,6 +43,7 @@ export class ProjectsComponent implements OnInit {
   }
 
   populateProjects(): void {
+    this.projects = new Array<Project>();
     this.applications.forEach(app => {
       if (this.projects.find(x => x.name == app.project) == undefined) {
         var project = new Project();
