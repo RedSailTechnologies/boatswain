@@ -4,6 +4,10 @@
 ## Table of Contents
 
 - [kraken.proto](#kraken.proto)
+    - [Application](#redsail.bosn.Application)
+    - [ApplicationCluster](#redsail.bosn.ApplicationCluster)
+    - [ApplicationsRequest](#redsail.bosn.ApplicationsRequest)
+    - [ApplicationsResponse](#redsail.bosn.ApplicationsResponse)
     - [Cluster](#redsail.bosn.Cluster)
     - [ClustersRequest](#redsail.bosn.ClustersRequest)
     - [ClustersResponse](#redsail.bosn.ClustersResponse)
@@ -28,6 +32,66 @@
 ## kraken.proto
 Kraken is the service managing external cluster connections.
 The api can be hit at /api/redsail.bosn.Kraken/&lt;Method&gt;.
+
+
+<a name="redsail.bosn.Application"></a>
+
+### Application
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | the application name by label app.kubernetes.io/name |
+| project | [string](#string) |  | the project by label app.kubernetes.io/part-of |
+| clusters | [ApplicationCluster](#redsail.bosn.ApplicationCluster) | repeated | the list of isntances of this application by cluster |
+
+
+
+
+
+
+<a name="redsail.bosn.ApplicationCluster"></a>
+
+### ApplicationCluster
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| cluster_name | [string](#string) |  | the cluster name |
+| version | [string](#string) |  | the app version by label app.kubernetes.io/version |
+| namespace | [string](#string) |  | the namespace |
+| ready | [bool](#bool) |  | whether all deployment or ss pods are ready |
+
+
+
+
+
+
+<a name="redsail.bosn.ApplicationsRequest"></a>
+
+### ApplicationsRequest
+
+
+
+
+
+
+
+<a name="redsail.bosn.ApplicationsResponse"></a>
+
+### ApplicationsResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| applications | [Application](#redsail.bosn.Application) | repeated | the list of applications |
+
+
+
+
 
 
 <a name="redsail.bosn.Cluster"></a>
@@ -78,7 +142,7 @@ The api can be hit at /api/redsail.bosn.Kraken/&lt;Method&gt;.
 <a name="redsail.bosn.Release"></a>
 
 ### Release
-
+NOTE - AdamP below is what we delete once we have other helm upgrade mechanisms
 
 
 | Field | Type | Label | Description |
@@ -207,6 +271,7 @@ the helm status of the release
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
+| Applications | [ApplicationsRequest](#redsail.bosn.ApplicationsRequest) | [ApplicationsResponse](#redsail.bosn.ApplicationsResponse) | gets all applications currently found in each cluster and their status |
 | AddCluster | [Cluster](#redsail.bosn.Cluster) | [Response](#redsail.bosn.Response) | adds a cluster to the list of configurations |
 | DeleteCluster | [Cluster](#redsail.bosn.Cluster) | [Response](#redsail.bosn.Response) | deletes a cluster from the list of configurations |
 | EditCluster | [Cluster](#redsail.bosn.Cluster) | [Response](#redsail.bosn.Response) | edits an already existing cluster |

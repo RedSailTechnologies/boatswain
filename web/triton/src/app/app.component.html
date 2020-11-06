@@ -31,8 +31,8 @@
                 <mat-divider></mat-divider>
                 <br/>
                 Apps
-                <a mat-list-item aria-label="projects">Projects</a>
-                <a mat-list-item aria-label="applications">Applications</a>
+                <a mat-list-item routerLink="projects" routerLinkActive="active" aria-label="projects" (click)="toggleSideNav()">Projects</a>
+                <a mat-list-item routerLink="applications" routerLinkActive="active" aria-label="applications" (click)="toggleSideNav()">Applications</a>
                 <mat-divider></mat-divider>
                 <br/>
                 Delivery

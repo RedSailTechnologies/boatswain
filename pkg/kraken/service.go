@@ -44,6 +44,102 @@ func New(cfg *Config, p poseidon.Poseidon) *Service {
 	}
 }
 
+// Applications gets all applications for each cluster currently configured
+func (s *Service) Applications(context.Context, *pb.ApplicationsRequest) (*pb.ApplicationsResponse, error) {
+	response := &pb.ApplicationsResponse{}
+	for _, cluster := range s.clusters {
+		clientset, err := cluster.ToClientset()
+		if err != nil {
+			logger.Error("could not get clientset for cluster", "cluster", cluster.Name)
+			return nil, twirp.InternalError("error getting cluster clientset")
+		}
+
+		deps, err := s.kubeAgent.getClusterDeployments(clientset, cluster.Name)
+		if err != nil {
+			return nil, twirp.InternalError("error getting deployments for cluster " + cluster.Name)
+		}
+
+		for _, dep := range deps {
+			ready := false
+			for _, c := range dep.Status.Conditions {
+				if c.Type == "Available" && c.Status == "True" {
+					ready = true
+				}
+			}
+			addApplication(
+				response,
+				dep.Labels["app.kubernetes.io/name"],
+				dep.Labels["app.kubernetes.io/part-of"],
+				dep.Labels["app.kubernetes.io/version"],
+				cluster.Name,
+				dep.Namespace,
+				ready,
+			)
+		}
+
+		sets, err := s.kubeAgent.getClusterStatefulSets(clientset, cluster.Name)
+		if err != nil {
+			return nil, twirp.InternalError("error getting statefulsets for cluster " + cluster.Name)
+		}
+
+		for _, set := range sets {
+			ready := false
+			for _, c := range set.Status.Conditions {
+				if c.Type == "Available" && c.Status == "True" {
+					ready = true
+				}
+			}
+			addApplication(
+				response,
+				set.Labels["app.kubernetes.io/name"],
+				set.Labels["app.kubernetes.io/part-of"],
+				set.Labels["app.kubernetes.io/version"],
+				cluster.Name,
+				set.Namespace,
+				ready,
+			)
+		}
+	}
+	return response, nil
+}
+
+func addApplication(resp *pb.ApplicationsResponse, name, partOf, version, cluster, namespace string, ready bool) {
+	for _, app := range resp.Applications {
+		if app.Name == name {
+			addApplicationCluster(app, version, cluster, namespace, ready)
+			return
+		}
+	}
+
+	app := &pb.Application{
+		Name:    name,
+		Project: partOf,
+	}
+	addApplicationCluster(app, version, cluster, namespace, ready)
+	resp.Applications = append(resp.Applications, app)
+}
+
+func addApplicationCluster(app *pb.Application, version, cluster, namespace string, ready bool) {
+	if len(app.Clusters) == 0 {
+		app.Clusters = make([]*pb.ApplicationCluster, 0)
+	}
+
+	for _, c := range app.Clusters {
+		if c.ClusterName == cluster {
+			return
+		}
+	}
+
+	cl := &pb.ApplicationCluster{
+		ClusterName: cluster,
+		Version:     version,
+		Namespace:   namespace,
+		Ready:       ready,
+	}
+
+	app.Clusters = append(app.Clusters, cl)
+}
+
 // AddCluster adds a cluster configuration
 func (s *Service) AddCluster(ctx context.Context, cluster *pb.Cluster) (*pb.Response, error) {
 	s.clusters = append(s.clusters, &Cluster{

@@ -82,6 +82,93 @@ const JSONToClustersResponse = (m: ClustersResponse | ClustersResponseJSON): Clu
     };
 };
 
+export interface Application {
+    name: string;
+    project: string;
+    clusters: ApplicationCluster[];
+    
+}
+
+interface ApplicationJSON {
+    name: string;
+    project: string;
+    clusters: ApplicationClusterJSON[];
+    
+}
+
+
+const JSONToApplication = (m: Application | ApplicationJSON): Application => {
+    
+    return {
+        name: m.name,
+        project: m.project,
+        clusters: (m.clusters as (ApplicationCluster | ApplicationClusterJSON)[]).map(JSONToApplicationCluster),
+        
+    };
+};
+
+export interface ApplicationCluster {
+    clusterName: string;
+    version: string;
+    namespace: string;
+    ready: boolean;
+    
+}
+
+interface ApplicationClusterJSON {
+    cluster_name: string;
+    version: string;
+    namespace: string;
+    ready: boolean;
+    
+}
+
+
+const JSONToApplicationCluster = (m: ApplicationCluster | ApplicationClusterJSON): ApplicationCluster => {
+    
+    return {
+        clusterName: (((m as ApplicationCluster).clusterName) ? (m as ApplicationCluster).clusterName : (m as ApplicationClusterJSON).cluster_name),
+        version: m.version,
+        namespace: m.namespace,
+        ready: m.ready,
+        
+    };
+};
+
+export interface ApplicationsRequest {
+    
+}
+
+interface ApplicationsRequestJSON {
+    
+}
+
+
+const ApplicationsRequestToJSON = (m: ApplicationsRequest): ApplicationsRequestJSON => {
+    return {
+        
+    };
+};
+
+export interface ApplicationsResponse {
+    applications: Application[];
+    
+}
+
+interface ApplicationsResponseJSON {
+    applications: ApplicationJSON[];
+    
+}
+
+
+const JSONToApplicationsResponse = (m: ApplicationsResponse | ApplicationsResponseJSON): ApplicationsResponse => {
+    
+    return {
+        applications: (m.applications as (Application | ApplicationJSON)[]).map(JSONToApplication),
+        
+    };
+};
+
 export interface Release {
     name: string;
     chart: string;
@@ -237,6 +324,8 @@ const JSONToResponse = (m: Response | ResponseJSON): Response => {
 };
 
 export interface Kraken {
+    applications: (applicationsRequest: ApplicationsRequest) => Promise<ApplicationsResponse>;
+    
     addCluster: (cluster: Cluster) => Promise<Response>;
     
     deleteCluster: (cluster: Cluster) => Promise<Response>;
@@ -264,6 +353,21 @@ export class DefaultKraken implements Kraken {
         this.fetch = fetch;
         this.writeCamelCase = writeCamelCase;
     }
+    applications(applicationsRequest: ApplicationsRequest): Promise<ApplicationsResponse> {
+        const url = this.hostname + this.pathPrefix + "Applications";
+        let body: ApplicationsRequest | ApplicationsRequestJSON = applicationsRequest;
+        if (!this.writeCamelCase) {
+            body = ApplicationsRequestToJSON(applicationsRequest);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToApplicationsResponse);
+        });
+    }
+    
     addCluster(cluster: Cluster): Promise<Response> {
         const url = this.hostname + this.pathPrefix + "AddCluster";
         let body: Cluster | ClusterJSON = cluster;
