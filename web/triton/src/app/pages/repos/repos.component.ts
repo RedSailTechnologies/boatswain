@@ -95,13 +95,13 @@ export class ReposComponent implements OnInit {
         setTimeout(() => this.refreshRepos(), 2 * 1000)
       });
     } else {
-      console.log("could not update repos after 5 retries")
+      console.log("could not update repos after 5 retries");
       this.retries = 0;
       this.repos = new Array<Repo>();
       this.snackBar.open(`Error getting repos`, "Dismiss", {
         duration: 5 * 1000,
         panelClass: ["warn-snack"]
-      })
+      });
     }
   }
 }

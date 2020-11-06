@@ -3,6 +3,7 @@ package kraken
 import (
 	"context"
 
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -10,17 +11,35 @@ import (
 )
 
 type kubeAgent interface {
-	getClusterStatus(kube kubernetes.Interface, name string) bool
+	getClusterDeployments(kubernetes.Interface, string) ([]appsv1.Deployment, error)
+	getClusterStatefulSets(kubernetes.Interface, string) ([]appsv1.StatefulSet, error)
+	getClusterStatus(kubernetes.Interface, string) bool
 }
 
-// kubeAgent is the agent used to talk to kubernetes clusters
 type defaultKubeAgent struct{}
 
-// GetClusterStatus checks a cluster's status by checking each node is ready
+func (k defaultKubeAgent) getClusterDeployments(kube kubernetes.Interface, name string) ([]appsv1.Deployment, error) {
+	d, err := kube.AppsV1().Deployments("").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		logger.Error("could not get deployments from cluster", "cluster", name, "error", err)
+		return nil, err
+	}
+	return d.Items, nil
+}
+
+func (k defaultKubeAgent) getClusterStatefulSets(kube kubernetes.Interface, name string) ([]appsv1.StatefulSet, error) {
+	ss, err := kube.AppsV1().StatefulSets("").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		logger.Error("could not get statefulsets from cluster", "cluster", name, "error", err)
+		return nil, err
+	}
+	return ss.Items, nil
+}
+
 func (k defaultKubeAgent) getClusterStatus(kube kubernetes.Interface, name string) bool {
 	nodes, err := kube.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		logger.Warn("could not get nodes from cluster", "cluster", name)
+		logger.Error("could not get nodes from cluster", "cluster", name, "error", err)
 		return false
 	}
 

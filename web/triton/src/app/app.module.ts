@@ -37,6 +37,8 @@ import { ThemeStorage } from "./utils/theme-picker/theme-storage";
 import { ClusterDialogComponent } from "./dialogs/cluster-dialog/cluster-dialog.component";
 import { RepoDialogComponent } from "./dialogs/repo-dialog/repo-dialog.component";
 import { ConfirmDialogComponent } from "./dialogs/confirm-dialog/confirm-dialog.component";
+import { ApplicationsComponent } from './pages/applications/applications.component';
+import { ProjectsComponent } from './pages/projects/projects.component';
 
 @NgModule({
   declarations: [
@@ -51,7 +53,9 @@ import { ConfirmDialogComponent } from "./dialogs/confirm-dialog/confirm-dialog.
     ThemePickerComponent,
     ClusterDialogComponent,
     RepoDialogComponent,
-    ConfirmDialogComponent
+    ConfirmDialogComponent,
+    ApplicationsComponent,
+    ProjectsComponent
   ],
   imports: [
     AppRoutingModule,

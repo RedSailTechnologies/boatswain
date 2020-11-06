@@ -10,6 +10,7 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/release"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/redsailtechnologies/boatswain/pkg/poseidon"
@@ -19,6 +20,14 @@ import (
 
 type mockedKubeAgent struct {
 	mock.Mock
+}
+
+func (m *mockedKubeAgent) getClusterDeployments(kubernetes.Interface, string) ([]appsv1.Deployment, error) {
+	return nil, nil
+}
+
+func (m *mockedKubeAgent) getClusterStatefulSets(kubernetes.Interface, string) ([]appsv1.StatefulSet, error) {
+	return nil, nil
 }
 
 func (m *mockedKubeAgent) getClusterStatus(kube kubernetes.Interface, name string) bool {

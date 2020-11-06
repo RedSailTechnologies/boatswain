@@ -1,0 +1,41 @@
+<div class="page" *ngIf="applications; else noData">
+    <mat-accordion>
+        <mat-expansion-panel class="panel" *ngFor="let app of applications">
+            <mat-expansion-panel-header>
+                <mat-panel-title>Application: {{app.name}}</mat-panel-title>
+                <mat-panel-description>
+                    <span style="text-align:right;width:100%;margin-right:750px;">
+                        Project: {{app.project}}
+                    </span>
+                </mat-panel-description>
+            </mat-expansion-panel-header>
+            <ng-template matExpansionPanelContent>
+                <table mat-table [dataSource]="app.clusters" class="full-width">
+                    <ng-container matColumnDef="cluster">
+                        <th mat-header-cell *matHeaderCellDef> Cluster </th>
+                        <td mat-cell *matCellDef="let element"> {{element.clusterName}} </td>
+                    </ng-container>
+                    <ng-container matColumnDef="version">
+                        <th mat-header-cell *matHeaderCellDef> Version </th>
+                        <td mat-cell *matCellDef="let element"> {{element.version}} </td>
+                    </ng-container>
+                    <ng-container matColumnDef="namespace">
+                        <th mat-header-cell *matHeaderCellDef> Namespace </th>
+                        <td mat-cell *matCellDef="let element"> {{element.namespace}} </td>
+                    </ng-container>
+                    <ng-container matColumnDef="status">
+                        <th mat-header-cell *matHeaderCellDef> Status </th>
+                        <td mat-cell *matCellDef="let element">
+                            <button mat-mini-fab class="shrink-button" [ngClass]="{'status-online':element.ready,'status-offline':!element.ready}"></button>
+                        </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="['cluster', 'version', 'namespace', 'status']"></tr>
+                    <tr mat-row *matRowDef="let row; columns: ['cluster', 'version', 'namespace', 'status'];"></tr>
+                </table>
+            </ng-template>
+        </mat-expansion-panel>
+    </mat-accordion>
+</div>
+<ng-template #noData>
+    <mat-spinner color="primary" class="page-spinner"></mat-spinner>
+</ng-template>
