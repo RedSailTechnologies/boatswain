@@ -6,6 +6,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 )
@@ -54,4 +55,15 @@ func (k defaultKubeAgent) getClusterStatus(kube kubernetes.Interface, name strin
 	}
 
 	return true
+}
+
+func toClientset(c *Cluster) (*kubernetes.Clientset, error) {
+	restConfig := &rest.Config{
+		Host:        c.Endpoint(),
+		BearerToken: c.Token(),
+		TLSClientConfig: rest.TLSClientConfig{
+			CAData: []byte(c.Cert()),
+		},
+	}
+	return kubernetes.NewForConfig(restConfig)
 }

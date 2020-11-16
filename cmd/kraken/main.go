@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"net/http"
-	"os"
 
 	"github.com/twitchtv/twirp"
 
@@ -15,19 +14,13 @@ import (
 )
 
 func main() {
-	var configFile string
-	flag.StringVar(&configFile, "config", "", "kraken config file path")
+	var poseidonHost, poseidonPort string
+	flag.StringVar(&poseidonHost, "poseidon-host", cfg.EnvOrDefaultString("POSEIDON_SERVICE_HOST", "not.found"), "poseidon service host")
+	flag.StringVar(&poseidonPort, "poseidon-port", cfg.EnvOrDefaultString("POSEIDON_SERVICE_PORT", "0000"), "poseidon service host")
 	flag.Parse()
 
-	config := &kraken.Config{}
-	if err := cfg.YAML(configFile, config); err != nil {
-		logger.Warn("no configuration found or file could not be parsed", "error", err)
-	}
-
-	ph := os.Getenv("POSEIDON_SERVICE_HOST")
-	pp := os.Getenv("POSEIDON_SERVICE_PORT")
-	pe := "http://" + ph + ":" + pp
-	poseidon := poseidon.NewPoseidonProtobufClient(pe, &http.Client{}, twirp.WithClientPathPrefix("/api"))
+	poseidonEndpoint := "http://" + poseidonHost + ":" + poseidonPort
+	poseidon := poseidon.NewPoseidonProtobufClient(poseidonEndpoint, &http.Client{}, twirp.WithClientPathPrefix("/api"))
 
 	server := kraken.New(config, poseidon)
 	twirp := rpc.NewKrakenServer(server, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))

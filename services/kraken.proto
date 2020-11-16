@@ -32,19 +32,46 @@ service Kraken {
     rpc UpgradeRelease(UpgradeReleaseRequest) returns (Release);
 }
 
-message Cluster {
-    string uuid = 1; // the unique id of the cluster
-    string name = 2; // name of the cluster
-    string endpoint = 3; // the cluster's api server
-    string token = 4; // the access token used to hit the kube api server
-    string cert = 5; // the certificate for the server, this can be grabbed from kube config with base64 -d
-    bool ready = 6; // if the cluster is ready (checking each node for Ready status)
+message CreateCluster {
+    string name = 1;
+    string endpoint = 2;
+    string token = 3;
+    string cert = 4;
 }
 
-message ClustersRequest {}
+message ClusterCreated {}
 
-message ClustersResponse {
-    repeated Cluster clusters = 1; // the list of clusters
+message ReadCluster {
+    string uuid = 1;
+}
+
+message ClusterRead {
+    string uuid = 1;
+    string name = 2;
+    string endpoint = 3;
+    string token = 4;
+    string cert = 5;
+    string ready = 6;
+}
+
+message UpdateCluster {
+    string uuid = 1;
+    string name = 2;
+    string endpoint = 3;
+    string token = 4;
+    string cert = 5;
+}
+
+message ClusterUpdated {}
+
+message DestroyCluster {
+    string uuid = 1;
+}
+
+message ClusterDestroyed {}
+
+message ReadClusters{
+    repeated ReadCluster clusters = 1;
 }
 
 message Application {

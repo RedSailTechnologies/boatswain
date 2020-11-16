@@ -8,7 +8,7 @@ type ClusterConfig struct {
 	Cert     string `yaml:"cert"`
 }
 
-// Config is a list of configurations
+// Config is the service's configuration
 type Config struct {
 	Clusters []ClusterConfig `yaml:"clusters"`
 }
