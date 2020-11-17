@@ -1,10 +1,17 @@
 package storage
 
-import "github.com/redsailtechnologies/boatswain/pkg/ddd"
-
 // Storage is the basic interface for storing of event streams
 type Storage interface {
-	All() []string
-	Load(uuid string) []ddd.Event
-	Save(uuid string, version int, event ddd.Event) error
+	All(coll string) ([]string, error)
+	Load(coll, uuid string) ([]*StoredEvent, error)
+	Save(coll, uuid, eventType, eventString string, version int) error
+	Version(coll, uuid string) (int, error)
+}
+
+// StoredEvent represents an event in storage which includes its uuid, version, type, and event (as json)
+type StoredEvent struct {
+	UUID    string
+	Version int
+	Type    string
+	Event   string
 }

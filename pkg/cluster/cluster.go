@@ -9,12 +9,12 @@ import "github.com/redsailtechnologies/boatswain/pkg/ddd"
 
 // Created is the event for when a new cluster is created
 type Created struct {
-	timestamp int64
-	uuid      string
-	name      string
-	endpoint  string
-	token     string
-	cert      string
+	Timestamp int64
+	UUID      string
+	Name      string
+	Endpoint  string
+	Token     string
+	Cert      string
 }
 
 // IsEvent marks this as an event
@@ -22,7 +22,7 @@ func (e Created) IsEvent() {}
 
 // Destroyed is the event for when a cluster is destroyed
 type Destroyed struct {
-	timestamp int64
+	Timestamp int64
 }
 
 // IsEvent marks this as an event
@@ -30,11 +30,11 @@ func (cu Destroyed) IsEvent() {}
 
 // Updated is the event for when a cluster is updatedDestroyed
 type Updated struct {
-	timestamp int64
-	name      string
-	endpoint  string
-	token     string
-	cert      string
+	Timestamp int64
+	Name      string
+	Endpoint  string
+	Token     string
+	Cert      string
 }
 
 // IsEvent marks this as an event
@@ -66,12 +66,12 @@ func Replay(events []ddd.Event) *Cluster {
 func Create(uuid, name, endpoint, token, cert string, timestamp int64) *Cluster {
 	c := &Cluster{}
 	c.on(&Created{
-		timestamp: timestamp,
-		uuid:      uuid,
-		name:      name,
-		endpoint:  endpoint,
-		token:     token,
-		cert:      cert,
+		Timestamp: timestamp,
+		UUID:      uuid,
+		Name:      name,
+		Endpoint:  endpoint,
+		Token:     token,
+		Cert:      cert,
 	})
 	return c
 }
@@ -82,7 +82,7 @@ func (c *Cluster) Destroy(timestamp int64) error {
 		return DestroyedError
 	}
 	c.on(&Destroyed{
-		timestamp: timestamp,
+		Timestamp: timestamp,
 	})
 	return nil
 }
@@ -93,11 +93,11 @@ func (c *Cluster) Update(name, endpoint, token, cert string, timestamp int64) er
 		return DestroyedError
 	}
 	c.on(&Updated{
-		timestamp: timestamp,
-		name:      name,
-		endpoint:  endpoint,
-		token:     token,
-		cert:      cert,
+		Timestamp: timestamp,
+		Name:      name,
+		Endpoint:  endpoint,
+		Token:     token,
+		Cert:      cert,
 	})
 	return nil
 }
@@ -142,18 +142,18 @@ func (c *Cluster) on(event ddd.Event) {
 	c.version++
 	switch e := event.(type) {
 	case *Created:
-		c.uuid = e.uuid
-		c.name = e.name
-		c.endpoint = e.endpoint
-		c.token = e.token
-		c.cert = e.cert
+		c.uuid = e.UUID
+		c.name = e.Name
+		c.endpoint = e.Endpoint
+		c.token = e.Token
+		c.cert = e.Cert
 	case *Destroyed:
 		c.destroyed = true
 	case *Updated:
-		c.name = e.name
-		c.endpoint = e.endpoint
-		c.token = e.token
-		c.cert = e.cert
+		c.name = e.Name
+		c.endpoint = e.Endpoint
+		c.token = e.Token
+		c.cert = e.Cert
 	}
 }
 

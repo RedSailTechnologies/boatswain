@@ -17,19 +17,19 @@ func TestReplay(t *testing.T) {
 	cert := "somecertdata"
 	events := []ddd.Event{
 		&Created{
-			timestamp: time.Now().Unix(),
-			uuid:      uuid,
-			name:      "abc",
-			endpoint:  "something",
-			token:     "blah",
-			cert:      "certainly",
+			Timestamp: time.Now().Unix(),
+			UUID:      uuid,
+			Name:      "abc",
+			Endpoint:  "something",
+			Token:     "blah",
+			Cert:      "certainly",
 		},
 		&Updated{
-			timestamp: time.Now().Unix(),
-			name:      name,
-			endpoint:  endpoint,
-			token:     token,
-			cert:      cert,
+			Timestamp: time.Now().Unix(),
+			Name:      name,
+			Endpoint:  endpoint,
+			Token:     token,
+			Cert:      cert,
 		},
 	}
 
