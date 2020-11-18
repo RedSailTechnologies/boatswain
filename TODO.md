@@ -1,14 +1,15 @@
 # To Do List
 
-- [ ] create event sourced stuff
+- [x] create event sourced stuff
   - [x] create domain models
   - [x] create events
-  - [ ] create commands
-  - [ ] create reads
-- [ ] create repository
-  - [ ] create repo interface
-  - [ ] create mongo instance
+  - [x] create commands
+  - [x] create reads
+- [x] create repository
+  - [x] create repo interface
+  - [x] create mongo instance
   - [ ] create in-memory version
-  - [ ] add to helm (what about leviathan?)
-- [ ] utilize both in the service layer
+- [x] utilize both in the service layer
 - [ ] fix the helm and kube agents
+  - [ ] helm
+  - [x] kube

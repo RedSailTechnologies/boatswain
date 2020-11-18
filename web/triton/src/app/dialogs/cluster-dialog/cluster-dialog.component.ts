@@ -1,7 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Cluster, DefaultKraken, Kraken } from 'src/app/services/kraken/kraken';
+import { ClusterRead, DefaultCluster, Cluster, UpdateCluster } from 'src/app/services/cluster/cluster';
 import * as fetch from 'isomorphic-fetch';
 import { BusyComponent } from '../busy/busy.component';
 import { MessageDialogComponent } from '../message-dialog/message-dialog.component';
@@ -12,8 +12,8 @@ import { MessageDialogComponent } from '../message-dialog/message-dialog.compone
   styleUrls: ['./cluster-dialog.component.sass']
 })
 export class ClusterDialogComponent implements OnInit {
-  private client: Kraken;
-  private cluster: Cluster;
+  private client: Cluster;
+  private cluster: ClusterRead;
   public clusterForm: FormGroup = new FormGroup({
     name: new FormControl(''),
     endpoint: new FormControl(''),
@@ -36,7 +36,7 @@ export class ClusterDialogComponent implements OnInit {
       this.clusterForm.controls["token"].setValue("***");
       this.clusterForm.controls["cert"].setValue("***");
     }
-    this.client = new DefaultKraken(`${location.protocol}//${location.host}/api`, fetch["default"]);
+    this.client = new DefaultCluster(`${location.protocol}//${location.host}/api`, fetch["default"]);
   }
 
   ngOnInit(): void {
@@ -53,7 +53,7 @@ export class ClusterDialogComponent implements OnInit {
       panelClass: 'transparent',
       disableClose: true
     });
-    var cluster = <Cluster>{
+    var cluster = <UpdateCluster>{
       "uuid": this.cluster != null ? this.cluster.uuid : null,
       "name": this.clusterForm.controls["name"].value,
       "endpoint": this.clusterForm.controls["endpoint"].value,
@@ -64,9 +64,9 @@ export class ClusterDialogComponent implements OnInit {
 
     var promise: Promise<any>
     if (this.isAdd) {
-      promise = this.client.addCluster(cluster);
+      promise = this.client.create(cluster);
     } else {
-      promise = this.client.editCluster(cluster);
+      promise = this.client.update(cluster);
     }
 
     promise.then(_ => {

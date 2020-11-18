@@ -51,8 +51,9 @@ func TestCreate(t *testing.T) {
 	token := "abc123"
 	cert := "somecertdata"
 
-	sut := Create(uuid, name, endpoint, token, cert, time.Now().Unix())
+	sut, err := Create(uuid, name, endpoint, token, cert, time.Now().Unix())
 
+	assert.Nil(t, err)
 	assert.Equal(t, uuid, sut.UUID())
 	assert.Equal(t, name, sut.Name())
 	assert.Equal(t, endpoint, sut.Endpoint())
@@ -68,14 +69,18 @@ func TestDestroy(t *testing.T) {
 	endpoint := "http://cluster.cluster"
 	token := "abc123"
 	cert := "somecertdata"
-	sut := Create(uuid, name, endpoint, token, cert, time.Now().Unix())
 
-	sut.Destroy(time.Now().Unix())
+	sut, err := Create(uuid, name, endpoint, token, cert, time.Now().Unix())
+	assert.Nil(t, err)
+
+	err = sut.Destroy(time.Now().Unix())
+	assert.Nil(t, err)
 
 	assert.Equal(t, true, sut.destroyed)
 	assert.Len(t, sut.Events(), 2)
 	assert.Equal(t, DestroyedError, sut.Destroy(time.Now().Unix()))
-	assert.Equal(t, DestroyedError, sut.Update("", "", "", "", 0))
+	assert.Equal(t, DestroyedError, sut.Update("a", "b", "c", "d", 0))
+	assert.Equal(t, ArgumentError, sut.Update("", "", "", "", 0))
 	assert.Len(t, sut.Events(), 2)
 }
 
@@ -85,7 +90,9 @@ func TestUpdate(t *testing.T) {
 	endpoint := "http://cluster.cluster"
 	token := "abc123"
 	cert := "somecertdata"
-	sut := Create(uuid, name, endpoint, token, cert, time.Now().Unix())
+
+	sut, err := Create(uuid, name, endpoint, token, cert, time.Now().Unix())
+	assert.Nil(t, err)
 
 	name = "newname"
 	endpoint = "http://new.cluster"
@@ -100,6 +107,42 @@ func TestUpdate(t *testing.T) {
 	assert.Equal(t, cert, sut.Cert())
 	assert.Equal(t, 2, sut.Version())
 	assert.Len(t, sut.Events(), 2)
+}
+
+func TestAnyEmptyStrings(t *testing.T) {
+	trueCases := [][]string{
+		[]string{
+			"a",
+			"",
+		},
+		[]string{
+			"",
+		},
+		[]string{
+			"a",
+			"",
+			"b",
+		},
+	}
+
+	for _, c := range trueCases {
+		assert.True(t, anyEmptyStrings(c...))
+	}
+
+	falseCases := [][]string{
+		[]string{},
+		[]string{
+			"a",
+		},
+	}
+
+	for _, c := range falseCases {
+		assert.False(t, anyEmptyStrings(c...))
+	}
+}
+
+func TestArgumentErrorMessage(t *testing.T) {
+	assert.Equal(t, "all fields are required for a valid Cluster", ArgumentError.Error())
 }
 
 func TestDestroyedErrorMessage(t *testing.T) {

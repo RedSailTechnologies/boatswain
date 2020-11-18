@@ -1,9 +1,8 @@
-package kraken
+package kube
 
 import (
 	"testing"
 
-	pb "github.com/redsailtechnologies/boatswain/rpc/kraken"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -29,22 +28,6 @@ func TestGetClusterStatus(t *testing.T) {
 		},
 	)
 
-	sut := &defaultKubeAgent{}
-	assert.True(t, sut.getClusterStatus(fakeClientset, "doesntmatter"))
-}
-
-func TestToClientset(t *testing.T) {
-	sut := Cluster{
-		&pb.Cluster{
-			Name:     "cluster",
-			Endpoint: "www.not.real",
-			Token:    "abcdefg",
-			Cert:     "notarealcert...",
-		},
-	}
-
-	clientset, err := sut.ToClientset()
-
-	assert.NotNil(t, clientset)
-	assert.Nil(t, err)
+	sut := &DefaultAgent{}
+	assert.True(t, sut.GetClusterStatus(fakeClientset, "doesntmatter"))
 }

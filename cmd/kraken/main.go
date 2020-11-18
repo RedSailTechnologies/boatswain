@@ -6,24 +6,39 @@ import (
 
 	"github.com/twitchtv/twirp"
 
+	"github.com/redsailtechnologies/boatswain/pkg/application"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
-	"github.com/redsailtechnologies/boatswain/pkg/kraken"
+	"github.com/redsailtechnologies/boatswain/pkg/cluster"
+	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
-	rpc "github.com/redsailtechnologies/boatswain/rpc/kraken"
-	"github.com/redsailtechnologies/boatswain/rpc/poseidon"
+	"github.com/redsailtechnologies/boatswain/pkg/storage"
+	app "github.com/redsailtechnologies/boatswain/rpc/application"
+	cl "github.com/redsailtechnologies/boatswain/rpc/cluster"
 )
 
 func main() {
-	var poseidonHost, poseidonPort string
-	flag.StringVar(&poseidonHost, "poseidon-host", cfg.EnvOrDefaultString("POSEIDON_SERVICE_HOST", "not.found"), "poseidon service host")
-	flag.StringVar(&poseidonPort, "poseidon-port", cfg.EnvOrDefaultString("POSEIDON_SERVICE_PORT", "0000"), "poseidon service host")
+	// poseidon := poseidon.NewPoseidonProtobufClient(poseidonEndpoint, &http.Client{}, twirp.WithClientPathPrefix("/api"))
+
+	var httpPort, mongoConn string
+	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
+	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
 	flag.Parse()
 
-	poseidonEndpoint := "http://" + poseidonHost + ":" + poseidonPort
-	poseidon := poseidon.NewPoseidonProtobufClient(poseidonEndpoint, &http.Client{}, twirp.WithClientPathPrefix("/api"))
+	store, err := storage.NewMongo(mongoConn, "kraken")
+	if err != nil {
+		logger.Fatal("mongo init failed")
+	}
 
-	server := kraken.New(config, poseidon)
-	twirp := rpc.NewKrakenServer(server, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+	cluster := cluster.NewService(kube.DefaultAgent{}, store)
+	clTwirp := cl.NewClusterServer(cluster, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+
+	application := application.NewService(cluster, kube.DefaultAgent{})
+	appTwirp := app.NewApplicationServer(application, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+
+	mux := http.NewServeMux()
+	mux.Handle(appTwirp.PathPrefix(), appTwirp)
+	mux.Handle(clTwirp.PathPrefix(), clTwirp)
+
 	logger.Info("starting kraken component...RELEASE THE KRAKEN!!!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":8080", twirp))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, mux))
 }

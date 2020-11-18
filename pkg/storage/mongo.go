@@ -2,12 +2,10 @@ package storage
 
 import (
 	"context"
-	"errors"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -37,8 +35,8 @@ func NewMongo(conn, db string) (Storage, error) {
 	}, nil
 }
 
-// All gets all uuids in a particular db
-func (m *Mongo) All(coll string) ([]string, error) {
+// IDs gets all uuids in a particular collection
+func (m *Mongo) IDs(coll string) ([]string, error) {
 	results := make([]string, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -61,8 +59,8 @@ func (m *Mongo) All(coll string) ([]string, error) {
 	return results, nil
 }
 
-// Load gets all events for a particular uuid in a particular db
-func (m *Mongo) Load(coll, uuid string) ([]*StoredEvent, error) {
+// GetEvents gets all events for a particular uuid in a particular collection
+func (m *Mongo) GetEvents(coll, uuid string) ([]*StoredEvent, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -89,8 +87,34 @@ func (m *Mongo) Load(coll, uuid string) ([]*StoredEvent, error) {
 	return results, nil
 }
 
-// Save stores an event given the db, uuid, and version
-func (m *Mongo) Save(coll, uuid, eventType, eventString string, version int) error {
+// GetVersion gets the most recently inserted event version or 0 on not found/error
+func (m *Mongo) GetVersion(coll, uuid string) int {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(m.conn))
+	if err != nil {
+		return 0
+	}
+
+	c := client.Database(m.db).Collection(coll)
+	opts := options.FindOne()
+	opts.SetSort(bson.D{primitive.E{Key: "version", Value: -1}})
+	result := c.FindOne(ctx, bson.M{"uuid": uuid}, opts)
+	if result == nil {
+		return 0
+	}
+	var decoded StoredEvent
+	err = result.Decode(&decoded)
+	if err != nil {
+		return 0
+	}
+
+	return decoded.Version
+}
+
+// StoreEvent stores an event given the db, uuid, and version
+func (m *Mongo) StoreEvent(coll, uuid, eventType, eventData string, version int) error {
 	err := m.checkCollection(coll)
 	if err != nil {
 		return err
@@ -106,40 +130,14 @@ func (m *Mongo) Save(coll, uuid, eventType, eventString string, version int) err
 	defer client.Disconnect(ctx)
 
 	c := client.Database(m.db).Collection(coll)
-	// TODO AdamP - check the most recent version here?
-
 	_, err = c.InsertOne(ctx, StoredEvent{
 		UUID:    uuid,
 		Version: version,
 		Type:    eventType,
-		Event:   eventString,
+		Data:    eventData,
 	})
 
-	// TODO AdamP - do we want to check out this error and return something more
-	// meaningful if its like a duplicate key error?
 	return err
-}
-
-// Version gets the most recently inserted event version
-func (m *Mongo) Version(coll, uuid string) (int, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(m.conn))
-	if err != nil {
-		return -1, err
-	}
-
-	c := client.Database(m.db).Collection(coll)
-	opts := options.FindOne()
-	opts.SetSort(bson.D{primitive.E{Key: "version", Value: -1}})
-	result := c.FindOne(ctx, bson.M{"uuid": uuid}, opts)
-	if result == nil {
-		return -1, errors.New("uuid not found")
-	}
-	var decoded StoredEvent
-	result.Decode(&decoded)
-	return decoded.Version, nil
 }
 
 func (m *Mongo) checkCollection(coll string) error {

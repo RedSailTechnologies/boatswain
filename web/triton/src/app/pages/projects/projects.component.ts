@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Application, DefaultKraken, Kraken } from 'src/app/services/kraken/kraken';
+import { ApplicationRead, DefaultApplication, Application } from 'src/app/services/application/application';
 import * as fetch from 'isomorphic-fetch';
 
 @Component({
@@ -9,13 +9,13 @@ import * as fetch from 'isomorphic-fetch';
   styleUrls: ['./projects.component.sass']
 })
 export class ProjectsComponent implements OnInit {
-  private client: Kraken;
+  private client: Application;
   private retries = 0;
-  public applications: Application[];
-  projects: Project[];
+  private applications: ApplicationRead[];
+  public projects: Project[];
 
   constructor(private snackBar: MatSnackBar) {
-    this.client = new DefaultKraken(`${location.protocol}//${location.host}/api`, fetch['default']);
+    this.client = new DefaultApplication(`${location.protocol}//${location.host}/api`, fetch['default']);
   }
 
   ngOnInit(): void {
@@ -25,7 +25,7 @@ export class ProjectsComponent implements OnInit {
   refresh(): void {
     if (this.retries < 5) {
       this.retries++;
-      this.client.applications({}).then(value => {
+      this.client.all({}).then(value => {
         this.applications = value.applications;
         this.populateProjects();
       }).catch(_ => {
@@ -34,7 +34,7 @@ export class ProjectsComponent implements OnInit {
     } else {
       console.log("could not update applications after 5 retries");
       this.retries = 0;
-      this.applications = new Array<Application>();
+      this.applications = new Array<ApplicationRead>();
       this.snackBar.open(`Error getting projects`, "Dismiss", {
         duration: 5 * 1000,
         panelClass: ["warn-snack"]
@@ -43,6 +43,7 @@ export class ProjectsComponent implements OnInit {
   }
 
   populateProjects(): void {
+    this.projects = new Array<Project>();
     this.applications.forEach(app => {
       if (this.projects.find(x => x.name == app.project) == undefined) {
         var project = new Project();
@@ -62,7 +63,6 @@ export class ProjectsComponent implements OnInit {
       });
     });
   }
-
 }
 
 class Project {

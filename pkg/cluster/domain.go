@@ -63,7 +63,10 @@ func Replay(events []ddd.Event) *Cluster {
 }
 
 // Create handles create commands
-func Create(uuid, name, endpoint, token, cert string, timestamp int64) *Cluster {
+func Create(uuid, name, endpoint, token, cert string, timestamp int64) (*Cluster, error) {
+	if anyEmptyStrings(uuid, name, endpoint, token, cert) {
+		return nil, ArgumentError
+	}
 	c := &Cluster{}
 	c.on(&Created{
 		Timestamp: timestamp,
@@ -73,7 +76,7 @@ func Create(uuid, name, endpoint, token, cert string, timestamp int64) *Cluster 
 		Token:     token,
 		Cert:      cert,
 	})
-	return c
+	return c, nil
 }
 
 // Destroy handles destroy commands
@@ -89,6 +92,9 @@ func (c *Cluster) Destroy(timestamp int64) error {
 
 // Update handles update commands
 func (c *Cluster) Update(name, endpoint, token, cert string, timestamp int64) error {
+	if anyEmptyStrings(name, endpoint, token, cert) {
+		return ArgumentError
+	}
 	if c.destroyed {
 		return DestroyedError
 	}
@@ -155,6 +161,24 @@ func (c *Cluster) on(event ddd.Event) {
 		c.token = e.Token
 		c.cert = e.Cert
 	}
+}
+
+func anyEmptyStrings(strings ...string) bool {
+	for _, str := range strings {
+		if str == "" {
+			return true
+		}
+	}
+	return false
+}
+
+// ArgumentError represents an invalid argument passed to a command
+var ArgumentError = argumentError{}
+
+type argumentError struct{}
+
+func (err argumentError) Error() string {
+	return "all fields are required for a valid Cluster"
 }
 
 // DestroyedError represents an error when subsequent commands are called on a destroyed cluster

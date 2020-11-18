@@ -1,5 +1,5 @@
 import { Component, OnInit } from "@angular/core";
-import { Cluster, DefaultKraken, Kraken } from "src/app/services/kraken/kraken";
+import { ClusterRead, Cluster, DefaultCluster } from "src/app/services/cluster/cluster";
 import * as fetch from "isomorphic-fetch";
 import { MatDialog } from "@angular/material/dialog";
 import { ClusterDialogComponent } from "src/app/dialogs/cluster-dialog/cluster-dialog.component";
@@ -13,12 +13,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 })
 
 export class ClustersComponent implements OnInit {
-  private client: Kraken;
-  public clusters: Cluster[];
+  private client: Cluster;
+  public clusters: ClusterRead[];
   private retries = 0;
 
   constructor(private dialog: MatDialog, private snackBar: MatSnackBar) {
-    this.client = new DefaultKraken(`${location.protocol}//${location.host}/api`, fetch["default"]);
+    this.client = new DefaultCluster(`${location.protocol}//${location.host}/api`, fetch["default"]);
   }
 
   ngOnInit() : void {
@@ -38,7 +38,7 @@ export class ClustersComponent implements OnInit {
     });
   }
 
-  edit(element: Cluster) : void {
+  edit(element: ClusterRead) : void {
     this.dialog.open(ClusterDialogComponent, {
       minWidth: "33%",
       panelClass: "custom-dialog-container",
@@ -52,7 +52,7 @@ export class ClustersComponent implements OnInit {
     });
   }
 
-  delete(element: Cluster) : void {
+  delete(element: ClusterRead) : void {
     this.dialog.open(ConfirmDialogComponent, {
       panelClass: 'message-box',
       data: {
@@ -61,7 +61,7 @@ export class ClustersComponent implements OnInit {
       }
     }).afterClosed().subscribe((result: Boolean) => {
       if (result) {
-        this.client.deleteCluster(element).catch(_ => {
+        this.client.destroy({"uuid": element.uuid}).catch(_ => {
           this.snackBar.open(`${element.name} could not be deleted`, "Dismiss", {
             duration: 5 * 1000,
             panelClass: ["warn-snack"]
@@ -76,7 +76,7 @@ export class ClustersComponent implements OnInit {
   refreshClusters() : void {
     if (this.retries < 5) {
       this.retries++;
-      this.client.clusters({}).then(value => {
+      this.client.all({}).then(value => {
         this.clusters = value.clusters;
         this.retries = 0;
       }).catch(_ => {
@@ -85,7 +85,7 @@ export class ClustersComponent implements OnInit {
     } else {
       console.log("could not update clusters after 5 retries")
       this.retries = 0;
-      this.clusters = new Array<Cluster>();
+      this.clusters = new Array<ClusterRead>();
       this.snackBar.open(`Error getting clusters`, "Dismiss", {
         duration: 5 * 1000,
         panelClass: ["warn-snack"]

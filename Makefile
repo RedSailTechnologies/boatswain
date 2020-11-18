@@ -31,6 +31,9 @@ clean:
 	@rm -f main
 	@rm -rf $(TRITON_PATH)dist
 	@rm -rf $(LEVI_OUT)
+	@rm -rf $(GEN_DOC)
+	@rm -rf $(GEN_GO)*
+	@rm -rf $(GEN_TS)*
 	@docker rmi -f $(DOCKER_REPO)triton:latest
 	@docker rmi -f $(DOCKER_REPO)triton:$(DOCKER_TAG)
 	@for service in $(SERVICE_LIST); do \
