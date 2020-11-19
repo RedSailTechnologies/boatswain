@@ -17,11 +17,9 @@ import (
 )
 
 func main() {
-	// poseidon := poseidon.NewPoseidonProtobufClient(poseidonEndpoint, &http.Client{}, twirp.WithClientPathPrefix("/api"))
-
 	var httpPort, mongoConn string
-	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
+	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
 	flag.Parse()
 
 	store, err := storage.NewMongo(mongoConn, "kraken")

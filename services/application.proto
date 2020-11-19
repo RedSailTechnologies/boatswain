@@ -1,6 +1,5 @@
 /*
-Kraken is the service managing external cluster connections.
-The api can be hit at /api/redsail.bosn.Kraken/<Method>.
+Application is the service for reading data about deployed applications.
 */
 syntax = "proto3";
 package redsail.bosn;

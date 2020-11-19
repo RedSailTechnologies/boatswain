@@ -78,9 +78,9 @@ func TestDestroy(t *testing.T) {
 
 	assert.Equal(t, true, sut.destroyed)
 	assert.Len(t, sut.Events(), 2)
-	assert.Equal(t, DestroyedError, sut.Destroy(time.Now().Unix()))
-	assert.Equal(t, DestroyedError, sut.Update("a", "b", "c", "d", 0))
-	assert.Equal(t, ArgumentError, sut.Update("", "", "", "", 0))
+	assert.Equal(t, ddd.DestroyedError, sut.Destroy(time.Now().Unix()))
+	assert.Equal(t, ddd.DestroyedError, sut.Update("a", "b", "c", "d", 0))
+	assert.Equal(t, ddd.RequiredArgumentError, sut.Update("", "", "", "", 0))
 	assert.Len(t, sut.Events(), 2)
 }
 
@@ -107,44 +107,4 @@ func TestUpdate(t *testing.T) {
 	assert.Equal(t, cert, sut.Cert())
 	assert.Equal(t, 2, sut.Version())
 	assert.Len(t, sut.Events(), 2)
-}
-
-func TestAnyEmptyStrings(t *testing.T) {
-	trueCases := [][]string{
-		[]string{
-			"a",
-			"",
-		},
-		[]string{
-			"",
-		},
-		[]string{
-			"a",
-			"",
-			"b",
-		},
-	}
-
-	for _, c := range trueCases {
-		assert.True(t, anyEmptyStrings(c...))
-	}
-
-	falseCases := [][]string{
-		[]string{},
-		[]string{
-			"a",
-		},
-	}
-
-	for _, c := range falseCases {
-		assert.False(t, anyEmptyStrings(c...))
-	}
-}
-
-func TestArgumentErrorMessage(t *testing.T) {
-	assert.Equal(t, "all fields are required for a valid Cluster", ArgumentError.Error())
-}
-
-func TestDestroyedErrorMessage(t *testing.T) {
-	assert.Equal(t, "Cluster cannot be modified further as it has been destroyed", DestroyedError.Error())
 }

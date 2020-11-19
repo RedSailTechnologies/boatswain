@@ -2,13 +2,12 @@ package cluster
 
 import (
 	"context"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/twitchtv/twirp"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
+	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
@@ -17,7 +16,7 @@ import (
 
 var collection = "clusters"
 
-// Service is the service implementation
+// Service is the implementation for twirp to use
 type Service struct {
 	k8s  kube.Agent
 	repo *Repository
@@ -33,17 +32,18 @@ func NewService(k kube.Agent, s storage.Storage) *Service {
 
 // Create adds a cluster to the list of configurations
 func (s Service) Create(ctx context.Context, cmd *pb.CreateCluster) (*pb.ClusterCreated, error) {
-	c, err := Create(uuid.New().String(), cmd.Name, cmd.Endpoint, cmd.Token, cmd.Cert, time.Now().Unix())
+	c, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, cmd.Token, cmd.Cert, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Cluster", "error", err)
-		return nil, twirp.RequiredArgumentError(err.Error())
+		return nil, toTwirpError(err, "could not create Cluster")
 	}
 
 	err = s.repo.Save(c)
 	if err != nil {
 		logger.Error("error saving Cluster", "error", err)
-		return nil, twirp.InternalError("error saving created cluster")
+		return nil, twirp.InternalError("error saving created Cluster")
 	}
+
 	return &pb.ClusterCreated{}, nil
 }
 
@@ -51,22 +51,14 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateCluster) (*pb.Cluster
 func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.ClusterUpdated, error) {
 	c, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
-		logger.Error("error updating cluster", "error", err)
-		if err == NotFoundError {
-			return nil, twirp.NotFoundError("cluster not found")
-		}
-		return nil, twirp.InternalError("error loading cluster")
+		logger.Error("error loading cluster", "error", err)
+		return nil, toTwirpError(err, "error loading Cluster")
 	}
 
-	err = c.Update(cmd.Name, cmd.Endpoint, cmd.Token, cmd.Cert, time.Now().Unix())
+	err = c.Update(cmd.Name, cmd.Endpoint, cmd.Token, cmd.Cert, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error updating Cluster", "error", err)
-		if err == ArgumentError {
-			return nil, twirp.RequiredArgumentError(err.Error())
-		} else if err == DestroyedError {
-			return nil, twirp.NotFoundError("Cluster has been destroyed")
-		}
-		return nil, twirp.InternalError("Cluster could not be updated")
+		return nil, toTwirpError(err, "Cluster could not be updated")
 	}
 
 	err = s.repo.Save(c)
@@ -82,26 +74,20 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.Cluster
 func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyCluster) (*pb.ClusterDestroyed, error) {
 	c, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
-		logger.Error("error destroying cluster", "error", err)
-		if err == NotFoundError {
-			return nil, twirp.NotFoundError("cluster not found")
-		}
-		return nil, twirp.InternalError("error loading cluster")
+		logger.Error("error loading Cluster", "error", err)
+		return nil, toTwirpError(err, "error loading Cluster")
 	}
 
-	err = c.Destroy(time.Now().Unix())
+	err = c.Destroy(ddd.NewTimestamp())
 	if err != nil {
-		logger.Error("error updating Cluster", "error", err)
-		if err == DestroyedError {
-			return &pb.ClusterDestroyed{}, nil
-		}
-		return nil, twirp.InternalError("Cluster could not be updated")
+		logger.Error("error destroying Cluster", "error", err)
+		return nil, toTwirpError(err, "Cluster could not be destroyed")
 	}
 
 	err = s.repo.Save(c)
 	if err != nil {
 		logger.Error("error saving Cluster", "error", err)
-		return nil, twirp.InternalError("error saving destroyed cluster")
+		return nil, twirp.InternalError("error saving destroyed Cluster")
 	}
 
 	return &pb.ClusterDestroyed{}, nil
@@ -111,17 +97,14 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyCluster) (*pb.Clust
 func (s Service) Read(ctx context.Context, req *pb.ReadCluster) (*pb.ClusterRead, error) {
 	c, err := s.repo.Load(req.Uuid)
 	if err != nil {
-		logger.Error("error reading cluster", "error", err)
-		if err == NotFoundError {
-			return nil, twirp.NotFoundError("cluster not found")
-		}
-		return nil, twirp.InternalError("error loading cluster")
+		logger.Error("error reading Cluster", "error", err)
+		return nil, toTwirpError(err, "error loading Cluster")
 	}
 
 	cs, err := c.toClientset()
 	if err != nil {
 		logger.Error("error converting Cluster to kube clientset", "error", err)
-		return nil, twirp.InternalError("error converting Cluster to kubernetes clientset")
+		return nil, twirp.InternalError("error converting Cluster to kubernetes Clientset")
 	}
 
 	return &pb.ClusterRead{
@@ -143,7 +126,7 @@ func (s Service) All(ctx context.Context, req *pb.ReadClusters) (*pb.ClustersRea
 	clusters, err := s.repo.All()
 	if err != nil {
 		logger.Error("error getting Clusters", "error", err)
-		return nil, twirp.InternalError("error loading clusters")
+		return nil, twirp.InternalError("error loading Clusters")
 	}
 
 	for _, c := range clusters {
@@ -174,4 +157,19 @@ func (c *Cluster) toClientset() (*kubernetes.Clientset, error) {
 		},
 	}
 	return kubernetes.NewForConfig(restConfig)
+}
+
+func toTwirpError(e error, m string) error {
+	switch e.(type) {
+	case ddd.DestroyedError:
+		return twirp.NotFoundError(e.Error())
+	case ddd.InvalidArgumentError:
+		return twirp.InvalidArgumentError(e.(ddd.InvalidArgumentError).Arg, e.Error())
+	case ddd.NotFoundError:
+		return twirp.NotFoundError(e.Error())
+	case ddd.RequiredArgumentError:
+		return twirp.RequiredArgumentError(e.(ddd.RequiredArgumentError).Arg)
+	default:
+		return twirp.InternalError(m)
+	}
 }

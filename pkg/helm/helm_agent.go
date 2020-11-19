@@ -1,69 +1,90 @@
-package kraken
+package helm
 
-import (
-	"bytes"
-	"fmt"
+// type helmAgent interface {
+// 	getReleases(*action.Configuration, string) ([]*release.Release, error)
+// 	upgradeRelease(*action.Configuration, string, *poseidon.File, string, map[string]interface{}) (*release.Release, error)
+// }
 
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/release"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
+// type defaultHelmAgent struct{}
 
-	"github.com/redsailtechnologies/boatswain/pkg/logger"
-	"github.com/redsailtechnologies/boatswain/rpc/poseidon"
-)
+// func (h defaultHelmAgent) getReleases(cfg *action.Configuration, cluster string) ([]*release.Release, error) {
+// 	list := action.NewList(cfg)
+// 	list.All = true
+// 	list.AllNamespaces = true
+// 	list.Limit = 0
+// 	list.SetStateMask()
 
-type helmAgent interface {
-	getReleases(*action.Configuration, string) ([]*release.Release, error)
-	upgradeRelease(*action.Configuration, string, *poseidon.File, string, map[string]interface{}) (*release.Release, error)
-}
+// 	releases, err := list.Run()
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-type defaultHelmAgent struct{}
+// 	return releases, nil
+// }
 
-func (h defaultHelmAgent) getReleases(cfg *action.Configuration, cluster string) ([]*release.Release, error) {
-	list := action.NewList(cfg)
-	list.All = true
-	list.AllNamespaces = true
-	list.Limit = 0
-	list.SetStateMask()
+// func (h defaultHelmAgent) upgradeRelease(cfg *action.Configuration, n string, f *poseidon.File, ns string, vals map[string]interface{}) (*release.Release, error) {
+// 	chart, err := loader.LoadArchive(bytes.NewReader(f.Contents))
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	releases, err := list.Run()
-	if err != nil {
-		return nil, err
-	}
+// 	upgrade := action.NewUpgrade(cfg)
+// 	upgrade.Namespace = ns
+// 	return upgrade.Run(n, chart, vals)
+// }
 
-	return releases, nil
-}
+// func toHelmClient(c *Cluster, namespace string) (*action.Configuration, error) {
+// 	ep := c.Endpoint()
+// 	tok := c.Token()
+// 	flags := &genericclioptions.ConfigFlags{
+// 		APIServer:   &ep,
+// 		BearerToken: &tok,
+// 		// TODO AdamP - flags only supports cert files, how do we want to handle?
+// 		// CertFile:    &cluster.Cert,
+// 		Insecure: &[]bool{true}[0],
+// 	}
+// 	actionConfig := new(action.Configuration)
+// 	if err := actionConfig.Init(flags, namespace, "secrets", helmLogger); err != nil {
+// 		return nil, err
+// 	}
 
-func (h defaultHelmAgent) upgradeRelease(cfg *action.Configuration, n string, f *poseidon.File, ns string, vals map[string]interface{}) (*release.Release, error) {
-	chart, err := loader.LoadArchive(bytes.NewReader(f.Contents))
-	if err != nil {
-		return nil, err
-	}
+// 	return actionConfig, nil
+// }
 
-	upgrade := action.NewUpgrade(cfg)
-	upgrade.Namespace = ns
-	return upgrade.Run(n, chart, vals)
-}
+// func helmLogger(template string, args ...interface{}) {
+// 	logger.Info(fmt.Sprintf(template, args...))
+// }
 
-func toHelmClient(c *Cluster, namespace string) (*action.Configuration, error) {
-	ep := c.Endpoint()
-	tok := c.Token()
-	flags := &genericclioptions.ConfigFlags{
-		APIServer:   &ep,
-		BearerToken: &tok,
-		// TODO AdamP - flags only supports cert files, how do we want to handle?
-		// CertFile:    &cluster.Cert,
-		Insecure: &[]bool{true}[0],
-	}
-	actionConfig := new(action.Configuration)
-	if err := actionConfig.Init(flags, namespace, "secrets", helmLogger); err != nil {
-		return nil, err
-	}
+// // DownloadChart downloads a chart to the local filesystem
+// func (a DefaultAgent) DownloadChart(name, version, out, endpoint string, opts *action.ChartPathOptions) (string, error) {
+// 	pull := action.NewPull()
+// 	pull.ChartPathOptions = *opts
+// 	pull.Settings = cli.New()
+// 	pull.RepoURL = endpoint
+// 	pull.Version = version
 
-	return actionConfig, nil
-}
+// 	// TODO AdamP - we may want to implement some kind of directory management to prevent overflow here..
+// 	pull.DestDir = out
 
-func helmLogger(template string, args ...interface{}) {
-	logger.Info(fmt.Sprintf(template, args...))
-}
+// 	if _, err := pull.Run(name); err != nil {
+// 		return "", err
+// 	}
+
+// 	return path.Join(out, getFullName(name, version)), nil
+// }
+
+// // ToChartPathOptions returns the chart path options for helm
+// func (r *Repo) ToChartPathOptions() *action.ChartPathOptions {
+// 	return &action.ChartPathOptions{
+// 		InsecureSkipTLSverify: true,
+// 		RepoURL:               r.Endpoint,
+// 	}
+// }
+
+// // ToChartPathOptions returns the chart path options for helm
+// func (r *Repo) ToChartPathOptions() *action.ChartPathOptions {
+// 	return &action.ChartPathOptions{
+// 		InsecureSkipTLSverify: true,
+// 		RepoURL:               r.Endpoint,
+// 	}
+// }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -131,10 +132,11 @@ func (m *Mongo) StoreEvent(coll, uuid, eventType, eventData string, version int)
 
 	c := client.Database(m.db).Collection(coll)
 	_, err = c.InsertOne(ctx, StoredEvent{
-		UUID:    uuid,
-		Version: version,
-		Type:    eventType,
-		Data:    eventData,
+		UUID:      uuid,
+		Version:   version,
+		Timestamp: ddd.NewTimestamp(),
+		Type:      eventType,
+		Data:      eventData,
 	})
 
 	return err

@@ -8,51 +8,41 @@ import (
 
 	"github.com/twitchtv/twirp"
 
+	"github.com/redsailtechnologies/boatswain/pkg/application"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
-	"github.com/redsailtechnologies/boatswain/pkg/kraken"
+	"github.com/redsailtechnologies/boatswain/pkg/cluster"
+	"github.com/redsailtechnologies/boatswain/pkg/helm"
+	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
-	"github.com/redsailtechnologies/boatswain/pkg/poseidon"
-	krakenRPC "github.com/redsailtechnologies/boatswain/rpc/kraken"
-	poseidonRPC "github.com/redsailtechnologies/boatswain/rpc/poseidon"
+	"github.com/redsailtechnologies/boatswain/pkg/repo"
+	"github.com/redsailtechnologies/boatswain/pkg/storage"
+	app "github.com/redsailtechnologies/boatswain/rpc/application"
+	cl "github.com/redsailtechnologies/boatswain/rpc/cluster"
+	rep "github.com/redsailtechnologies/boatswain/rpc/repo"
 )
 
 func main() {
-	var configFile, cacheDir string
-	flag.StringVar(&configFile, "config", "", "leviathan config file path")
-	flag.StringVar(&cacheDir, "cache", "", "poseidon cache path")
+	var httpPort, mongoConn string
+	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
+	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
 	flag.Parse()
 
+	// Storage
+	store, err := storage.NewMongo(mongoConn, "leviathan")
+	if err != nil {
+		logger.Fatal("mongo init failed")
+	}
+
 	// Kraken
-	krakenConfig := &kraken.Config{}
-	if err := cfg.YAML(configFile, krakenConfig); err != nil {
-		logger.Warn("could not read kraken configuration", "error", err)
-	}
+	cluster := cluster.NewService(kube.DefaultAgent{}, store)
+	clTwirp := cl.NewClusterServer(cluster, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
 
-	ph := "localhost"
-	pp := "8080"
-	if err := os.Setenv("POSEIDON_SERVICE_HOST", "localhost"); err != nil {
-		logger.Fatal("could not set host env")
-	}
-	if err := os.Setenv("POSEIDON_SERVICE_PORT", "8080"); err != nil {
-		logger.Fatal("could not set host port")
-	}
-	pe := "http://" + ph + ":" + pp
-	poseidonClient := poseidonRPC.NewPoseidonProtobufClient(pe, &http.Client{}, twirp.WithClientPathPrefix("/api"))
-
-	krakenServer := kraken.New(krakenConfig, poseidonClient)
-	krakenTwirp := krakenRPC.NewKrakenServer(krakenServer, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+	application := application.NewService(cluster, kube.DefaultAgent{})
+	appTwirp := app.NewApplicationServer(application, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
 
 	// Poseidon
-	poseidonConfig := &poseidon.Config{}
-	if err := cfg.YAML(configFile, poseidonConfig); err != nil {
-		logger.Warn("could not read poseidon configuration", "error", err)
-	}
-	if cacheDir != "" {
-		poseidonConfig.CacheDir = cacheDir
-	}
-
-	poseidonServer := poseidon.New(poseidonConfig)
-	poseidonTwirp := poseidonRPC.NewPoseidonServer(poseidonServer, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+	repo := repo.NewService(helm.DefaultAgent{}, store)
+	repTwirp := rep.NewRepoServer(repo, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
 
 	// Triton
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
@@ -62,10 +52,11 @@ func main() {
 	tritonServer := http.FileServer(http.Dir(dir + "/triton"))
 
 	mux := http.NewServeMux()
-	mux.Handle(krakenTwirp.PathPrefix(), krakenTwirp)
-	mux.Handle(poseidonTwirp.PathPrefix(), poseidonTwirp)
+	mux.Handle(appTwirp.PathPrefix(), appTwirp)
+	mux.Handle(clTwirp.PathPrefix(), clTwirp)
+	mux.Handle(repTwirp.PathPrefix(), repTwirp)
 	mux.Handle("/", tritonServer) // TODO AdamP - fix multiplexer
 
 	logger.Info("starting leviathan server...ITS HUUUUUUUUUUGE!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":8080", mux))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, mux))
 }

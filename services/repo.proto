@@ -1,0 +1,81 @@
+/*
+Repo is the service managing external repositories, such as helm.
+*/
+syntax = "proto3";
+package redsail.bosn;
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/repo";
+
+service Repo {
+    // adds a repo to the list of configurations
+    rpc Create (CreateRepo) returns (RepoCreated);
+    
+    // edits an already existing repo
+    rpc Update (UpdateRepo) returns (RepoUpdated);
+    
+    // removes a repo from the list of configurations
+    rpc Destroy (DestroyRepo) returns (RepoDestroyed);
+
+    // reads out a repo
+    rpc Read (ReadRepo) returns (RepoRead);
+    
+    // gets all repos currently configured and their status
+    rpc All (ReadRepos) returns (ReposRead);
+
+    // gets all the charts for this repository
+    rpc Charts (ReadRepo) returns (ChartsRead);
+}
+
+message CreateRepo {
+    string name = 1; // name of the repo
+    string endpoint = 2; // repo endpoint
+}
+
+message RepoCreated {}
+
+message UpdateRepo {
+    string uuid = 1; // unique id of the repo
+    string name = 2; // name of the repo
+    string endpoint = 3; // repo endpoint
+}
+
+message RepoUpdated {}
+
+message DestroyRepo {
+    string uuid = 1; // unique id of the repo
+}
+
+message RepoDestroyed {}
+
+message ReadRepo {
+    string uuid = 1; // unique id of the repo
+}
+
+message RepoRead {
+    string uuid = 1; // unique id of the repo
+    string name = 2; // name of the repo
+    string endpoint = 3; // repo endpoint
+    bool ready = 6; // repo ready status, based on whether index.yaml can be fetched
+}
+
+message ReadRepos {}
+
+message ReposRead {
+    repeated RepoRead repos = 1; // repos read
+}
+
+message ChartRead {
+    string name = 1; // the chart name
+    repeated VersionRead versions = 2; // the versions available for this chart
+}
+
+message VersionRead {
+    string name = 1; // the name of the chart
+    string chart_version = 2; // the chart version
+    string app_version = 3; // the chart's default app version
+    string description = 4; // description of the chart
+    string url = 5; // the url for this specific version of the chart
+}
+
+message ChartsRead {
+    repeated ChartRead charts = 1; // the list of charts
+}

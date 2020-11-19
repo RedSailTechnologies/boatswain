@@ -1,7 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { ClusterRead, DefaultCluster, Cluster, UpdateCluster } from 'src/app/services/cluster/cluster';
+import { ClusterRead, DefaultCluster, Cluster, UpdateCluster, CreateCluster } from 'src/app/services/cluster/cluster';
 import * as fetch from 'isomorphic-fetch';
 import { BusyComponent } from '../busy/busy.component';
 import { MessageDialogComponent } from '../message-dialog/message-dialog.component';
@@ -53,19 +53,28 @@ export class ClusterDialogComponent implements OnInit {
       panelClass: 'transparent',
       disableClose: true
     });
-    var cluster = <UpdateCluster>{
-      "uuid": this.cluster != null ? this.cluster.uuid : null,
-      "name": this.clusterForm.controls["name"].value,
-      "endpoint": this.clusterForm.controls["endpoint"].value,
-      "token": this.clusterForm.controls["token"].value == "***" ? this.cluster.token : this.clusterForm.controls["token"].value,
-      "cert": this.clusterForm.controls["cert"].value == "***" ? this.cluster.cert : this.clusterForm.controls["cert"].value,
-      "ready": false
-    };
+    
 
     var promise: Promise<any>
+    var cluster
     if (this.isAdd) {
+      cluster = <CreateCluster>{
+        "name": this.clusterForm.controls["name"].value,
+        "endpoint": this.clusterForm.controls["endpoint"].value,
+        "token": this.clusterForm.controls["token"].value == "***" ? this.cluster.token : this.clusterForm.controls["token"].value,
+        "cert": this.clusterForm.controls["cert"].value == "***" ? this.cluster.cert : this.clusterForm.controls["cert"].value,
+        "ready": false
+      };
       promise = this.client.create(cluster);
     } else {
+      cluster = <UpdateCluster>{
+        "uuid": this.cluster != null ? this.cluster.uuid : null,
+        "name": this.clusterForm.controls["name"].value,
+        "endpoint": this.clusterForm.controls["endpoint"].value,
+        "token": this.clusterForm.controls["token"].value == "***" ? this.cluster.token : this.clusterForm.controls["token"].value,
+        "cert": this.clusterForm.controls["cert"].value == "***" ? this.cluster.cert : this.clusterForm.controls["cert"].value,
+        "ready": false
+      };
       promise = this.client.update(cluster);
     }
 

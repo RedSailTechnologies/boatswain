@@ -7,27 +7,26 @@ import (
 	"github.com/twitchtv/twirp"
 
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
+	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
-	"github.com/redsailtechnologies/boatswain/pkg/poseidon"
-	rpc "github.com/redsailtechnologies/boatswain/rpc/poseidon"
+	"github.com/redsailtechnologies/boatswain/pkg/repo"
+	"github.com/redsailtechnologies/boatswain/pkg/storage"
+	rep "github.com/redsailtechnologies/boatswain/rpc/repo"
 )
 
 func main() {
-	var configFile, cacheDir string
-	flag.StringVar(&configFile, "config", "", "poseidon config file path")
-	flag.StringVar(&cacheDir, "cache", "", "poseidon cache path")
+	var httpPort, mongoConn string
+	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
+	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
 	flag.Parse()
 
-	config := &poseidon.Config{}
-	if err := cfg.YAML(configFile, config); err != nil {
-		logger.Warn("no configuration found or file could not be parsed", "error", err)
-	}
-	if cacheDir != "" {
-		config.CacheDir = cacheDir
+	store, err := storage.NewMongo(mongoConn, "poseidon")
+	if err != nil {
+		logger.Fatal("mongo init failed")
 	}
 
-	server := poseidon.New(config)
-	twirp := rpc.NewPoseidonServer(server, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+	repo := repo.NewService(helm.DefaultAgent{}, store)
+	repTwirp := rep.NewRepoServer(repo, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
 	logger.Info("starting poseidon component...I am Poseidon!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":8080", twirp))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, repTwirp))
 }

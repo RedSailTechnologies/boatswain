@@ -2,11 +2,6 @@ package cluster
 
 import "github.com/redsailtechnologies/boatswain/pkg/ddd"
 
-// // Event is the interface for events
-// type Event interface {
-// 	isEvent()
-// }
-
 // Created is the event for when a new cluster is created
 type Created struct {
 	Timestamp int64
@@ -17,18 +12,22 @@ type Created struct {
 	Cert      string
 }
 
-// IsEvent marks this as an event
-func (e Created) IsEvent() {}
+// EventType marks this as an event
+func (e Created) EventType() string {
+	return "ClusterCreated"
+}
 
 // Destroyed is the event for when a cluster is destroyed
 type Destroyed struct {
 	Timestamp int64
 }
 
-// IsEvent marks this as an event
-func (cu Destroyed) IsEvent() {}
+// EventType marks this as an event
+func (e Destroyed) EventType() string {
+	return "ClusterDestroyed"
+}
 
-// Updated is the event for when a cluster is updatedDestroyed
+// Updated is the event for when a cluster is updated
 type Updated struct {
 	Timestamp int64
 	Name      string
@@ -37,8 +36,10 @@ type Updated struct {
 	Cert      string
 }
 
-// IsEvent marks this as an event
-func (cu Updated) IsEvent() {}
+// EventType marks this as an event
+func (e Updated) EventType() string {
+	return "ClusterUpdated"
+}
 
 // Cluster represents a kubernetes cluster we are monitoring/deploying to
 type Cluster struct {
@@ -53,7 +54,7 @@ type Cluster struct {
 	cert     string
 }
 
-// Replay recreates the aggregate from a series of events
+// Replay recreates the cluster from a series of events
 func Replay(events []ddd.Event) *Cluster {
 	c := &Cluster{}
 	for _, event := range events {
@@ -64,9 +65,14 @@ func Replay(events []ddd.Event) *Cluster {
 
 // Create handles create commands
 func Create(uuid, name, endpoint, token, cert string, timestamp int64) (*Cluster, error) {
-	if anyEmptyStrings(uuid, name, endpoint, token, cert) {
-		return nil, ArgumentError
+	if uuid == "" {
+		return nil, ddd.IDError{}
 	}
+	err := validateFields(name, endpoint, token, cert)
+	if err != nil {
+		return nil, err
+	}
+
 	c := &Cluster{}
 	c.on(&Created{
 		Timestamp: timestamp,
@@ -82,7 +88,7 @@ func Create(uuid, name, endpoint, token, cert string, timestamp int64) (*Cluster
 // Destroy handles destroy commands
 func (c *Cluster) Destroy(timestamp int64) error {
 	if c.destroyed {
-		return DestroyedError
+		return ddd.DestroyedError{Entity: "Cluter"}
 	}
 	c.on(&Destroyed{
 		Timestamp: timestamp,
@@ -92,11 +98,12 @@ func (c *Cluster) Destroy(timestamp int64) error {
 
 // Update handles update commands
 func (c *Cluster) Update(name, endpoint, token, cert string, timestamp int64) error {
-	if anyEmptyStrings(name, endpoint, token, cert) {
-		return ArgumentError
+	err := validateFields(name, endpoint, token, cert)
+	if err != nil {
+		return err
 	}
 	if c.destroyed {
-		return DestroyedError
+		return ddd.DestroyedError{Entity: "Cluter"}
 	}
 	c.on(&Updated{
 		Timestamp: timestamp,
@@ -163,29 +170,18 @@ func (c *Cluster) on(event ddd.Event) {
 	}
 }
 
-func anyEmptyStrings(strings ...string) bool {
-	for _, str := range strings {
-		if str == "" {
-			return true
-		}
+func validateFields(name, endpoint, token, cert string) error {
+	if name == "" {
+		return ddd.RequiredArgumentError{Arg: "Name"}
 	}
-	return false
-}
-
-// ArgumentError represents an invalid argument passed to a command
-var ArgumentError = argumentError{}
-
-type argumentError struct{}
-
-func (err argumentError) Error() string {
-	return "all fields are required for a valid Cluster"
-}
-
-// DestroyedError represents an error when subsequent commands are called on a destroyed cluster
-var DestroyedError = destroyedError{}
-
-type destroyedError struct{}
-
-func (err destroyedError) Error() string {
-	return "Cluster cannot be modified further as it has been destroyed"
+	if endpoint == "" {
+		return ddd.RequiredArgumentError{Arg: "Endpoint"}
+	}
+	if token == "" {
+		return ddd.RequiredArgumentError{Arg: "Token"}
+	}
+	if cert == "" {
+		return ddd.RequiredArgumentError{Arg: "Cert"}
+	}
+	return nil
 }

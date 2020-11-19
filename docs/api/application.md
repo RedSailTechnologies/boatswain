@@ -19,8 +19,7 @@
 <p align="right"><a href="#top">Top</a></p>
 
 ## application.proto
-Kraken is the service managing external cluster connections.
-The api can be hit at /api/redsail.bosn.Kraken/&lt;Method&gt;.
+Application is the service for reading data about deployed applications.
 
 
 <a name="redsail.bosn.ApplicationCluster"></a>

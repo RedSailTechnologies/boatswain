@@ -10,8 +10,9 @@ type Storage interface {
 
 // StoredEvent represents an event in storage which includes its uuid, version, type, and event (as json)
 type StoredEvent struct {
-	UUID    string
-	Version int
-	Type    string
-	Data    string
+	UUID      string
+	Version   int
+	Timestamp int64
+	Type      string
+	Data      string
 }

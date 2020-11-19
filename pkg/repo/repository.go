@@ -1,4 +1,4 @@
-package cluster
+package repo
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 )
 
-// Repository is the repository for dealing with cluster storage
+// Repository is the repository for dealing with repo storage
 type Repository struct {
 	coll  string
 	store storage.Storage
@@ -21,14 +21,14 @@ func NewRepository(coll string, store storage.Storage) *Repository {
 	}
 }
 
-// All gets all clusters, excluding deleted items
-func (r *Repository) All() ([]*Cluster, error) {
+// All gets all repos, excluding deleted items
+func (r *Repository) All() ([]*Repo, error) {
 	uuids, err := r.store.IDs(r.coll)
 	if err != nil {
 		return nil, err
 	}
 
-	clusters := make([]*Cluster, 0)
+	repos := make([]*Repo, 0)
 	for _, uuid := range uuids {
 		storedEvents, err := r.store.GetEvents(r.coll, uuid)
 		if err != nil {
@@ -38,16 +38,16 @@ func (r *Repository) All() ([]*Cluster, error) {
 		if err != nil {
 			return nil, err
 		}
-		cluster := Replay(events)
-		if !cluster.destroyed {
-			clusters = append(clusters, cluster)
+		repo := Replay(events)
+		if !repo.destroyed {
+			repos = append(repos, repo)
 		}
 	}
-	return clusters, nil
+	return repos, nil
 }
 
-// Load reads out the cluster for the uuid given
-func (r *Repository) Load(uuid string) (*Cluster, error) {
+// Load reads out the repo for the uuid given
+func (r *Repository) Load(uuid string) (*Repo, error) {
 	events, err := r.store.GetEvents(r.coll, uuid)
 	if err != nil {
 		return nil, err
@@ -58,27 +58,27 @@ func (r *Repository) Load(uuid string) (*Cluster, error) {
 		return nil, err
 	}
 	if len(unmarshaled) == 0 {
-		return nil, ddd.NotFoundError{Entity: "Cluster"}
+		return nil, ddd.NotFoundError{Entity: "Repo"}
 	}
 
-	cluster := Replay(unmarshaled)
-	if cluster.destroyed {
-		return nil, ddd.DestroyedError{Entity: "Cluster"}
+	repo := Replay(unmarshaled)
+	if repo.destroyed {
+		return nil, ddd.DestroyedError{Entity: "Repo"}
 	}
-	return cluster, nil
+	return repo, nil
 }
 
-// Save persists the new events for the cluster given
-func (r *Repository) Save(c *Cluster) error {
-	version := r.store.GetVersion(r.coll, c.UUID())
-	for i, ev := range c.Events()[version:] {
+// Save persists the new events for the repo given
+func (r *Repository) Save(repo *Repo) error {
+	version := r.store.GetVersion(r.coll, repo.UUID())
+	for i, ev := range repo.Events()[version:] {
 		v := i + version + 1
 		d, err := json.Marshal(ev)
 		if err != nil {
 			return err
 		}
 
-		err = r.store.StoreEvent(r.coll, c.UUID(), ev.EventType(), string(d), v)
+		err = r.store.StoreEvent(r.coll, repo.UUID(), ev.EventType(), string(d), v)
 		if err != nil {
 			return err
 		}
@@ -90,21 +90,21 @@ func unmarshalEvents(events []*storage.StoredEvent) ([]ddd.Event, error) {
 	unmarshaled := make([]ddd.Event, 0)
 	for _, event := range events {
 		switch event.Type {
-		case "ClusterCreated":
+		case "RepoCreated":
 			var c Created
 			err := json.Unmarshal([]byte(event.Data), &c)
 			if err != nil {
 				return nil, err
 			}
 			unmarshaled = append(unmarshaled, &c)
-		case "ClusterDestroyed":
+		case "RepoDestroyed":
 			var d Destroyed
 			err := json.Unmarshal([]byte(event.Data), &d)
 			if err != nil {
 				return nil, err
 			}
 			unmarshaled = append(unmarshaled, &d)
-		case "ClusterUpdated":
+		case "RepoUpdated":
 			var u Updated
 			err := json.Unmarshal([]byte(event.Data), &u)
 			if err != nil {
