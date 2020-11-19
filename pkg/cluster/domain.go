@@ -88,7 +88,7 @@ func Create(uuid, name, endpoint, token, cert string, timestamp int64) (*Cluster
 // Destroy handles destroy commands
 func (c *Cluster) Destroy(timestamp int64) error {
 	if c.destroyed {
-		return ddd.DestroyedError{Entity: "Cluter"}
+		return ddd.DestroyedError{Entity: "Cluster"}
 	}
 	c.on(&Destroyed{
 		Timestamp: timestamp,
@@ -103,7 +103,7 @@ func (c *Cluster) Update(name, endpoint, token, cert string, timestamp int64) er
 		return err
 	}
 	if c.destroyed {
-		return ddd.DestroyedError{Entity: "Cluter"}
+		return ddd.DestroyedError{Entity: "Cluster"}
 	}
 	c.on(&Updated{
 		Timestamp: timestamp,
@@ -115,7 +115,7 @@ func (c *Cluster) Update(name, endpoint, token, cert string, timestamp int64) er
 	return nil
 }
 
-// UUID returns this cluter's identifier
+// UUID returns this cluster's identifier
 func (c *Cluster) UUID() string {
 	return c.uuid
 }

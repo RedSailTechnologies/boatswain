@@ -78,9 +78,9 @@ func TestDestroy(t *testing.T) {
 
 	assert.Equal(t, true, sut.destroyed)
 	assert.Len(t, sut.Events(), 2)
-	assert.Equal(t, ddd.DestroyedError, sut.Destroy(time.Now().Unix()))
-	assert.Equal(t, ddd.DestroyedError, sut.Update("a", "b", "c", "d", 0))
-	assert.Equal(t, ddd.RequiredArgumentError, sut.Update("", "", "", "", 0))
+	assert.Equal(t, ddd.DestroyedError{Entity: "Cluster"}, sut.Destroy(time.Now().Unix()))
+	assert.Equal(t, ddd.DestroyedError{Entity: "Cluster"}, sut.Update("a", "b", "c", "d", 0))
+	assert.Equal(t, ddd.RequiredArgumentError{Arg: "Endpoint"}, sut.Update("a", "", "b", "c", 0))
 	assert.Len(t, sut.Events(), 2)
 }
 
