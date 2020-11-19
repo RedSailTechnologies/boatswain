@@ -20,7 +20,9 @@ import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatSortModule } from "@angular/material/sort";
 import { MatTableModule } from "@angular/material/table";
 import { MatToolbarModule } from "@angular/material/toolbar";
-import { MatTooltipModule } from "@angular/material/tooltip"; 
+import { MatTooltipModule } from "@angular/material/tooltip";
+
+import { NgScrollbarModule } from 'ngx-scrollbar';
 
 import { AppComponent } from "./app.component";
 import { AppRoutingModule } from "./app-routing.module";
@@ -76,7 +78,9 @@ import { ProjectsComponent } from './pages/projects/projects.component';
     MatSortModule,
     MatTableModule,
     MatToolbarModule,
-    MatTooltipModule
+    MatTooltipModule,
+
+    NgScrollbarModule
   ],
   providers: [
     StyleManager,

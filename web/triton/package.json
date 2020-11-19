@@ -12,7 +12,7 @@
   "private": true,
   "dependencies": {
     "@angular/animations": "~10.1.4",
-    "@angular/cdk": "^10.2.4",
+    "@angular/cdk": "^10.2.7",
     "@angular/common": "~10.1.4",
     "@angular/compiler": "~10.1.4",
     "@angular/core": "~10.1.4",
@@ -23,6 +23,7 @@
     "@angular/router": "~10.1.4",
     "@types/google-protobuf": "^3.7.3",
     "isomorphic-fetch": "^3.0.0",
+    "ngx-scrollbar": "^7.4.1",
     "rxjs": "~6.6.0",
     "tslib": "^2.0.0",
     "zone.js": "~0.10.2"
