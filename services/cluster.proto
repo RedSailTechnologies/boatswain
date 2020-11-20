@@ -1,0 +1,67 @@
+/*
+Cluster is the service managing external clusters.
+*/
+syntax = "proto3";
+package redsail.bosn;
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/cluster";
+
+service Cluster {
+    // adds a cluster to the list of configurations
+    rpc Create (CreateCluster) returns (ClusterCreated);
+    
+    // edits an already existing cluster
+    rpc Update (UpdateCluster) returns (ClusterUpdated);
+    
+    // removes a cluster from the list of configurations
+    rpc Destroy (DestroyCluster) returns (ClusterDestroyed);
+
+    // reads out a cluster
+    rpc Read (ReadCluster) returns (ClusterRead);
+    
+    // gets all clusters currently configured and their status
+    rpc All (ReadClusters) returns (ClustersRead);
+}
+
+message CreateCluster {
+    string name = 1; // name of the cluster
+    string endpoint = 2; // api server endpoint
+    string token = 3; // authentication token
+    string cert = 4; // server certificate
+}
+
+message ClusterCreated {}
+
+message UpdateCluster {
+    string uuid = 1; // unique id of the cluster
+    string name = 2; // name of the cluster
+    string endpoint = 3; // api server endpoint
+    string token = 4; // authentication token
+    string cert = 5; // server certificate
+}
+
+message ClusterUpdated {}
+
+message DestroyCluster {
+    string uuid = 1; // unique id of the cluster
+}
+
+message ClusterDestroyed {}
+
+message ReadCluster {
+    string uuid = 1; // unique id of the cluster
+}
+
+message ClusterRead {
+    string uuid = 1; // unique id of the cluster
+    string name = 2; // name of the cluster
+    string endpoint = 3; // api server endpoint
+    string token = 4; // authentication token
+    string cert = 5; // server certificate
+    bool ready = 6; // server ready status, based on node status
+}
+
+message ReadClusters {}
+
+message ClustersRead {
+    repeated ClusterRead clusters = 1; // clusters read
+}

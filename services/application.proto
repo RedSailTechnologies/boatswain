@@ -1,0 +1,30 @@
+/*
+Application is the service for reading data about deployed applications.
+*/
+syntax = "proto3";
+package redsail.bosn;
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/kraken";
+
+service Application {
+    // gets all applications currently found in each cluster and their status
+    rpc All (ReadApplications) returns (ApplicationsRead);
+}
+
+message ApplicationRead {
+    string name = 1; // the application name by label app.kubernetes.io/name
+    string project = 2; // the project by label app.kubernetes.io/part-of
+    repeated ApplicationCluster clusters = 3; // the list of isntances of this application by cluster
+}
+
+message ApplicationCluster {
+    string cluster_name = 1; // the cluster name
+    string version = 2; // the app version by label app.kubernetes.io/version
+    string namespace = 3; // the namespace
+    bool ready = 4; // whether all deployment or ss pods are ready
+}
+
+message ReadApplications {}
+
+message ApplicationsRead {
+    repeated ApplicationRead applications = 1; // the list of applications
+}

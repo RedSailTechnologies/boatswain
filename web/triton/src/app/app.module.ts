@@ -20,15 +20,15 @@ import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatSortModule } from "@angular/material/sort";
 import { MatTableModule } from "@angular/material/table";
 import { MatToolbarModule } from "@angular/material/toolbar";
-import { MatTooltipModule } from "@angular/material/tooltip"; 
+import { MatTooltipModule } from "@angular/material/tooltip";
+
+import { NgScrollbarModule } from 'ngx-scrollbar';
 
 import { AppComponent } from "./app.component";
 import { AppRoutingModule } from "./app-routing.module";
 import { ClustersComponent } from "./pages/clusters/clusters.component"
 import { HomeComponent } from "./pages/home/home.component";
-import { ReleasesComponent } from "./pages/releases/releases.component";
 import { ReposComponent } from "./pages/repos/repos.component";
-import { UpdateDialogComponent } from "./dialogs/update-dialog/update-dialog.component";
 import { BusyComponent } from "./dialogs/busy/busy.component";
 import { MessageDialogComponent } from "./dialogs/message-dialog/message-dialog.component";
 import { ThemePickerComponent } from "./utils/theme-picker/theme-picker.component";
@@ -45,9 +45,7 @@ import { ProjectsComponent } from './pages/projects/projects.component';
     AppComponent,
     HomeComponent,
     ClustersComponent,
-    ReleasesComponent,
     ReposComponent,
-    UpdateDialogComponent,
     BusyComponent,
     MessageDialogComponent,
     ThemePickerComponent,
@@ -80,7 +78,9 @@ import { ProjectsComponent } from './pages/projects/projects.component';
     MatSortModule,
     MatTableModule,
     MatToolbarModule,
-    MatTooltipModule
+    MatTooltipModule,
+
+    NgScrollbarModule
   ],
   providers: [
     StyleManager,

@@ -1,8 +1,8 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { RepoRead, ChartRead, Repo, DefaultRepo, UpdateRepo, CreateRepo } from 'src/app/services/repo/repo';
 import * as fetch from 'isomorphic-fetch';
-import { DefaultPoseidon, Poseidon, Repo } from 'src/app/services/poseidon/poseidon';
 import { BusyComponent } from '../busy/busy.component';
 import { MessageDialogComponent } from '../message-dialog/message-dialog.component';
 
@@ -12,8 +12,8 @@ import { MessageDialogComponent } from '../message-dialog/message-dialog.compone
   styleUrls: ['./repo-dialog.component.sass']
 })
 export class RepoDialogComponent implements OnInit {
-  private client: Poseidon;
-  private repo: Repo;
+  private client: Repo;
+  private repo: RepoRead;
   public repoForm: FormGroup = new FormGroup({
     name: new FormControl(''),
     endpoint: new FormControl(''),
@@ -32,7 +32,7 @@ export class RepoDialogComponent implements OnInit {
       this.repoForm.controls["name"].setValue(this.repo.name);
       this.repoForm.controls["endpoint"].setValue(this.repo.endpoint);
     }
-    this.client = new DefaultPoseidon(`${location.protocol}//${location.host}/api`, fetch["default"]);
+    this.client = new DefaultRepo(`${location.protocol}//${location.host}/api`, fetch["default"]);
   }
 
   ngOnInit(): void {
@@ -49,18 +49,26 @@ export class RepoDialogComponent implements OnInit {
       panelClass: 'transparent',
       disableClose: true
     });
-    var cluster = <Repo>{
-      "uuid": this.repo != null ? this.repo.uuid : null,
-      "name": this.repoForm.controls["name"].value,
-      "endpoint": this.repoForm.controls["endpoint"].value,
-      "ready": false
-    };
+    
 
     var promise: Promise<any>
+    var repo
     if (this.isAdd) {
-      promise = this.client.addRepo(cluster);
+      repo = <CreateRepo>{
+        "uuid": this.repo != null ? this.repo.uuid : null,
+        "name": this.repoForm.controls["name"].value,
+        "endpoint": this.repoForm.controls["endpoint"].value,
+        "ready": false
+      };
+      promise = this.client.create(repo);
     } else {
-      promise = this.client.editRepo(cluster);
+      repo = <UpdateRepo>{
+        "uuid": this.repo != null ? this.repo.uuid : null,
+        "name": this.repoForm.controls["name"].value,
+        "endpoint": this.repoForm.controls["endpoint"].value,
+        "ready": false
+      };
+      promise = this.client.update(repo);
     }
 
     promise.then(_ => {

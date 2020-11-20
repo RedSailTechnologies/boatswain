@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Application, DefaultKraken, Kraken } from 'src/app/services/kraken/kraken';
+import { ApplicationRead, DefaultApplication, Application } from 'src/app/services/application/application';
 import * as fetch from 'isomorphic-fetch';
 
 @Component({
@@ -9,12 +9,12 @@ import * as fetch from 'isomorphic-fetch';
   styleUrls: ['./applications.component.sass']
 })
 export class ApplicationsComponent implements OnInit {
-  private client: Kraken;
+  private client: Application;
   private retries = 0;
-  public applications: Application[];
+  public applications: ApplicationRead[];
 
   constructor(private snackBar: MatSnackBar) {
-    this.client = new DefaultKraken(`${location.protocol}//${location.host}/api`, fetch['default']);
+    this.client = new DefaultApplication(`${location.protocol}//${location.host}/api`, fetch['default']);
   }
 
   ngOnInit(): void {
@@ -24,7 +24,7 @@ export class ApplicationsComponent implements OnInit {
   refresh(): void {
     if (this.retries < 5) {
       this.retries++;
-      this.client.applications({}).then(value => {
+      this.client.all({}).then(value => {
         this.applications = value.applications;
       }).catch(_ => {
         setTimeout(() => this.refresh(), 2 * 1000)
@@ -32,7 +32,7 @@ export class ApplicationsComponent implements OnInit {
     } else {
       console.log("could not update applications after 5 retries");
       this.retries = 0;
-      this.applications = new Array<Application>();
+      this.applications = new Array<ApplicationRead>();
       this.snackBar.open(`Error getting applications`, "Dismiss", {
         duration: 5 * 1000,
         panelClass: ["warn-snack"]

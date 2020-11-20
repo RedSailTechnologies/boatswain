@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Chart, DefaultPoseidon, Poseidon, Repo } from 'src/app/services/poseidon/poseidon';
+import { RepoRead, ChartRead, Repo, DefaultRepo } from 'src/app/services/repo/repo';
 import * as fetch from 'isomorphic-fetch';
 import { RepoDialogComponent } from 'src/app/dialogs/repo-dialog/repo-dialog.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -12,16 +12,16 @@ import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-d
   styleUrls: ['./repos.component.sass']
 })
 export class ReposComponent implements OnInit {
-  private client: Poseidon;
+  private client: Repo;
   private retries = 0;
-  public repos: Repo[];
-  public charts: Map<Repo, Chart[]>;
-  public expandedRepo: Repo;
-  public expandedCharts: Chart[];
+  public repos: RepoRead[];
+  public charts: Map<RepoRead, ChartRead[]>;
+  public expandedRepo: RepoRead;
+  public expandedCharts: ChartRead[];
 
   
   constructor(private dialog: MatDialog, private snackBar: MatSnackBar) {
-    this.client = new DefaultPoseidon(`${location.protocol}//${location.host}/api`, fetch['default']);
+    this.client = new DefaultRepo(`${location.protocol}//${location.host}/api`, fetch['default']);
   }
   
   ngOnInit(): void {
@@ -41,7 +41,7 @@ export class ReposComponent implements OnInit {
     });
   }
 
-  edit(repo: Repo) : void {
+  edit(repo: RepoRead) : void {
     this.dialog.open(RepoDialogComponent, {
       minWidth: "33%",
       panelClass: "custom-dialog-container",
@@ -55,7 +55,7 @@ export class ReposComponent implements OnInit {
     });
   }
 
-  delete(repo: Repo) : void {
+  delete(repo: RepoRead) : void {
     this.dialog.open(ConfirmDialogComponent, {
       panelClass: 'message-box',
       data: {
@@ -64,7 +64,7 @@ export class ReposComponent implements OnInit {
       }
     }).afterClosed().subscribe((result: Boolean) => {
       if (result) {
-        this.client.deleteRepo(repo).catch(_ => {
+        this.client.destroy(repo).catch(_ => {
           this.snackBar.open(`${repo.name} could not be deleted`, "Dismiss", {
             duration: 5 * 1000,
             panelClass: ["warn-snack"]
@@ -79,8 +79,8 @@ export class ReposComponent implements OnInit {
   refreshRepos() : void {
     if (this.retries < 5) {
       this.retries++;
-      this.charts = new Map<Repo, Chart[]>();
-      this.client.repos({}).then(value => {
+      this.charts = new Map<RepoRead, ChartRead[]>();
+      this.client.all({}).then(value => {
         this.repos = value.repos;
         value.repos.forEach(repo => {
           if (repo.ready) {
@@ -97,7 +97,7 @@ export class ReposComponent implements OnInit {
     } else {
       console.log("could not update repos after 5 retries");
       this.retries = 0;
-      this.repos = new Array<Repo>();
+      this.repos = new Array<RepoRead>();
       this.snackBar.open(`Error getting repos`, "Dismiss", {
         duration: 5 * 1000,
         panelClass: ["warn-snack"]
