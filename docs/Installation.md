@@ -11,5 +11,5 @@ The services come with reasonable out of the box defaults, but can be customized
 
 ## Leviathan
 ### Basics
-Download and extract leviathan-0.1.0.zip. The leviathan binary and static web content is located there. A mongodb connection string (and working instance) is required either with
+Download and extract leviathan-\<version\>.zip. The leviathan binary and static web content is located there. A mongodb connection string (and working instance) is required either with
 the environment variable `MONGO_CONNECTION_STRING` or the `--mongo-conn` flag.
