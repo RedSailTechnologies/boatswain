@@ -14,7 +14,7 @@ type Created struct {
 
 // EventType marks this as an event
 func (e Created) EventType() string {
-	return "ClusterCreated"
+	return entityName + "Created"
 }
 
 // Destroyed is the event for when a cluster is destroyed
@@ -24,7 +24,7 @@ type Destroyed struct {
 
 // EventType marks this as an event
 func (e Destroyed) EventType() string {
-	return "ClusterDestroyed"
+	return entityName + "Destroyed"
 }
 
 // Updated is the event for when a cluster is updated
@@ -38,8 +38,10 @@ type Updated struct {
 
 // EventType marks this as an event
 func (e Updated) EventType() string {
-	return "ClusterUpdated"
+	return entityName + "Updated"
 }
+
+var entityName = "Cluster"
 
 // Cluster represents a kubernetes cluster we are monitoring/deploying to
 type Cluster struct {
@@ -88,7 +90,7 @@ func Create(uuid, name, endpoint, token, cert string, timestamp int64) (*Cluster
 // Destroy handles destroy commands
 func (c *Cluster) Destroy(timestamp int64) error {
 	if c.destroyed {
-		return ddd.DestroyedError{Entity: "Cluster"}
+		return ddd.DestroyedError{Entity: entityName}
 	}
 	c.on(&Destroyed{
 		Timestamp: timestamp,
@@ -103,7 +105,7 @@ func (c *Cluster) Update(name, endpoint, token, cert string, timestamp int64) er
 		return err
 	}
 	if c.destroyed {
-		return ddd.DestroyedError{Entity: "Cluster"}
+		return ddd.DestroyedError{Entity: entityName}
 	}
 	c.on(&Updated{
 		Timestamp: timestamp,

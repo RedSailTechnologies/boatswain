@@ -11,6 +11,7 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
+	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
 	pb "github.com/redsailtechnologies/boatswain/rpc/cluster"
 )
 
@@ -35,7 +36,7 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateCluster) (*pb.Cluster
 	c, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, cmd.Token, cmd.Cert, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Cluster", "error", err)
-		return nil, toTwirpError(err, "could not create Cluster")
+		return nil, tw.ToTwirpError(err, "could not create Cluster")
 	}
 
 	err = s.repo.Save(c)
@@ -52,13 +53,13 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.Cluster
 	c, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading cluster", "error", err)
-		return nil, toTwirpError(err, "error loading Cluster")
+		return nil, tw.ToTwirpError(err, "error loading Cluster")
 	}
 
 	err = c.Update(cmd.Name, cmd.Endpoint, cmd.Token, cmd.Cert, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error updating Cluster", "error", err)
-		return nil, toTwirpError(err, "Cluster could not be updated")
+		return nil, tw.ToTwirpError(err, "Cluster could not be updated")
 	}
 
 	err = s.repo.Save(c)
@@ -75,13 +76,18 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyCluster) (*pb.Clust
 	c, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading Cluster", "error", err)
-		return nil, toTwirpError(err, "error loading Cluster")
+
+		// NOTE we could consider returning the error here
+		if err == (ddd.DestroyedError{Entity: "Cluster"}) {
+			return &pb.ClusterDestroyed{}, nil
+		}
+		return nil, tw.ToTwirpError(err, "error loading Cluster")
 	}
 
 	err = c.Destroy(ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error destroying Cluster", "error", err)
-		return nil, toTwirpError(err, "Cluster could not be destroyed")
+		return nil, tw.ToTwirpError(err, "Cluster could not be destroyed")
 	}
 
 	err = s.repo.Save(c)
@@ -98,7 +104,7 @@ func (s Service) Read(ctx context.Context, req *pb.ReadCluster) (*pb.ClusterRead
 	c, err := s.repo.Load(req.Uuid)
 	if err != nil {
 		logger.Error("error reading Cluster", "error", err)
-		return nil, toTwirpError(err, "error loading Cluster")
+		return nil, tw.ToTwirpError(err, "error loading Cluster")
 	}
 
 	cs, err := c.toClientset()
@@ -157,19 +163,4 @@ func (c *Cluster) toClientset() (*kubernetes.Clientset, error) {
 		},
 	}
 	return kubernetes.NewForConfig(restConfig)
-}
-
-func toTwirpError(e error, m string) error {
-	switch e.(type) {
-	case ddd.DestroyedError:
-		return twirp.NotFoundError(e.Error())
-	case ddd.InvalidArgumentError:
-		return twirp.InvalidArgumentError(e.(ddd.InvalidArgumentError).Arg, e.Error())
-	case ddd.NotFoundError:
-		return twirp.NotFoundError(e.Error())
-	case ddd.RequiredArgumentError:
-		return twirp.RequiredArgumentError(e.(ddd.RequiredArgumentError).Arg)
-	default:
-		return twirp.InternalError(m)
-	}
 }

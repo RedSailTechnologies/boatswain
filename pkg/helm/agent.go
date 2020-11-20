@@ -1,6 +1,8 @@
 package helm
 
 import (
+	"fmt"
+
 	"helm.sh/helm/v3/pkg/repo"
 )
 
@@ -35,5 +37,5 @@ func (a DefaultAgent) GetCharts(r *repo.ChartRepository) (map[string]repo.ChartV
 }
 
 func getFullName(n string, v string) string {
-	return n + "-" + v + ".tgz"
+	return fmt.Sprintf("%s-%s.tgz", n, v)
 }

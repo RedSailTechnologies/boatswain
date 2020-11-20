@@ -58,12 +58,12 @@ func (r *Repository) Load(uuid string) (*Repo, error) {
 		return nil, err
 	}
 	if len(unmarshaled) == 0 {
-		return nil, ddd.NotFoundError{Entity: "Repo"}
+		return nil, ddd.NotFoundError{Entity: entityName}
 	}
 
 	repo := Replay(unmarshaled)
 	if repo.destroyed {
-		return nil, ddd.DestroyedError{Entity: "Repo"}
+		return nil, ddd.DestroyedError{Entity: entityName}
 	}
 	return repo, nil
 }
@@ -88,30 +88,26 @@ func (r *Repository) Save(repo *Repo) error {
 
 func unmarshalEvents(events []*storage.StoredEvent) ([]ddd.Event, error) {
 	unmarshaled := make([]ddd.Event, 0)
+	var e interface{}
 	for _, event := range events {
 		switch event.Type {
-		case "RepoCreated":
-			var c Created
-			err := json.Unmarshal([]byte(event.Data), &c)
-			if err != nil {
-				return nil, err
+		case entityName + "Created":
+			e = &Created{}
+		case entityName + "Destroyed":
+			e = &Destroyed{}
+		case entityName + "Updated":
+			e = &Updated{}
+		default:
+			return nil, ddd.UnsupportedEventError{
+				EventType: event.Type,
+				Type:      entityName,
 			}
-			unmarshaled = append(unmarshaled, &c)
-		case "RepoDestroyed":
-			var d Destroyed
-			err := json.Unmarshal([]byte(event.Data), &d)
-			if err != nil {
-				return nil, err
-			}
-			unmarshaled = append(unmarshaled, &d)
-		case "RepoUpdated":
-			var u Updated
-			err := json.Unmarshal([]byte(event.Data), &u)
-			if err != nil {
-				return nil, err
-			}
-			unmarshaled = append(unmarshaled, &u)
 		}
+		err := json.Unmarshal([]byte(event.Data), &e)
+		if err != nil {
+			return nil, err
+		}
+		unmarshaled = append(unmarshaled, e.(ddd.Event))
 	}
 	return unmarshaled, nil
 }

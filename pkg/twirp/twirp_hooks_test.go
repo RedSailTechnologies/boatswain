@@ -1,4 +1,4 @@
-package logger
+package twirp
 
 import (
 	"context"
@@ -10,16 +10,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTwirpHooksSet(t *testing.T) {
-	sut := TwirpHooks()
+func TestLoggingHooksSet(t *testing.T) {
+	sut := LoggingHooks()
 	assert.NotNil(t, sut.RequestReceived)
 	assert.NotNil(t, sut.RequestRouted)
 	assert.NotNil(t, sut.ResponseSent)
 }
 
-func TestTwirpHooksPipe(t *testing.T) {
+func TestLoggingHooksPipe(t *testing.T) {
 	ctx := context.TODO()
-	sut := TwirpHooks()
+	sut := LoggingHooks()
 	twirp.WithHTTPRequestHeaders(ctx, http.Header{})
 
 	ctx, err := sut.RequestReceived(ctx)

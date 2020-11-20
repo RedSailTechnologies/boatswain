@@ -45,3 +45,13 @@ type RequiredArgumentError struct {
 func (err RequiredArgumentError) Error() string {
 	return fmt.Sprintf("%s is required", err.Arg)
 }
+
+// UnsupportedEventError represents an invalid event for the aggregate
+type UnsupportedEventError struct {
+	EventType string
+	Type      string
+}
+
+func (err UnsupportedEventError) Error() string {
+	return fmt.Sprintf("%s is not supported for %ss", err.EventType, err.Type)
+}

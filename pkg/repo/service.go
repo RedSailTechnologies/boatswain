@@ -11,6 +11,7 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
+	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
 	pb "github.com/redsailtechnologies/boatswain/rpc/repo"
 )
 
@@ -35,7 +36,7 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreate
 	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Repo", "error", err)
-		return nil, toTwirpError(err, "could not create Repo")
+		return nil, tw.ToTwirpError(err, "could not create Repo")
 	}
 
 	err = s.repo.Save(r)
@@ -52,13 +53,13 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdate
 	r, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading cluster", "error", err)
-		return nil, toTwirpError(err, "error loading Repo")
+		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
 	err = r.Update(cmd.Name, cmd.Endpoint, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error updating Repo", "error", err)
-		return nil, toTwirpError(err, "Repo could not be updated")
+		return nil, tw.ToTwirpError(err, "Repo could not be updated")
 	}
 
 	err = s.repo.Save(r)
@@ -75,13 +76,18 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyRepo) (*pb.RepoDest
 	r, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading Repo", "error", err)
-		return nil, toTwirpError(err, "error loading Repo")
+
+		// NOTE we could consider returning the error here
+		if err == (ddd.DestroyedError{Entity: "Repo"}) {
+			return &pb.RepoDestroyed{}, nil
+		}
+		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
 	err = r.Destroy(ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error destroying Repo", "error", err)
-		return nil, toTwirpError(err, "Repo could not be destroyed")
+		return nil, tw.ToTwirpError(err, "Repo could not be destroyed")
 	}
 
 	err = s.repo.Save(r)
@@ -98,7 +104,7 @@ func (s Service) Read(ctx context.Context, req *pb.ReadRepo) (*pb.RepoRead, erro
 	r, err := s.repo.Load(req.Uuid)
 	if err != nil {
 		logger.Error("error loading Repo", "error", err)
-		return nil, toTwirpError(err, "error loading Repo")
+		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
 	cr, err := r.toChartRepo()
@@ -149,7 +155,7 @@ func (s Service) Charts(ctx context.Context, req *pb.ReadRepo) (*pb.ChartsRead, 
 	r, err := s.repo.Load(req.Uuid)
 	if err != nil {
 		logger.Error("error loading Repo", "error", err)
-		return nil, toTwirpError(err, "error loading Repo")
+		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
 	cr, err := r.toChartRepo()
@@ -210,19 +216,4 @@ func (r *Repo) toChartRepo() (*repo.ChartRepository, error) {
 	}
 
 	return repo.NewChartRepository(entry, providers)
-}
-
-func toTwirpError(e error, m string) error {
-	switch e.(type) {
-	case ddd.DestroyedError:
-		return twirp.NotFoundError(e.Error())
-	case ddd.InvalidArgumentError:
-		return twirp.InvalidArgumentError(e.(ddd.InvalidArgumentError).Arg, e.Error())
-	case ddd.NotFoundError:
-		return twirp.NotFoundError(e.Error())
-	case ddd.RequiredArgumentError:
-		return twirp.RequiredArgumentError(e.(ddd.RequiredArgumentError).Arg)
-	default:
-		return twirp.InternalError(m)
-	}
 }

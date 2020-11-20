@@ -12,7 +12,7 @@ type Created struct {
 
 // EventType marks this as an event
 func (e Created) EventType() string {
-	return "RepoCreated"
+	return entityName + "Created"
 }
 
 // Destroyed is the event for when a repo is destroyed
@@ -22,7 +22,7 @@ type Destroyed struct {
 
 // EventType marks this as an event
 func (e Destroyed) EventType() string {
-	return "RepoDestroyed"
+	return entityName + "Destroyed"
 }
 
 // Updated is the event for when a repo is updated
@@ -34,8 +34,10 @@ type Updated struct {
 
 // EventType marks this as an event
 func (e Updated) EventType() string {
-	return "RepoUpdated"
+	return entityName + "Updated"
 }
+
+var entityName = "Repo"
 
 // Repo represents a repository, for now helm only
 type Repo struct {
@@ -80,7 +82,7 @@ func Create(uuid, name, endpoint string, timestamp int64) (*Repo, error) {
 // Destroy handles destroy commands
 func (r *Repo) Destroy(timestamp int64) error {
 	if r.destroyed {
-		return ddd.DestroyedError{Entity: "Repo"}
+		return ddd.DestroyedError{Entity: entityName}
 	}
 	r.on(&Destroyed{
 		Timestamp: timestamp,
@@ -95,7 +97,7 @@ func (r *Repo) Update(name, endpoint string, timestamp int64) error {
 		return err
 	}
 	if r.destroyed {
-		return ddd.DestroyedError{Entity: "Repo"}
+		return ddd.DestroyedError{Entity: entityName}
 	}
 	r.on(&Updated{
 		Timestamp: timestamp,

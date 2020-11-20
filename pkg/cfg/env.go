@@ -20,7 +20,8 @@ func EnvOrDefaultInt(e string, d int) int {
 	if val, ok := os.LookupEnv(e); ok {
 		v, err := strconv.Atoi(val)
 		if err != nil {
-			logger.Warn("error converting int value", "error", err)
+			logger.Error("error converting int value", "error", err)
+			return d
 		}
 		return v
 	}

@@ -1,4 +1,4 @@
-package logger
+package twirp
 
 import (
 	"context"
@@ -6,13 +6,15 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/twitchtv/twirp"
+
+	"github.com/redsailtechnologies/boatswain/pkg/logger"
 )
 
 var timeKey = new(int)
 var idKey = new(int)
 
-// TwirpHooks creates server hooks which log on requests and responses automatically
-func TwirpHooks() *twirp.ServerHooks {
+// LoggingHooks creates server hooks which log on requests and responses automatically
+func LoggingHooks() *twirp.ServerHooks {
 	return &twirp.ServerHooks{
 		RequestReceived: func(ctx context.Context) (context.Context, error) {
 			start := time.Now()
@@ -26,7 +28,7 @@ func TwirpHooks() *twirp.ServerHooks {
 			headers, _ := twirp.HTTPRequestHeaders(ctx)
 			method, _ := twirp.MethodName(ctx)
 			service, _ := twirp.ServiceName(ctx)
-			l.Infow("request received",
+			logger.Info("request received",
 				"id", id,
 				"service", service,
 				"method", method,
@@ -39,7 +41,7 @@ func TwirpHooks() *twirp.ServerHooks {
 			method, _ := twirp.MethodName(ctx)
 			service, _ := twirp.ServiceName(ctx)
 			status, _ := twirp.StatusCode(ctx)
-			l.Infow("response sent",
+			logger.Info("response sent",
 				"id", id,
 				"service", service,
 				"method", method,

@@ -21,7 +21,10 @@ func TestEnvOrDefaultInt(t *testing.T) {
 	key := "someenvvar"
 	def1 := 1
 	val1 := 2
+	bogus := "notint"
 	os.Setenv(key, fmt.Sprint(val1))
+	os.Setenv(bogus, bogus)
 	assert.Equal(t, val1, EnvOrDefaultInt(key, def1))
 	assert.Equal(t, 3, EnvOrDefaultInt("ne", 3))
+	assert.Equal(t, 42, EnvOrDefaultInt(bogus, 42))
 }
