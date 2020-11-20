@@ -14,7 +14,6 @@ FROM golang:1.15-alpine as release
 RUN addgroup -g 10001 -S poseidon && \
     adduser -u 10001 -S poseidon -G poseidon
 USER poseidon
-EXPOSE 3100
 WORKDIR /poseidon
 COPY --from=base /go/src/github.com/redsailtechnologies/boatswain/bin/app .
 ENTRYPOINT ./app

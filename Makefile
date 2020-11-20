@@ -22,7 +22,7 @@ WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
 ## all: builds the client and all services
-all: echo proto kraken poseidon client
+all: echo proto kraken poseidon triton
 
 ## clean: removes binaries, images, etc
 clean:

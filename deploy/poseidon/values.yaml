@@ -1,12 +1,6 @@
 
 config:
-  enabled: true
-  repos: []
-  # preconfigure repos here
-  # - name: <repo_name>
-    # endpoint: <repo_url>
-  # the name of the place poseidon stores charts locally
-  cacheDir: /home/poseidon/charts
+  mongoConn: mongodb://$(BOSN_MONGODB_SERVICE_HOST):$(BOSN_MONGODB_SERVICE_PORT)
 
 replicaCount: 1
 

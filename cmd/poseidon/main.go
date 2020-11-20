@@ -11,6 +11,7 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/repo"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
+	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
 	rep "github.com/redsailtechnologies/boatswain/rpc/repo"
 )
 
@@ -26,7 +27,7 @@ func main() {
 	}
 
 	repo := repo.NewService(helm.DefaultAgent{}, store)
-	repTwirp := rep.NewRepoServer(repo, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+	repTwirp := rep.NewRepoServer(repo, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
 	logger.Info("starting poseidon component...I am Poseidon!")
 	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, repTwirp))
 }

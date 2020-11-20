@@ -20,7 +20,6 @@ deploy/boatswain/charts/
 deploy/boatswain/Chart.lock
 
 # Dev stuff - TODO AdamP figure out a way around this
-**/**-debug-config.yaml
 temp.yaml
 **/__debug_bin
 

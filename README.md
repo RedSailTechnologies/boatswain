@@ -41,39 +41,31 @@ A kubernetes-native CD tool with first-class support for Helm v3.
 * Leviathan
   * Single binary version
 * Kraken
-  * Kube/cluster management
-  * Helm commands
+  * Kube management
+  * Kube monitoring
 * Poseidon
   * Repo plugin
     * Helm
     * Docker
-    * Git
 * Gyrados
   * Canary/CD flow management
+  * Deployment running
   * Test running
 * Cthulu
-  * scm plugins
-    * azdo
-    * github
-  * triggers
+  * Azure DevOps SCM plugin
+  * Github SCM plugin
 
 ## Roadmap
-* 0.2
-  * Config/client cleanup and performance optimization
-  * Add cluster/repo functionality (through client)
-  * Gyrados initial cut and design
-    * Run/deployment objects
-    * Canary strategies/settings
-  * Persistent storage
-  * Client side filtering/part-of views
 * 0.3
   * Users/auth (LDAP)
   * RBAC
   * Client login/cookies
+  * Service health checks
 * 0.4
+  * Dev/debug canaries
+  * mongodb security (for helm)
+* 0.5
   * Cthulu first cut
     * azdo plugin
     * triggers
     * PR canaries
-* 0.5
-  * Dev/debug canaries

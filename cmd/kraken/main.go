@@ -12,6 +12,7 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
+	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
 	app "github.com/redsailtechnologies/boatswain/rpc/application"
 	cl "github.com/redsailtechnologies/boatswain/rpc/cluster"
 )
@@ -28,10 +29,10 @@ func main() {
 	}
 
 	cluster := cluster.NewService(kube.DefaultAgent{}, store)
-	clTwirp := cl.NewClusterServer(cluster, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+	clTwirp := cl.NewClusterServer(cluster, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
 
 	application := application.NewService(cluster, kube.DefaultAgent{})
-	appTwirp := app.NewApplicationServer(application, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+	appTwirp := app.NewApplicationServer(application, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
 
 	mux := http.NewServeMux()
 	mux.Handle(appTwirp.PathPrefix(), appTwirp)

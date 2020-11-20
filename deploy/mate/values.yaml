@@ -2,10 +2,13 @@
 # the default envoy routing configuration
 # this shouldn't need to be chnaged under normal configurations
 routing:
+  client: 
   services:
-    - triton
-    - kraken
-    - poseidon
+    kraken:
+      - Application
+      - Cluster
+    poseidon:
+      - Repo
   connectTimeout: 0.25s
 
 replicaCount: 1
