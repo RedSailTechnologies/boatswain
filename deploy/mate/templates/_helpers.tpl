@@ -36,9 +36,10 @@ Common labels
 {{- define "mate.labels" -}}
 helm.sh/chart: {{ include "mate.chart" . }}
 {{ include "mate.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- if .Values.global.partOf }}
+app.kubernetes.io/part-of: {{ .Values.global.partOf }}
 {{- end }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 

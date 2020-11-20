@@ -94,6 +94,10 @@ func (s Service) All(ctx context.Context, req *pb.ReadApplications) (*pb.Applica
 }
 
 func addApplication(resp *pb.ApplicationsRead, name, partOf, version, cluster, namespace string, ready bool) {
+	if name == "" || partOf == "" {
+		return
+	}
+
 	for _, app := range resp.Applications {
 		if app.Name == name {
 			addApplicationCluster(app, version, cluster, namespace, ready)
