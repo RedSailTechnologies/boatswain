@@ -27,23 +27,15 @@ spec:
       serviceAccountName: {{ include "kraken.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      volumes:
-        - name: config
-          secret:
-            secretName: {{ include "kraken.fullname" . }}
-            items:
-              - key: config.yaml
-                path: config.yaml
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          volumeMounts:
-            - name: config
-              mountPath: /etc/kraken/
-              readOnly: true
+          env:
+            - name: MONGO_CONNECTION_STRING
+              value: {{ .Values.config.mongoConn }}
           ports:
             - name: http
               containerPort: 8080

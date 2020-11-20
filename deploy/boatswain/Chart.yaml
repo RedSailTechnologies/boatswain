@@ -8,18 +8,17 @@ appVersion: 0.1.0
 
 dependencies:
   - name: kraken
-    condition: kraken.enabled
     repository: file://../kraken
     version: "0.1.0"
   - name: poseidon
-    condition: poseidon.enabled
     repository: file://../poseidon
     version: "0.1.0"
   - name: mate
-    condition: mate.enabled
     repository: file://../mate
     version: "0.1.0"
+  - name: mongodb
+    repository: https://charts.bitnami.com/bitnami
+    version: "10.0.5"
   - name: triton
-    condition: triton.enabled
     repository: file://../triton
     version: "0.1.0"

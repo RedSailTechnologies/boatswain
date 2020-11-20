@@ -1,23 +1,6 @@
+global:
+  partOf: boatswain
 
-triton:
-  enabled: true
-
-kraken:
-  enabled: true
-  config:
-    clusters:
-      kubeConfig: ""
-      # use kubeConfig with setfile 
-      # e.g.: --set-file config.clusters.kubeConfig=/home/<user>/.kube/config
-      contexts: []
-      # list of configs to get from the kubeConfig above
-      fromValues: []
-      # map in values directly
-      # - name: <cluster-name>
-      #   endpoint: <api-server-endpoint>
-      #   token: <kube-token>
-      #   cert: |
-      #     --------BEGIN CERTIFICATE-----
-      #     ...
-      #     -----END CERTIFICATE-----
-
+mongodb:
+  auth:
+    enabled: false

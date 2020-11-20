@@ -16,6 +16,7 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/repo"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
+	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
 	app "github.com/redsailtechnologies/boatswain/rpc/application"
 	cl "github.com/redsailtechnologies/boatswain/rpc/cluster"
 	rep "github.com/redsailtechnologies/boatswain/rpc/repo"
@@ -35,14 +36,14 @@ func main() {
 
 	// Kraken
 	cluster := cluster.NewService(kube.DefaultAgent{}, store)
-	clTwirp := cl.NewClusterServer(cluster, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+	clTwirp := cl.NewClusterServer(cluster, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
 
 	application := application.NewService(cluster, kube.DefaultAgent{})
-	appTwirp := app.NewApplicationServer(application, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+	appTwirp := app.NewApplicationServer(application, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
 
 	// Poseidon
 	repo := repo.NewService(helm.DefaultAgent{}, store)
-	repTwirp := rep.NewRepoServer(repo, logger.TwirpHooks(), twirp.WithServerPathPrefix("/api"))
+	repTwirp := rep.NewRepoServer(repo, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
 
 	// Triton
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))

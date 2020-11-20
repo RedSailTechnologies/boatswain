@@ -20,20 +20,24 @@ type Mongo struct {
 
 // NewMongo returns the Storage interface from the mongo driver
 func NewMongo(conn, db string) (Storage, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(conn))
-	if err != nil {
-		return nil, err
-	}
-	if err := client.Ping(ctx, readpref.Primary()); err != nil {
-		return nil, err
-	}
-
 	return &Mongo{
 		conn: conn,
 		db:   db,
 	}, nil
+}
+
+// CheckReady checks to see if the service can connect
+func (m *Mongo) CheckReady() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(m.conn))
+	if err != nil {
+		return err
+	}
+	if err := client.Ping(ctx, readpref.Primary()); err != nil {
+		return err
+	}
+	return nil
 }
 
 // IDs gets all uuids in a particular collection

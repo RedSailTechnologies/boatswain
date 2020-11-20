@@ -26,28 +26,25 @@ data:
                   domains:
                   - "*"
                   routes:
-                  {{- if has "kraken" .Values.routing.services }}
+                  {{- range $service := .Values.routing.services.kraken }}
                   - match:
-                      prefix: "/api/redsail.bosn.Kraken"
+                      prefix: "/api/redsail.bosn.{{ $service }}"
                     route:
                       cluster: kraken
                   {{- end }}
-                  {{- if has "poseidon" .Values.routing.services }}
+                  {{- range $service := .Values.routing.services.poseidon }}
                   - match:
-                      prefix: "/api/redsail.bosn.Poseidon"
+                      prefix: "/api/redsail.bosn.{{ $service }}"
                     route:
                       cluster: poseidon
                   {{- end }}
-                  {{- if has "triton" .Values.routing.services }}
                   - match:
                       prefix: "/"
                     route:
                       cluster: triton
-                  {{- end }}
               http_filters:
               - name: envoy.filters.http.router
       clusters:
-      {{- if has "kraken" .Values.routing.services }}
       - name: kraken
         type: STRICT_DNS
         connect_timeout: {{ .Values.routing.connectTimeout }}
@@ -58,8 +55,6 @@ data:
           - socket_address:
               address: kraken
               port_value: 80
-      {{- end }}
-      {{- if has "poseidon" .Values.routing.services }}
       - name: poseidon
         type: STRICT_DNS
         connect_timeout: {{ .Values.routing.connectTimeout }}
@@ -70,8 +65,6 @@ data:
           - socket_address:
               address: poseidon
               port_value: 80
-      {{- end }}
-      {{- if has "triton" .Values.routing.services }}
       - name: triton
         type: STRICT_DNS
         connect_timeout: {{ .Values.routing.connectTimeout }}
@@ -82,4 +75,3 @@ data:
           - socket_address:
               address: triton
               port_value: 80
-      {{- end }}
