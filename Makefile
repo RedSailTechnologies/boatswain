@@ -76,7 +76,7 @@ ifeq ($(LEVI_CLIENT),true)
 	@cp -r $(TRITON_PATH)dist/triton $(LEVI_OUT)
 endif
 ifeq ($(DEBUG),true)
-	./bin/leviathan --cache ./bin/temp
+	./bin/leviathan --mongo-conn mongodb://localhost:27017
 endif
 
 ## poseidon: builds the poseidon image

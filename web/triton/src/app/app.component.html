@@ -6,6 +6,10 @@
     <span class="spacer"></span>
     <span>{{page}}</span>    
     <span class="spacer"></span>
+    <a (click)="  clickLoginButton()" mat-button aria-label="Login">
+        <mat-icon>{{userIcon}}</mat-icon>
+        {{userIcon == 'login' ? 'login' : userProfile.name }}
+    </a>
     <app-theme-picker></app-theme-picker>
     <a href="" mat-button aria-label="Documentation">
         <mat-icon>help</mat-icon>

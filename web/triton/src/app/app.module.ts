@@ -39,6 +39,8 @@ import { RepoDialogComponent } from "./dialogs/repo-dialog/repo-dialog.component
 import { ConfirmDialogComponent } from "./dialogs/confirm-dialog/confirm-dialog.component";
 import { ApplicationsComponent } from './pages/applications/applications.component';
 import { ProjectsComponent } from './pages/projects/projects.component';
+import { LoginComponent } from './pages/login/login.component';
+import { LogoutComponent } from './pages/logout/logout.component';
 
 @NgModule({
   declarations: [
@@ -53,7 +55,9 @@ import { ProjectsComponent } from './pages/projects/projects.component';
     RepoDialogComponent,
     ConfirmDialogComponent,
     ApplicationsComponent,
-    ProjectsComponent
+    ProjectsComponent,
+    LoginComponent,
+    LogoutComponent
   ],
   imports: [
     AppRoutingModule,
