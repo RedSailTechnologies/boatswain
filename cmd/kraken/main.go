@@ -7,6 +7,7 @@ import (
 	"github.com/twitchtv/twirp"
 
 	"github.com/redsailtechnologies/boatswain/pkg/application"
+	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
@@ -28,8 +29,10 @@ func main() {
 		logger.Fatal("mongo init failed")
 	}
 
+	hooks := twirp.ChainHooks(auth.JWTHook(), tw.LoggingHooks())
+
 	cluster := cluster.NewService(kube.DefaultAgent{}, store)
-	clTwirp := cl.NewClusterServer(cluster, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
+	clTwirp := cl.NewClusterServer(cluster, hooks, twirp.WithServerPathPrefix("/api"))
 
 	application := application.NewService(cluster, kube.DefaultAgent{})
 	appTwirp := app.NewApplicationServer(application, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
@@ -39,5 +42,5 @@ func main() {
 	mux.Handle(clTwirp.PathPrefix(), clTwirp)
 
 	logger.Info("starting kraken component...RELEASE THE KRAKEN!!!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, mux))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, auth.WithJWT(mux)))
 }

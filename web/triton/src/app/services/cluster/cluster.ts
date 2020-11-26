@@ -301,6 +301,7 @@ export class DefaultCluster implements Cluster {
         if (!this.writeCamelCase) {
             body = ReadClustersToJSON(readClusters);
         }
+        console.log("calling fetch")
         return this.fetch(createTwirpRequest(url, body)).then((resp) => {
             if (!resp.ok) {
                 return throwTwirpError(resp);

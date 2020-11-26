@@ -67,6 +67,7 @@ export class AuthService {
         this.user = usr;
         this.events.emit(this.user);
         this.mgr.startSilentRenew();
+        console.log(this.user)
       }
     }).finally(() => {
       sessionStorage.setItem(key, '');

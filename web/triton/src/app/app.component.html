@@ -6,14 +6,19 @@
     <span class="spacer"></span>
     <span>{{page}}</span>    
     <span class="spacer"></span>
-    <a (click)="  clickLoginButton()" mat-button aria-label="Login">
-        <mat-icon>{{userIcon}}</mat-icon>
-        {{userIcon == 'login' ? 'login' : userProfile.name }}
+    <a mat-button [disabled]="true" class="nohover" aria-label="User">
+        <mat-icon>{{userIcon == 'login' ? '' : 'person' }}</mat-icon>
+        {{userIcon == 'login' ? '' : userProfile.given_name }}
     </a>
+    <a (click)="clickLoginButton()" mat-button aria-label="Login">
+        <mat-icon>{{userIcon}}</mat-icon>
+        {{userIcon == 'login' ? 'Login' : 'Logout' }}
+    </a>
+    <mat-divider [vertical]="true" style="height:50%;margin:10px;"></mat-divider>
     <app-theme-picker></app-theme-picker>
     <a href="" mat-button aria-label="Documentation">
         <mat-icon>help</mat-icon>
-        Documentation
+        Docs
     </a>
     <a href="https://github.com/RedSailTechnologies/boatswain" mat-button aria-label="Github">
         <mat-icon>link</mat-icon>
