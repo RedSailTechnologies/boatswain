@@ -16,7 +16,6 @@ type User struct {
 	NotOnOrAfter int64    `json:"exp"`
 	IssuedAt     int64    `json:"iat"`
 	Scope        string   `json:"scp"`
-	Scopes       []string `json:"scope"`
 	Roles        []string `json:"roles"`
 }
 
@@ -69,11 +68,6 @@ func (u *User) IsReader() bool {
 // ValidateScope checks the user scope for this app
 func (u *User) ValidateScope() error {
 	if u.Scope != config.scope {
-		for _, scope := range u.Scopes {
-			if scope == config.scope {
-				return nil
-			}
-		}
 		return &userScopeError{scope: u.Scope}
 	}
 	return nil
