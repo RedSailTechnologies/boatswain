@@ -10,13 +10,13 @@ const settings: UserManagerSettings = {
   // scope: 'openid profile api://071e7d94-aa7e-42aa-8ff3-3ca84b9c9e06/boatswain',
   authority: 'http://localhost:4011',
   client_id: 'implicit-mock-client',
-  scope: 'openid profile boatswain',
+  scope: 'openid profile roles boatswain',
 
   redirect_uri: 'http://localhost:4200/login',
   post_logout_redirect_uri: 'http://localhost:4200/logout',
   response_type: 'id_token token',
   filterProtocolClaims: true,
-  loadUserInfo: false,
+  loadUserInfo: false
 };
 
 const actionKey: string = "loginActionInProgress";
@@ -96,11 +96,6 @@ export class AuthService {
   completeLogin(): Promise<void> {
     sessionStorage.setItem(actionKey, "false")
     return this.mgr.signinRedirectCallback().then(usr => {
-      // TODO - remove me
-      console.log(usr.scope)
-      console.log(usr.profile.roles)
-      console.log(usr)
-
       if (usr != null ) {
         this.user = usr;
         sessionStorage.setItem(userKey, this.user.toStorageString());

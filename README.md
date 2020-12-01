@@ -69,3 +69,4 @@ A kubernetes-native CD tool with first-class support for Helm v3.
     * azdo plugin
     * triggers
     * PR canaries
+  * Delivery change logs

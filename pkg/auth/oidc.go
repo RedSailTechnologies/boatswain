@@ -70,8 +70,7 @@ func ValidateJWT(ctx context.Context) (context.Context, error) {
 	}
 
 	user := User{}
-	test := make(map[string]interface{})
-	err = parsedToken.Claims(key.Key, &user, &test)
+	err = parsedToken.Claims(key.Key, &user)
 	if err != nil {
 		logger.Error("couldn't parse user claims", "error", err)
 		return ctx, twirp.NewError(twirp.Unauthenticated, "couldn't parse user claims")
