@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/twitchtv/twirp"
 	"github.com/stretchr/testify/assert"
+	"github.com/twitchtv/twirp"
 
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 )

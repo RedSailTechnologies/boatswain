@@ -4,27 +4,12 @@ import {
   Cluster,
   DefaultCluster,
 } from 'src/app/services/cluster/cluster';
-import * as fetch from 'isomorphic-fetch';
 import { MatDialog } from '@angular/material/dialog';
 import { ClusterDialogComponent } from 'src/app/dialogs/cluster-dialog/cluster-dialog.component';
 import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-dialog.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TwirpError } from 'src/app/services/cluster/twirp';
 import { AuthService } from 'src/app/utils/auth/auth.service';
-
-// FIXME
-var fetcher = function(jwt: string) {
-  return function (
-  input: RequestInfo,
-  init?: RequestInit
-): Promise<Response> {
-  
-  console.log((<Request>input).headers);
-  console.log(input);
-  (<Request>input).headers.append("Authorization", jwt);
-  console.log((<Request>input).headers);
-  return fetch['default'](input, init);
-}};
 
 @Component({
   selector: 'app-clusters',
@@ -33,17 +18,18 @@ var fetcher = function(jwt: string) {
 })
 export class ClustersComponent implements OnInit {
   private client: Cluster;
-  public clusters: ClusterRead[];
   private retries = 0;
+
+  public clusters: ClusterRead[];
 
   constructor(
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private auth: AuthService
+    public auth: AuthService
   ) {
     this.client = new DefaultCluster(
       `${location.protocol}//${location.host}/api`,
-      fetcher(auth.authHeader())
+      auth.fetch()
     );
   }
 

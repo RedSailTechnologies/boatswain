@@ -1,6 +1,6 @@
 .PHONY: client echo help kraken target version
 
-# ENV
+# Build env
 DEBUG=false
 CHART_LIST=boatswain mate triton $(SERVICE_LIST)
 DOCKER_BUILDKIT=1
@@ -19,6 +19,9 @@ SERVICE_LIST=kraken poseidon
 TRITON_PATH=web/triton/
 TEST_OUT=
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+
+# App Env
+include .env
 
 # BASIC TARGETS
 ## all: builds the client and all services
@@ -76,7 +79,7 @@ ifeq ($(LEVI_CLIENT),true)
 	@cp -r $(TRITON_PATH)dist/triton $(LEVI_OUT)
 endif
 ifeq ($(DEBUG),true)
-	./bin/leviathan --mongo-conn mongodb://localhost:27017
+	@./bin/leviathan
 endif
 
 ## poseidon: builds the poseidon image

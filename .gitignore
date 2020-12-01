@@ -19,9 +19,10 @@ coverage.html
 deploy/boatswain/charts/
 deploy/boatswain/Chart.lock
 
-# Dev stuff - TODO AdamP figure out a way around this
+# Dev stuff
 temp.yaml
 **/__debug_bin
+.env
 
 # Editor stuff
 **/.vscode/

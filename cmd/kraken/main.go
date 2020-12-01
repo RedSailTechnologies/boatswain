@@ -19,6 +19,7 @@ import (
 )
 
 func main() {
+	auth.Flags()
 	var httpPort, mongoConn string
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
 	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
@@ -29,7 +30,7 @@ func main() {
 		logger.Fatal("mongo init failed")
 	}
 
-	hooks := twirp.ChainHooks(auth.JWTHook(), tw.LoggingHooks())
+	hooks := twirp.ChainHooks(tw.JWTHook(), tw.LoggingHooks())
 
 	cluster := cluster.NewService(kube.DefaultAgent{}, store)
 	clTwirp := cl.NewClusterServer(cluster, hooks, twirp.WithServerPathPrefix("/api"))

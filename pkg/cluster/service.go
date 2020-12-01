@@ -3,6 +3,8 @@ package cluster
 import (
 	"context"
 
+	"github.com/redsailtechnologies/boatswain/pkg/auth"
+
 	"github.com/twitchtv/twirp"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -33,6 +35,12 @@ func NewService(k kube.Agent, s storage.Storage) *Service {
 
 // Create adds a cluster to the list of configurations
 func (s Service) Create(ctx context.Context, cmd *pb.CreateCluster) (*pb.ClusterCreated, error) {
+	user := auth.UserFromContext(ctx)
+	if !user.IsAdmin() {
+		logger.Info("user not authorized for create")
+		return nil, twirp.NewError(twirp.Unauthenticated, "you are not authorized to create clusters")
+	}
+
 	c, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, cmd.Token, cmd.Cert, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Cluster", "error", err)
@@ -50,6 +58,12 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateCluster) (*pb.Cluster
 
 // Update edits an already existing cluster
 func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.ClusterUpdated, error) {
+	user := auth.UserFromContext(ctx)
+	if !user.IsAdmin() {
+		logger.Info("user not authorized for update")
+		return nil, twirp.NewError(twirp.Unauthenticated, "you are not authorized to update clusters")
+	}
+
 	c, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading cluster", "error", err)
@@ -73,6 +87,12 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.Cluster
 
 // Destroy removes a cluster from the list of configurations
 func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyCluster) (*pb.ClusterDestroyed, error) {
+	user := auth.UserFromContext(ctx)
+	if !user.IsAdmin() {
+		logger.Info("user not authorized for destroy")
+		return nil, twirp.NewError(twirp.Unauthenticated, "you are not authorized to destroy clusters")
+	}
+
 	c, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading Cluster", "error", err)

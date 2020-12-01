@@ -18,6 +18,7 @@ require (
 	golang.org/x/sys v0.0.0-20201007165808-a893ed343c85 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	google.golang.org/protobuf v1.25.0
+	gopkg.in/square/go-jose.v2 v2.2.2
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	helm.sh/helm/v3 v3.3.4
 	k8s.io/api v0.18.8

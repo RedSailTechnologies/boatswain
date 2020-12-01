@@ -6,6 +6,7 @@ import (
 
 	"github.com/twitchtv/twirp"
 
+	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
@@ -26,8 +27,10 @@ func main() {
 		logger.Fatal("mongo init failed")
 	}
 
+	hooks := twirp.ChainHooks(tw.JWTHook(), tw.LoggingHooks())
+
 	repo := repo.NewService(helm.DefaultAgent{}, store)
-	repTwirp := rep.NewRepoServer(repo, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
+	repTwirp := rep.NewRepoServer(repo, hooks, twirp.WithServerPathPrefix("/api"))
 	logger.Info("starting poseidon component...I am Poseidon!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, repTwirp))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, auth.WithJWT(repTwirp)))
 }

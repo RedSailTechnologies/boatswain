@@ -7,6 +7,7 @@ import (
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/repo"
 
+	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
@@ -33,6 +34,12 @@ func NewService(h helm.Agent, s storage.Storage) *Service {
 
 // Create adds a repo to the list of configurations
 func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreated, error) {
+	user := auth.UserFromContext(ctx)
+	if !user.IsAdmin() {
+		logger.Info("user not authorized for create")
+		return nil, twirp.NewError(twirp.Unauthenticated, "you are not authorized to create repos")
+	}
+
 	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Repo", "error", err)
@@ -50,6 +57,12 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreate
 
 // Update edits an already existing repo
 func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdated, error) {
+	user := auth.UserFromContext(ctx)
+	if !user.IsAdmin() {
+		logger.Info("user not authorized for update")
+		return nil, twirp.NewError(twirp.Unauthenticated, "you are not authorized to update repos")
+	}
+
 	r, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading cluster", "error", err)
@@ -73,6 +86,12 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdate
 
 // Destroy removes a repo from the list of configurations
 func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyRepo) (*pb.RepoDestroyed, error) {
+	user := auth.UserFromContext(ctx)
+	if !user.IsAdmin() {
+		logger.Info("user not authorized for destroy")
+		return nil, twirp.NewError(twirp.Unauthenticated, "you are not authorized to destroy repos")
+	}
+
 	r, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading Repo", "error", err)
@@ -211,8 +230,6 @@ func (r *Repo) toChartRepo() (*repo.ChartRepository, error) {
 	entry := &repo.Entry{
 		Name: r.Name(),
 		URL:  r.Endpoint(),
-		// TODO AdamP - we definitely want to support this soon!
-		InsecureSkipTLSverify: true,
 	}
 
 	return repo.NewChartRepository(entry, providers)

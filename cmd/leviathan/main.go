@@ -9,6 +9,7 @@ import (
 	"github.com/twitchtv/twirp"
 
 	"github.com/redsailtechnologies/boatswain/pkg/application"
+	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
@@ -23,6 +24,7 @@ import (
 )
 
 func main() {
+	auth.Flags()
 	var httpPort, mongoConn string
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
 	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
@@ -34,18 +36,19 @@ func main() {
 		logger.Fatal("mongo init failed")
 	}
 
-	// Kraken
+	// Services
+	hooks := twirp.ChainHooks(tw.JWTHook(), tw.LoggingHooks())
+
 	cluster := cluster.NewService(kube.DefaultAgent{}, store)
-	clTwirp := cl.NewClusterServer(cluster, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
+	clTwirp := cl.NewClusterServer(cluster, hooks, twirp.WithServerPathPrefix("/api"))
 
 	application := application.NewService(cluster, kube.DefaultAgent{})
-	appTwirp := app.NewApplicationServer(application, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
+	appTwirp := app.NewApplicationServer(application, hooks, twirp.WithServerPathPrefix("/api"))
 
-	// Poseidon
 	repo := repo.NewService(helm.DefaultAgent{}, store)
-	repTwirp := rep.NewRepoServer(repo, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
+	repTwirp := rep.NewRepoServer(repo, hooks, twirp.WithServerPathPrefix("/api"))
 
-	// Triton
+	// Client
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		logger.Fatal("could not get current directory")
@@ -59,5 +62,5 @@ func main() {
 	mux.Handle("/", tritonServer) // TODO AdamP - fix multiplexer
 
 	logger.Info("starting leviathan server...ITS HUUUUUUUUUUGE!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, mux))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, auth.WithJWT(mux)))
 }
