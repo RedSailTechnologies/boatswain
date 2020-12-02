@@ -48,7 +48,7 @@ clean:
 changes: 
 	@cat docs/installation.md
 	@echo \\n## Changes:
-	@git log $$(make version-previous)..$$(make version) --oneline --first-parent | xargs -i echo "*" "{}"
+	@git log $(shell make versionprev)..$(shell make version) --oneline --first-parent | xargs -i echo "*" "{}"
 
 echo:
 	@echo Project directory: $(WORKDIR)
@@ -105,7 +105,7 @@ package: echo
 	@mkdir -p $(HELM_OUT)
 	@helm dependency update deploy/boatswain
 	@for chart in $(CHART_LIST); do \
-		helm package deploy/$$chart --version $$(make version) --app-version $$(make version) --destination $(HELM_OUT); \
+		helm package deploy/$$chart --version $(shell make version) --app-version $(shell make version) --destination $(HELM_OUT); \
 	done
 
 template:
@@ -141,5 +141,5 @@ endif
 version:
 	@git describe --tags --abbrev=0
 
-version-previous:
-	@git describe --tags --abbrev=0 --tags $$(make version)^
+versionprev:
+	@version=$(shell make version);git describe --tags --abbrev=0 --tags $$version^
