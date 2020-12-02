@@ -1,6 +1,7 @@
-import { NgModule } from "@angular/core";
+import { APP_INITIALIZER, NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { ReactiveFormsModule } from "@angular/forms";
 
 import { MatButtonModule } from "@angular/material/button";
@@ -41,6 +42,11 @@ import { ApplicationsComponent } from './pages/applications/applications.compone
 import { ProjectsComponent } from './pages/projects/projects.component';
 import { LoginComponent } from './pages/login/login.component';
 import { LogoutComponent } from './pages/logout/logout.component';
+import { ConfigService } from './utils/config/config.service';
+
+export function initializeConfig(config: ConfigService) {
+  return () => config.load();
+}
 
 @NgModule({
   declarations: [
@@ -63,6 +69,7 @@ import { LogoutComponent } from './pages/logout/logout.component';
     AppRoutingModule,
     BrowserModule,
     BrowserAnimationsModule,
+    HttpClientModule,
     ReactiveFormsModule,
 
     MatButtonModule,
@@ -87,6 +94,14 @@ import { LogoutComponent } from './pages/logout/logout.component';
     NgScrollbarModule
   ],
   providers: [
+    ConfigService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeConfig,
+      deps: [ConfigService],
+      multi: true
+    },
+    HttpClient,
     StyleManager,
     ThemeStorage
   ],

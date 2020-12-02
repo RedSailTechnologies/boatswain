@@ -43,7 +43,8 @@ export class AppComponent {
   
   private getPage(url: string) {
     if (url == '/') return 'Home';
-    return url[1].toUpperCase() + url.slice(2);
+    var part = url.split('#')[0];
+    return part[1].toUpperCase() + part.slice(2);
   }
   
   private login() {

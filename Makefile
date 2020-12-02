@@ -46,7 +46,7 @@ clean:
 	done
 
 changes: 
-	@cat docs/Installation.md
+	@cat docs/installation.md
 	@echo \\n## Changes:
 	@git log $$(make version-previous)..$$(make version) --oneline --first-parent | xargs -i echo "*" "{}"
 

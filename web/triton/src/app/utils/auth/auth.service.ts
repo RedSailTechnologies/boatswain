@@ -2,22 +2,7 @@ import { EventEmitter, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Profile, User, UserManager, UserManagerSettings } from 'oidc-client';
 import * as fetch from 'isomorphic-fetch';
-
-// TODO AdamP - refactor
-const settings: UserManagerSettings = {
-  // authority: 'https://login.microsoftonline.com/8c91e3f4-7f37-4334-9f70-fae3f5235c18/v2.0/',
-  // client_id: '071e7d94-aa7e-42aa-8ff3-3ca84b9c9e06',
-  // scope: 'openid profile api://071e7d94-aa7e-42aa-8ff3-3ca84b9c9e06/boatswain',
-  authority: 'http://localhost:4011',
-  client_id: 'implicit-mock-client',
-  scope: 'openid profile roles boatswain',
-
-  redirect_uri: 'http://localhost:4200/login',
-  post_logout_redirect_uri: 'http://localhost:4200/logout',
-  response_type: 'id_token token',
-  filterProtocolClaims: true,
-  loadUserInfo: false
-};
+import { ConfigService } from '../config/config.service';
 
 const actionKey: string = "loginActionInProgress";
 const redirectKey: string = "loginRedirectDestination";
@@ -27,13 +12,31 @@ const userKey: string = "currentUser";
   providedIn: 'root',
 })
 export class AuthService {
-  private mgr: UserManager = new UserManager(settings);
+  private static settings: UserManagerSettings = null;
+  private mgr: UserManager;
   private user: User;
 
   public static IN_PROGRESS: boolean = (sessionStorage.getItem(actionKey) ?? "false") != "false";
   public events: EventEmitter<User> = new EventEmitter<User>();
 
-  constructor(private router: Router) {
+  constructor(private router: Router, private configService: ConfigService) {
+    if (AuthService.settings == null) {
+      const config = configService.getOIDC();
+      AuthService.settings = {
+        authority: config.authority,
+        client_id: config.clientId,
+        scope: config.scope,
+      
+        redirect_uri: `${window.location.origin}/login`,
+        post_logout_redirect_uri: `${window.location.origin}/logout`,
+        response_type: 'id_token token',
+        filterProtocolClaims: true,
+        loadUserInfo: false
+      };
+      console.log(AuthService.settings);
+    }
+    this.mgr = new UserManager(AuthService.settings);
+
     var storedString = sessionStorage.getItem(userKey);
     if (storedString != null) {
       var storedUser: User = User.fromStorageString(storedString);
