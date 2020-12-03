@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/twitchtv/twirp"
 
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
@@ -43,13 +46,13 @@ type oidcConfig struct {
 
 // OIDCAgent is an auth agent implementation using oidc
 type OIDCAgent struct {
-	cfg     Config
+	cfg     *Config
 	jwtKey  *int
 	userKey *int
 }
 
 // NewOIDCAgent builds a new agent from the configuration
-func NewOIDCAgent(config Config) *OIDCAgent {
+func NewOIDCAgent(config *Config) *OIDCAgent {
 	req, err := http.NewRequest(http.MethodGet, config.OIDC, nil)
 	if err != nil {
 		logger.Panic("could not create request for oidc configuration", "error", err)
@@ -139,6 +142,10 @@ func (o *OIDCAgent) Authorize(ctx context.Context, role Role) error {
 			return nil
 		}
 	}
+
+	service, _ := twirp.ServiceName(ctx)
+	method, _ := twirp.MethodName(ctx)
+	logger.Error(fmt.Sprintf("user not authorized for %s.%s", service, method), "user", user)
 	return NotAuthorizedError{}
 }
 
@@ -192,6 +199,6 @@ func (o *OIDCAgent) userFromContext(ctx context.Context) *User {
 	if userVal == nil {
 		return nil
 	}
-	user := userVal.(*User)
-	return user
+	user := userVal.(User)
+	return &user
 }

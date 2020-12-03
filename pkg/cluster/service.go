@@ -38,7 +38,6 @@ func NewService(a auth.Agent, k kube.Agent, s storage.Storage) *Service {
 // Create adds a cluster to the list of configurations
 func (s Service) Create(ctx context.Context, cmd *pb.CreateCluster) (*pb.ClusterCreated, error) {
 	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
-		logger.Error("not authorized for Cluster.Create", "error", err)
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
@@ -60,7 +59,6 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateCluster) (*pb.Cluster
 // Update edits an already existing cluster
 func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.ClusterUpdated, error) {
 	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
-		logger.Error("not authorized for Cluster.Update", "error", err)
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
@@ -88,7 +86,6 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.Cluster
 // Destroy removes a cluster from the list of configurations
 func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyCluster) (*pb.ClusterDestroyed, error) {
 	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
-		logger.Error("not authorized for Cluster.Destroy", "error", err)
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
@@ -121,7 +118,6 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyCluster) (*pb.Clust
 // Read reads out a cluster
 func (s Service) Read(ctx context.Context, req *pb.ReadCluster) (*pb.ClusterRead, error) {
 	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
-		logger.Error("not authorized for Cluster.Read", "error", err)
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
@@ -150,7 +146,6 @@ func (s Service) Read(ctx context.Context, req *pb.ReadCluster) (*pb.ClusterRead
 // All gets all clusters currently configured and their status
 func (s Service) All(ctx context.Context, req *pb.ReadClusters) (*pb.ClustersRead, error) {
 	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
-		logger.Error("not authorized for Cluster.All", "error", err)
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 

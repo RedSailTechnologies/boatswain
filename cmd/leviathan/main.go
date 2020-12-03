@@ -24,10 +24,10 @@ import (
 )
 
 func main() {
-	auth.Flags()
 	var httpPort, mongoConn string
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
 	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
+	authCfg := auth.Flags()
 	flag.Parse()
 
 	// Storage
@@ -36,16 +36,19 @@ func main() {
 		logger.Fatal("mongo init failed")
 	}
 
-	// Services
-	hooks := twirp.ChainHooks(tw.JWTHook(), tw.LoggingHooks())
+	// Auth
+	authAgent := auth.NewOIDCAgent(authCfg)
 
-	cluster := cluster.NewService(kube.DefaultAgent{}, store)
+	// Services
+	hooks := twirp.ChainHooks(tw.JWTHook(authAgent), tw.LoggingHooks())
+
+	cluster := cluster.NewService(authAgent, kube.DefaultAgent{}, store)
 	clTwirp := cl.NewClusterServer(cluster, hooks, twirp.WithServerPathPrefix("/api"))
 
-	application := application.NewService(cluster, kube.DefaultAgent{})
+	application := application.NewService(authAgent, cluster, kube.DefaultAgent{})
 	appTwirp := app.NewApplicationServer(application, hooks, twirp.WithServerPathPrefix("/api"))
 
-	repo := repo.NewService(helm.DefaultAgent{}, store)
+	repo := repo.NewService(authAgent, helm.DefaultAgent{}, store)
 	repTwirp := rep.NewRepoServer(repo, hooks, twirp.WithServerPathPrefix("/api"))
 
 	// Client
@@ -62,5 +65,5 @@ func main() {
 	mux.Handle("/", tritonServer) // TODO AdamP - fix multiplexer
 
 	logger.Info("starting leviathan server...ITS HUUUUUUUUUUGE!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, auth.WithJWT(mux)))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, authAgent.Wrap(mux)))
 }

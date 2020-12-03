@@ -34,7 +34,6 @@ func NewService(a auth.Agent, c cluster.Cluster, k kube.Agent) *Service {
 // All gets all applications currently found in each cluster and their status
 func (s Service) All(ctx context.Context, req *pb.ReadApplications) (*pb.ApplicationsRead, error) {
 	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
-		logger.Error("not authorized for Application.All", "error", err)
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 

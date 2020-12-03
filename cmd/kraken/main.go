@@ -19,10 +19,10 @@ import (
 )
 
 func main() {
-	auth.Flags()
 	var httpPort, mongoConn string
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
 	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
+	authCfg := auth.Flags()
 	flag.Parse()
 
 	store, err := storage.NewMongo(mongoConn, "kraken")
@@ -30,12 +30,14 @@ func main() {
 		logger.Fatal("mongo init failed")
 	}
 
-	hooks := twirp.ChainHooks(tw.JWTHook(), tw.LoggingHooks())
+	authAgent := auth.NewOIDCAgent(authCfg)
 
-	cluster := cluster.NewService(kube.DefaultAgent{}, store)
+	hooks := twirp.ChainHooks(tw.JWTHook(authAgent), tw.LoggingHooks())
+
+	cluster := cluster.NewService(authAgent, kube.DefaultAgent{}, store)
 	clTwirp := cl.NewClusterServer(cluster, hooks, twirp.WithServerPathPrefix("/api"))
 
-	application := application.NewService(cluster, kube.DefaultAgent{})
+	application := application.NewService(authAgent, cluster, kube.DefaultAgent{})
 	appTwirp := app.NewApplicationServer(application, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
 
 	mux := http.NewServeMux()
@@ -43,5 +45,5 @@ func main() {
 	mux.Handle(clTwirp.PathPrefix(), clTwirp)
 
 	logger.Info("starting kraken component...RELEASE THE KRAKEN!!!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, auth.WithJWT(mux)))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, authAgent.Wrap(mux)))
 }

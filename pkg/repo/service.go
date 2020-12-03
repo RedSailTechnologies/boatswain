@@ -37,7 +37,6 @@ func NewService(a auth.Agent, h helm.Agent, s storage.Storage) *Service {
 // Create adds a repo to the list of configurations
 func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreated, error) {
 	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
-		logger.Error("not authorized for Repo.Create", "error", err)
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
@@ -59,7 +58,6 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreate
 // Update edits an already existing repo
 func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdated, error) {
 	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
-		logger.Error("not authorized for Repo.Update", "error", err)
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
@@ -87,7 +85,6 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdate
 // Destroy removes a repo from the list of configurations
 func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyRepo) (*pb.RepoDestroyed, error) {
 	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
-		logger.Error("not authorized for Repo.Destroy", "error", err)
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
@@ -120,7 +117,6 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyRepo) (*pb.RepoDest
 // Read reads out a repo
 func (s Service) Read(ctx context.Context, req *pb.ReadRepo) (*pb.RepoRead, error) {
 	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
-		logger.Error("not authorized for Repo.Read", "error", err)
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
@@ -147,7 +143,6 @@ func (s Service) Read(ctx context.Context, req *pb.ReadRepo) (*pb.RepoRead, erro
 // All gets all repos currently configured and their status
 func (s Service) All(ctx context.Context, req *pb.ReadRepos) (*pb.ReposRead, error) {
 	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
-		logger.Error("not authorized for Repo.All", "error", err)
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
@@ -182,7 +177,6 @@ func (s Service) All(ctx context.Context, req *pb.ReadRepos) (*pb.ReposRead, err
 func (s Service) Charts(ctx context.Context, req *pb.ReadRepo) (*pb.ChartsRead, error) {
 	r, err := s.repo.Load(req.Uuid)
 	if err != nil {
-		logger.Error("error loading Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
