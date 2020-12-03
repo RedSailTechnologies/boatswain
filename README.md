@@ -5,11 +5,11 @@
 ![Develop](https://github.com/RedSailTechnologies/boatswain/workflows/Develop/badge.svg)
 ![GoReport](https://goreportcard.com/badge/github.com/redsailtechnologies/boatswain)
 
-## [Documentation]([https](https://redsailtechnologies.github.io/boatswain/))
+## [Documentation](https://redsailtechnologies.github.io/boatswain/)
 
 ## Roadmap
 * 0.4
-  * Service health checks
+  * [ ] Service health checks
   * Dev/debug canaries
   * mongodb security (for helm)
 * 0.5
