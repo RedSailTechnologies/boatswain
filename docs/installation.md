@@ -11,17 +11,18 @@ The services come with reasonable out of the box defaults, but can be customized
 
 ## Leviathan
 ### Basics
-Download and extract leviathan-0.1.0.zip. The leviathan binary and static web content is located there.
+Download and extract leviathan-<version>.zip. The leviathan binary and static web content is located there.
 A mongodb connection string (and working instance) is required either with
 the environment variable `MONGO_CONNECTION_STRING` or the `--mongo-conn` flag.
 
 ## OIDC
-To configure OIDC for hte server the following environment variables are used: `OIDC_URL`, `USER_SCOPE`, `USER_ADMIN_ROLE`, `USER_EDITOR_ROLE`, `USER_READER_ROLE` (or cli params --oidc-url etc.).
-The client serves a json file found at assets/config/config.prod.json relative to the html root, and values here can be overwritten for the client.
-For helm installations these values can be customized in values.yaml
+To configure OIDC for the server the following environment variables are used: `OIDC_URL`, `USER_SCOPE`, `USER_ADMIN_ROLE`, `USER_EDITOR_ROLE`, `USER_READER_ROLE`
+(or cli params --oidc-url etc.). The client serves a json file found at assets/config/config.prod.json relative to the html root, and values here can be 
+overwritten for the client. For helm installations these values can be customized in values.yaml
+
 *IMPORTANT:* The roles used are not part of the default oidc profile and must be setup and added to both the id token and the access token.
 Helm Example (using Azure AD and an App Registration):
-```
+```yaml
 global:
   oidc:
     url: https://login.microsoftonline.com/<azure-directory>/v2.0/
