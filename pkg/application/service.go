@@ -39,7 +39,7 @@ func (s Service) All(ctx context.Context, req *pb.ReadApplications) (*pb.Applica
 
 	response := &pb.ApplicationsRead{}
 
-	clusters, err := s.cl.All(context.TODO(), &cluster.ReadClusters{})
+	clusters, err := s.cl.All(ctx, &cluster.ReadClusters{})
 	if err != nil {
 		logger.Error("error from cluster service", "error", err)
 		return nil, err

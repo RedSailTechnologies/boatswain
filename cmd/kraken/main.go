@@ -38,7 +38,7 @@ func main() {
 	clTwirp := cl.NewClusterServer(cluster, hooks, twirp.WithServerPathPrefix("/api"))
 
 	application := application.NewService(authAgent, cluster, kube.DefaultAgent{})
-	appTwirp := app.NewApplicationServer(application, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
+	appTwirp := app.NewApplicationServer(application, hooks, twirp.WithServerPathPrefix("/api"))
 
 	mux := http.NewServeMux()
 	mux.Handle(appTwirp.PathPrefix(), appTwirp)
