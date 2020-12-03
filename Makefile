@@ -27,6 +27,7 @@ all: echo proto kraken poseidon triton
 clean:
 	@echo Running clean
 	@rm -f main
+	@rm -f coverage.out
 	@rm -rf $(TRITON_PATH)dist
 	@rm -rf $(LEVI_OUT)
 	@rm -rf $(GEN_DOC)

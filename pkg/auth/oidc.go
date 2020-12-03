@@ -55,19 +55,19 @@ type OIDCAgent struct {
 func NewOIDCAgent(config *Config) *OIDCAgent {
 	req, err := http.NewRequest(http.MethodGet, config.OIDC, nil)
 	if err != nil {
-		logger.Panic("could not create request for oidc configuration", "error", err)
+		logger.Fatal("could not create request for oidc configuration", "error", err)
 	}
 
 	var client http.Client
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.Panic("error getting oidc configuration", "error", err)
+		logger.Fatal("error getting oidc configuration", "error", err)
 	}
 	defer resp.Body.Close()
 
 	err = json.NewDecoder(resp.Body).Decode(&config.Endpoints)
 	if err != nil {
-		logger.Panic("error reading oidc configuration", "error", err)
+		logger.Fatal("error reading oidc configuration", "error", err)
 	}
 	return &OIDCAgent{
 		cfg:     config,
