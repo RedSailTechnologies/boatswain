@@ -1,4 +1,4 @@
-# Boatswain (bow·sn)
+# Home
 
 ## About
 A kubernetes-native CD tool with first-class support for Helm v3.
