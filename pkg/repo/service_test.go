@@ -3,26 +3,72 @@ package repo
 import (
 	"context"
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 	pb "github.com/redsailtechnologies/boatswain/rpc/repo"
 )
 
+type mockAuth struct {
+	mock.Mock
+}
+
+func (ma *mockAuth) Authenticate(ctx context.Context) (context.Context, error) {
+	args := ma.Called(ctx)
+	err := args.Get(1)
+	if err != nil {
+		return nil, err.(error)
+	}
+	return args.Get(0).(context.Context), nil
+}
+
+func (ma *mockAuth) Authorize(ctx context.Context, role auth.Role) error {
+	args := ma.Called(ctx, role)
+	err := args.Get(0)
+	if err != nil {
+		return err.(error)
+	}
+	return nil
+}
+
+func (ma *mockAuth) Wrap(h http.Handler) http.Handler {
+	ma.Called(h)
+	return h
+}
+
 func TestNewService(t *testing.T) {
-	assert.NotNil(t, NewService(helm.DefaultAgent{}, &mockStorage{}))
+	assert.NotNil(t, NewService(&mockAuth{}, helm.DefaultAgent{}, &mockStorage{}))
+}
+
+func TestCreateAuth(t *testing.T) {
+	a := &mockAuth{}
+	a.On("Authorize", mock.Anything, mock.Anything).Return(auth.NotAuthorizedError{})
+	store := &mockStorage{}
+	sut := NewService(a, helm.DefaultAgent{}, store)
+
+	res, err := sut.Create(context.TODO(), &pb.CreateRepo{
+		Name:     "name",
+		Endpoint: "http://endpoint",
+	})
+
+	assert.Nil(t, res)
+	assert.Error(t, err)
 }
 
 func TestCreateValid(t *testing.T) {
+	auth := &mockAuth{}
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(0)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	sut := NewService(helm.DefaultAgent{}, store)
+	sut := NewService(auth, helm.DefaultAgent{}, store)
 
 	res, err := sut.Create(context.TODO(), &pb.CreateRepo{
 		Name:     "name",
@@ -34,10 +80,12 @@ func TestCreateValid(t *testing.T) {
 }
 
 func TestCreateInvalid(t *testing.T) {
+	auth := &mockAuth{}
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(0)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	sut := NewService(helm.DefaultAgent{}, store)
+	sut := NewService(auth, helm.DefaultAgent{}, store)
 
 	res, err := sut.Create(context.TODO(), &pb.CreateRepo{
 		Name:     "",
@@ -49,10 +97,12 @@ func TestCreateInvalid(t *testing.T) {
 }
 
 func TestCreateSaveError(t *testing.T) {
+	auth := &mockAuth{}
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(0)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(""))
-	sut := NewService(helm.DefaultAgent{}, store)
+	sut := NewService(auth, helm.DefaultAgent{}, store)
 
 	res, err := sut.Create(context.TODO(), &pb.CreateRepo{
 		Name:     "name",
@@ -63,7 +113,9 @@ func TestCreateSaveError(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestUpdateValid(t *testing.T) {
+func TestUpdateAuth(t *testing.T) {
+	a := &mockAuth{}
+	a.On("Authorize", mock.Anything, mock.Anything).Return(auth.NotAuthorizedError{})
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
 		&storage.StoredEvent{
@@ -77,7 +129,35 @@ func TestUpdateValid(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(helm.DefaultAgent{}, store)
+	sut := NewService(a, helm.DefaultAgent{}, store)
+
+	res, err := sut.Update(context.TODO(), &pb.UpdateRepo{
+		Uuid:     "a",
+		Name:     "NEWname",
+		Endpoint: "http://NEWendpoint",
+	})
+
+	assert.Nil(t, res)
+	assert.Error(t, err)
+}
+
+func TestUpdateValid(t *testing.T) {
+	auth := &mockAuth{}
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
+	store := &mockStorage{}
+	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
+		&storage.StoredEvent{
+			UUID:      "a",
+			Version:   1,
+			Timestamp: ddd.NewTimestamp(),
+			Type:      "RepoCreated",
+			Data:      `{"Timestamp":0,"UUID":"a","Name":"name","Endpoint":"http://endpoint","Token":"token","Cert":"cert"}`,
+		},
+	}, nil)
+	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
+	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	sut := NewService(auth, helm.DefaultAgent{}, store)
 
 	res, err := sut.Update(context.TODO(), &pb.UpdateRepo{
 		Uuid:     "a",
@@ -90,6 +170,8 @@ func TestUpdateValid(t *testing.T) {
 }
 
 func TestUpdateValidMultiple(t *testing.T) {
+	auth := &mockAuth{}
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
 		&storage.StoredEvent{
@@ -110,7 +192,7 @@ func TestUpdateValidMultiple(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(2)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(helm.DefaultAgent{}, store)
+	sut := NewService(auth, helm.DefaultAgent{}, store)
 
 	res, err := sut.Update(context.TODO(), &pb.UpdateRepo{
 		Uuid:     "a",
@@ -123,12 +205,14 @@ func TestUpdateValidMultiple(t *testing.T) {
 }
 
 func TestUpdateLoadError(t *testing.T) {
+	auth := &mockAuth{}
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return(nil, errors.New(""))
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(helm.DefaultAgent{}, store)
+	sut := NewService(auth, helm.DefaultAgent{}, store)
 
 	res, err := sut.Update(context.TODO(), &pb.UpdateRepo{
 		Uuid:     "a",
@@ -141,6 +225,8 @@ func TestUpdateLoadError(t *testing.T) {
 }
 
 func TestUpdateInvalid(t *testing.T) {
+	auth := &mockAuth{}
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
 		&storage.StoredEvent{
@@ -154,7 +240,7 @@ func TestUpdateInvalid(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(helm.DefaultAgent{}, store)
+	sut := NewService(auth, helm.DefaultAgent{}, store)
 
 	res, err := sut.Update(context.TODO(), &pb.UpdateRepo{
 		Uuid:     "a",
@@ -167,6 +253,8 @@ func TestUpdateInvalid(t *testing.T) {
 }
 
 func TestUpdateStoreEventError(t *testing.T) {
+	auth := &mockAuth{}
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
 		&storage.StoredEvent{
@@ -180,7 +268,7 @@ func TestUpdateStoreEventError(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(""))
 
-	sut := NewService(helm.DefaultAgent{}, store)
+	sut := NewService(auth, helm.DefaultAgent{}, store)
 
 	res, err := sut.Update(context.TODO(), &pb.UpdateRepo{
 		Uuid:     "a",
@@ -192,7 +280,9 @@ func TestUpdateStoreEventError(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestDestroyValid(t *testing.T) {
+func TestDestroyAuth(t *testing.T) {
+	a := &mockAuth{}
+	a.On("Authorize", mock.Anything, mock.Anything).Return(auth.NotAuthorizedError{})
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
 		&storage.StoredEvent{
@@ -206,7 +296,33 @@ func TestDestroyValid(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(helm.DefaultAgent{}, store)
+	sut := NewService(a, helm.DefaultAgent{}, store)
+
+	res, err := sut.Destroy(context.TODO(), &pb.DestroyRepo{
+		Uuid: "a",
+	})
+
+	assert.Nil(t, res)
+	assert.Error(t, err)
+}
+
+func TestDestroyValid(t *testing.T) {
+	auth := &mockAuth{}
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
+	store := &mockStorage{}
+	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
+		&storage.StoredEvent{
+			UUID:      "a",
+			Version:   1,
+			Timestamp: ddd.NewTimestamp(),
+			Type:      "RepoCreated",
+			Data:      `{"Timestamp":0,"UUID":"a","Name":"name","Endpoint":"http://endpoint","Token":"token","Cert":"cert"}`,
+		},
+	}, nil)
+	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
+	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	sut := NewService(auth, helm.DefaultAgent{}, store)
 
 	res, err := sut.Destroy(context.TODO(), &pb.DestroyRepo{
 		Uuid: "a",
@@ -217,12 +333,14 @@ func TestDestroyValid(t *testing.T) {
 }
 
 func TestDestroyLoadError(t *testing.T) {
+	auth := &mockAuth{}
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return(nil, errors.New(""))
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(helm.DefaultAgent{}, store)
+	sut := NewService(auth, helm.DefaultAgent{}, store)
 
 	res, err := sut.Destroy(context.TODO(), &pb.DestroyRepo{
 		Uuid: "a",
@@ -233,6 +351,8 @@ func TestDestroyLoadError(t *testing.T) {
 }
 
 func TestDestroyAlreadyDestroyed(t *testing.T) {
+	auth := &mockAuth{}
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
 		&storage.StoredEvent{
@@ -253,7 +373,7 @@ func TestDestroyAlreadyDestroyed(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(2)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(helm.DefaultAgent{}, store)
+	sut := NewService(auth, helm.DefaultAgent{}, store)
 
 	res, err := sut.Destroy(context.TODO(), &pb.DestroyRepo{
 		Uuid: "a",
@@ -264,6 +384,8 @@ func TestDestroyAlreadyDestroyed(t *testing.T) {
 }
 
 func TestDestroyStoreEventError(t *testing.T) {
+	auth := &mockAuth{}
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
 		&storage.StoredEvent{
@@ -277,7 +399,7 @@ func TestDestroyStoreEventError(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(""))
 
-	sut := NewService(helm.DefaultAgent{}, store)
+	sut := NewService(auth, helm.DefaultAgent{}, store)
 
 	res, err := sut.Destroy(context.TODO(), &pb.DestroyRepo{
 		Uuid: "a",

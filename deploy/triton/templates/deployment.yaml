@@ -27,12 +27,23 @@ spec:
       serviceAccountName: {{ include "triton.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: oidc
+          configMap:
+            name: {{ include "triton.fullname" . }}
+            items:
+              - key: oidc.json
+                path: config.prod.json
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: oidc
+              mountPath: /usr/share/nginx/html/assets/config/
+              readOnly: true
           ports:
             - name: http
               containerPort: 80

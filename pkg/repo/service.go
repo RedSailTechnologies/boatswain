@@ -7,6 +7,7 @@ import (
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/repo"
 
+	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
@@ -19,13 +20,15 @@ var collection = "repos"
 
 // Service is the implementation for twirp to use
 type Service struct {
+	auth auth.Agent
 	helm helm.Agent
 	repo *Repository
 }
 
 // NewService creates the service
-func NewService(h helm.Agent, s storage.Storage) *Service {
+func NewService(a auth.Agent, h helm.Agent, s storage.Storage) *Service {
 	return &Service{
+		auth: a,
 		helm: h,
 		repo: NewRepository(collection, s),
 	}
@@ -33,6 +36,10 @@ func NewService(h helm.Agent, s storage.Storage) *Service {
 
 // Create adds a repo to the list of configurations
 func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreated, error) {
+	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
 	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Repo", "error", err)
@@ -50,6 +57,10 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreate
 
 // Update edits an already existing repo
 func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdated, error) {
+	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
 	r, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading cluster", "error", err)
@@ -73,6 +84,10 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdate
 
 // Destroy removes a repo from the list of configurations
 func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyRepo) (*pb.RepoDestroyed, error) {
+	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
 	r, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading Repo", "error", err)
@@ -101,6 +116,10 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyRepo) (*pb.RepoDest
 
 // Read reads out a repo
 func (s Service) Read(ctx context.Context, req *pb.ReadRepo) (*pb.RepoRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
 	r, err := s.repo.Load(req.Uuid)
 	if err != nil {
 		logger.Error("error loading Repo", "error", err)
@@ -122,7 +141,11 @@ func (s Service) Read(ctx context.Context, req *pb.ReadRepo) (*pb.RepoRead, erro
 }
 
 // All gets all repos currently configured and their status
-func (s Service) All(context.Context, *pb.ReadRepos) (*pb.ReposRead, error) {
+func (s Service) All(ctx context.Context, req *pb.ReadRepos) (*pb.ReposRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
 	resp := &pb.ReposRead{
 		Repos: make([]*pb.RepoRead, 0),
 	}
@@ -154,7 +177,6 @@ func (s Service) All(context.Context, *pb.ReadRepos) (*pb.ReposRead, error) {
 func (s Service) Charts(ctx context.Context, req *pb.ReadRepo) (*pb.ChartsRead, error) {
 	r, err := s.repo.Load(req.Uuid)
 	if err != nil {
-		logger.Error("error loading Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
@@ -211,8 +233,6 @@ func (r *Repo) toChartRepo() (*repo.ChartRepository, error) {
 	entry := &repo.Entry{
 		Name: r.Name(),
 		URL:  r.Endpoint(),
-		// TODO AdamP - we definitely want to support this soon!
-		InsecureSkipTLSverify: true,
 	}
 
 	return repo.NewChartRepository(entry, providers)

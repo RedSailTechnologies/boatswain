@@ -1,0 +1,7 @@
+{
+    "oidc": {
+        "authority": "<oidc-authority>",
+        "clientId": "<oidc-client>",
+        "scope": "<oidc-scope>"
+    }
+}
