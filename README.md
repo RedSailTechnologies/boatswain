@@ -8,10 +8,6 @@
 ## [Documentation]([https](https://redsailtechnologies.github.io/boatswain/))
 
 ## Roadmap
-* 0.3
-  * Users/auth (LDAP)
-  * RBAC
-  * Client login/cookies
 * 0.4
   * Service health checks
   * Dev/debug canaries
