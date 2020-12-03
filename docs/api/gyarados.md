@@ -32,6 +32,7 @@
 ## gyarados.proto
 Gyarados manages delivery objects and their conversion to/from yaml. This
 will likely get moved to individual entity services.
+IMPORTANT: This service is undergoing rapid changes and is likely to be broken into multiple services.
 
 
 <a name="redsail.bosn.Delivery"></a>
