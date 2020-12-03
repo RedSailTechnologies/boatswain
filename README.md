@@ -12,8 +12,8 @@
   * Users/auth (LDAP)
   * RBAC
   * Client login/cookies
-  * Service health checks
 * 0.4
+  * Service health checks
   * Dev/debug canaries
   * mongodb security (for helm)
 * 0.5
@@ -21,3 +21,5 @@
     * azdo plugin
     * triggers
     * PR canaries
+* 0.6
+  * Change logs/history
