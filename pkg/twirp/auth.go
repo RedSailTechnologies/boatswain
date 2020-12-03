@@ -7,8 +7,8 @@ import (
 )
 
 // JWTHook is the twirp server hook to validate JWTs
-func JWTHook() *twirp.ServerHooks {
+func JWTHook(a auth.Agent) *twirp.ServerHooks {
 	hooks := &twirp.ServerHooks{}
-	hooks.RequestRouted = auth.ValidateJWT
+	hooks.RequestRouted = a.Authenticate
 	return hooks
 }

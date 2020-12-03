@@ -7,16 +7,6 @@ import { BusyComponent } from '../busy/busy.component';
 import { MessageDialogComponent } from '../message-dialog/message-dialog.component';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 
-var fetcher = function(jwt: string) {
-  return function (
-  input: RequestInfo,
-  init?: RequestInit
-): Promise<Response> {
-  
-  (<Request>input).headers.append("Authorization", jwt);
-  return fetch['default'](input, init);
-}};
-
 @Component({
   selector: 'app-cluster-dialog',
   templateUrl: './cluster-dialog.component.html',
@@ -48,7 +38,7 @@ export class ClusterDialogComponent implements OnInit {
       this.clusterForm.controls["token"].setValue("***");
       this.clusterForm.controls["cert"].setValue("***");
     }
-    this.client = new DefaultCluster(`${location.protocol}//${location.host}/api`, fetcher(auth.authHeader()));
+    this.client = new DefaultCluster(`${location.protocol}//${location.host}/api`, auth.fetch());
   }
 
   ngOnInit(): void {

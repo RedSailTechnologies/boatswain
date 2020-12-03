@@ -1,11 +1,8 @@
 package auth
 
 import (
-	"context"
 	"fmt"
 )
-
-var userKey = new(int)
 
 // User represents our representation of an oidc user
 type User struct {
@@ -19,55 +16,17 @@ type User struct {
 	Roles        []string `json:"roles"`
 }
 
-// AddToContext adds the user to the context
-func (u *User) AddToContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, userKey, u)
-}
-
-// UserFromContext gets the user from the context
-func UserFromContext(ctx context.Context) *User {
-	userVal := ctx.Value(userKey)
-	if userVal == nil {
-		return nil
-	}
-	fmt.Printf("%T\n", userVal)
-	user := userVal.(*User)
-	return user
-}
-
-// IsAdmin checks to see if the user is in the admin role
-func (u *User) IsAdmin() bool {
+func (u *User) hasRole(r string) bool {
 	for _, role := range u.Roles {
-		if role == config.adminRole {
+		if role == r {
 			return true
 		}
 	}
 	return false
 }
 
-// IsEditor checks to see if the user is in the editor role
-func (u *User) IsEditor() bool {
-	for _, role := range u.Roles {
-		if role == config.editorRole {
-			return true
-		}
-	}
-	return false
-}
-
-// IsReader checks to see if the user is in the reader role
-func (u *User) IsReader() bool {
-	for _, role := range u.Roles {
-		if role == config.readerRole {
-			return true
-		}
-	}
-	return false
-}
-
-// ValidateScope checks the user scope for this app
-func (u *User) ValidateScope() error {
-	if u.Scope != config.scope {
+func (u *User) validateScope(s string) error {
+	if u.Scope != s {
 		return &userScopeError{scope: u.Scope}
 	}
 	return nil

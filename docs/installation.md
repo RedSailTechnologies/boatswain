@@ -20,3 +20,15 @@ To configure OIDC for hte server the following environment variables are used: `
 The client serves a json file found at assets/config/config.prod.json relative to the html root, and values here can be overwritten for the client.
 For helm installations these values can be customized in values.yaml
 *IMPORTANT:* The roles used are not part of the default oidc profile and must be setup and added to both the id token and the access token.
+Helm Example (using Azure AD and an App Registration):
+```
+global:
+  oidc:
+    url: https://login.microsoftonline.com/<azure-directory>/v2.0/
+    clientId: <app-registration-client-id>
+    scope: "openid profile api://<app-registration-client-id>/boatswain"
+    roles:
+      admin: Boatswain.Admin
+      editor: Boatswain.Editor
+      reader: Boatswain.Reader
+```

@@ -11,7 +11,6 @@ GEN_DOC=docs/api/
 GEN_GO=rpc/
 GEN_TS=$(TRITON_PATH)src/app/services/
 HELM_OUT=bin/
-LEVI_CLIENT=true
 LEVI_CMD=cmd/leviathan/
 LEVI_OUT=bin/
 PROJECT_NAME=null
@@ -19,9 +18,6 @@ SERVICE_LIST=kraken poseidon
 TRITON_PATH=web/triton/
 TEST_OUT=
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-
-# App Env
-include .env
 
 # BASIC TARGETS
 ## all: builds the client and all services
@@ -74,13 +70,8 @@ leviathan: echo proto
 	@echo Building leviathan server to $(LEVI_OUT)
 	@ rm -rf $(LEVI_OUT)
 	@go build -o $(LEVI_OUT)leviathan $(LEVI_CMD)main.go
-ifeq ($(LEVI_CLIENT),true)
 	@cd $(WORKDIR)/$(TRITON_PATH); npm run build
 	@cp -r $(TRITON_PATH)dist/triton $(LEVI_OUT)
-endif
-ifeq ($(DEBUG),true)
-	@./bin/leviathan
-endif
 
 ## poseidon: builds the poseidon image
 poseidon: echo

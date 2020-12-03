@@ -20,13 +20,15 @@ var collection = "repos"
 
 // Service is the implementation for twirp to use
 type Service struct {
+	auth auth.Agent
 	helm helm.Agent
 	repo *Repository
 }
 
 // NewService creates the service
-func NewService(h helm.Agent, s storage.Storage) *Service {
+func NewService(a auth.Agent, h helm.Agent, s storage.Storage) *Service {
 	return &Service{
+		auth: a,
 		helm: h,
 		repo: NewRepository(collection, s),
 	}
@@ -34,10 +36,9 @@ func NewService(h helm.Agent, s storage.Storage) *Service {
 
 // Create adds a repo to the list of configurations
 func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreated, error) {
-	user := auth.UserFromContext(ctx)
-	if !user.IsAdmin() {
-		logger.Info("user not authorized for create")
-		return nil, twirp.NewError(twirp.Unauthenticated, "you are not authorized to create repos")
+	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
+		logger.Error("not authorized for Repo.Create", "error", err)
+		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
 	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, ddd.NewTimestamp())
@@ -57,10 +58,9 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreate
 
 // Update edits an already existing repo
 func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdated, error) {
-	user := auth.UserFromContext(ctx)
-	if !user.IsAdmin() {
-		logger.Info("user not authorized for update")
-		return nil, twirp.NewError(twirp.Unauthenticated, "you are not authorized to update repos")
+	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
+		logger.Error("not authorized for Repo.Update", "error", err)
+		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
 	r, err := s.repo.Load(cmd.Uuid)
@@ -86,10 +86,9 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdate
 
 // Destroy removes a repo from the list of configurations
 func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyRepo) (*pb.RepoDestroyed, error) {
-	user := auth.UserFromContext(ctx)
-	if !user.IsAdmin() {
-		logger.Info("user not authorized for destroy")
-		return nil, twirp.NewError(twirp.Unauthenticated, "you are not authorized to destroy repos")
+	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
+		logger.Error("not authorized for Repo.Destroy", "error", err)
+		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
 	r, err := s.repo.Load(cmd.Uuid)
@@ -120,6 +119,11 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyRepo) (*pb.RepoDest
 
 // Read reads out a repo
 func (s Service) Read(ctx context.Context, req *pb.ReadRepo) (*pb.RepoRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		logger.Error("not authorized for Repo.Read", "error", err)
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
 	r, err := s.repo.Load(req.Uuid)
 	if err != nil {
 		logger.Error("error loading Repo", "error", err)
@@ -141,7 +145,12 @@ func (s Service) Read(ctx context.Context, req *pb.ReadRepo) (*pb.RepoRead, erro
 }
 
 // All gets all repos currently configured and their status
-func (s Service) All(context.Context, *pb.ReadRepos) (*pb.ReposRead, error) {
+func (s Service) All(ctx context.Context, req *pb.ReadRepos) (*pb.ReposRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		logger.Error("not authorized for Repo.All", "error", err)
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
 	resp := &pb.ReposRead{
 		Repos: make([]*pb.RepoRead, 0),
 	}

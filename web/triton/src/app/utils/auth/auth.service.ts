@@ -25,7 +25,7 @@ export class AuthService {
       AuthService.settings = {
         authority: config.authority,
         client_id: config.clientId,
-        scope: config.scope,
+        scope: `${config.scope}`,
       
         redirect_uri: `${window.location.origin}/login`,
         post_logout_redirect_uri: `${window.location.origin}/logout`,

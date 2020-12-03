@@ -16,8 +16,6 @@ export class ConfigService {
   }
 
   load() {
-    console.log(environment.name);
-    console.log(isDevMode());
     const file = `assets/config/config.${environment.name}.json`
     return new Promise<void>((resolve, reject) => {
       this.http.get(file).toPromise().then((response: IConfig) => {
