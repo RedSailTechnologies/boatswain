@@ -9,7 +9,7 @@
 
 ## Roadmap
 * 0.4
-  * [ ] Service health checks
+  * Service health checks
   * Dev/debug canaries
   * mongodb security (for helm)
 * 0.5
