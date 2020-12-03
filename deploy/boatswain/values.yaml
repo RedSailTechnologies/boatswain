@@ -1,5 +1,16 @@
 global:
   partOf: boatswain
+  
+  # the values for oidc authentication/authorization
+  oidc:
+    url: ''
+    clientId: ''
+    clientScopes: ''
+    apiScope: ''
+    roles:
+      admin: ''
+      editor: ''
+      reader: ''
 
 mongodb:
   auth:

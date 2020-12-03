@@ -3,8 +3,8 @@ name: boatswain
 description: Chart for the boatswain deployment tool.
 
 type: application
-version: 0.2.0
-appVersion: 0.2.0
+version: 0.3.0
+appVersion: 0.3.0
 
 dependencies:
   - name: kraken

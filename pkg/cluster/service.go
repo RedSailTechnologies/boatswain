@@ -3,6 +3,8 @@ package cluster
 import (
 	"context"
 
+	"github.com/redsailtechnologies/boatswain/pkg/auth"
+
 	"github.com/twitchtv/twirp"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -19,13 +21,15 @@ var collection = "clusters"
 
 // Service is the implementation for twirp to use
 type Service struct {
+	auth auth.Agent
 	k8s  kube.Agent
 	repo *Repository
 }
 
 // NewService creates the service
-func NewService(k kube.Agent, s storage.Storage) *Service {
+func NewService(a auth.Agent, k kube.Agent, s storage.Storage) *Service {
 	return &Service{
+		auth: a,
 		k8s:  k,
 		repo: NewRepository(collection, s),
 	}
@@ -33,6 +37,10 @@ func NewService(k kube.Agent, s storage.Storage) *Service {
 
 // Create adds a cluster to the list of configurations
 func (s Service) Create(ctx context.Context, cmd *pb.CreateCluster) (*pb.ClusterCreated, error) {
+	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
 	c, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, cmd.Token, cmd.Cert, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Cluster", "error", err)
@@ -50,6 +58,10 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateCluster) (*pb.Cluster
 
 // Update edits an already existing cluster
 func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.ClusterUpdated, error) {
+	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
 	c, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading cluster", "error", err)
@@ -73,6 +85,10 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.Cluster
 
 // Destroy removes a cluster from the list of configurations
 func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyCluster) (*pb.ClusterDestroyed, error) {
+	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
 	c, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading Cluster", "error", err)
@@ -101,6 +117,10 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyCluster) (*pb.Clust
 
 // Read reads out a cluster
 func (s Service) Read(ctx context.Context, req *pb.ReadCluster) (*pb.ClusterRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
 	c, err := s.repo.Load(req.Uuid)
 	if err != nil {
 		logger.Error("error reading Cluster", "error", err)
@@ -125,6 +145,10 @@ func (s Service) Read(ctx context.Context, req *pb.ReadCluster) (*pb.ClusterRead
 
 // All gets all clusters currently configured and their status
 func (s Service) All(ctx context.Context, req *pb.ReadClusters) (*pb.ClustersRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
 	resp := &pb.ClustersRead{
 		Clusters: make([]*pb.ClusterRead, 0),
 	}

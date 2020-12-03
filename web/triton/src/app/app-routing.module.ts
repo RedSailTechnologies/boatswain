@@ -5,13 +5,18 @@ import { ClustersComponent } from './pages/clusters/clusters.component';
 import { ReposComponent } from './pages/repos/repos.component';
 import { ProjectsComponent } from './pages/projects/projects.component';
 import { ApplicationsComponent } from './pages/applications/applications.component';
+import { LoginComponent } from './pages/login/login.component';
+import { CheckService } from './utils/auth/check.service';
+import { LogoutComponent } from './pages/logout/logout.component';
 
 const routes: Routes = [
-    {path: '', component: HomeComponent},
-    {path: 'clusters', component: ClustersComponent},
-    {path: 'repos', component: ReposComponent},
-    {path: 'projects', component: ProjectsComponent},
-    {path: 'applications', component: ApplicationsComponent}
+  {path: '', component: HomeComponent},
+  {path: 'login', component: LoginComponent},
+  {path: 'logout', component: LogoutComponent},
+  {path: 'clusters', component: ClustersComponent, canActivate: [CheckService]},
+  {path: 'repos', component: ReposComponent, canActivate: [CheckService]},
+  {path: 'projects', component: ProjectsComponent, canActivate: [CheckService]},
+  {path: 'applications', component: ApplicationsComponent, canActivate: [CheckService]}
 ];
 
 @NgModule({

@@ -7,6 +7,7 @@ import (
 	"github.com/twitchtv/twirp"
 
 	"github.com/redsailtechnologies/boatswain/pkg/application"
+	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
@@ -21,6 +22,7 @@ func main() {
 	var httpPort, mongoConn string
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
 	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
+	authCfg := auth.Flags()
 	flag.Parse()
 
 	store, err := storage.NewMongo(mongoConn, "kraken")
@@ -28,10 +30,14 @@ func main() {
 		logger.Fatal("mongo init failed")
 	}
 
-	cluster := cluster.NewService(kube.DefaultAgent{}, store)
-	clTwirp := cl.NewClusterServer(cluster, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
+	authAgent := auth.NewOIDCAgent(authCfg)
 
-	application := application.NewService(cluster, kube.DefaultAgent{})
+	hooks := twirp.ChainHooks(tw.JWTHook(authAgent), tw.LoggingHooks())
+
+	cluster := cluster.NewService(authAgent, kube.DefaultAgent{}, store)
+	clTwirp := cl.NewClusterServer(cluster, hooks, twirp.WithServerPathPrefix("/api"))
+
+	application := application.NewService(authAgent, cluster, kube.DefaultAgent{})
 	appTwirp := app.NewApplicationServer(application, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
 
 	mux := http.NewServeMux()
@@ -39,5 +45,5 @@ func main() {
 	mux.Handle(clTwirp.PathPrefix(), clTwirp)
 
 	logger.Info("starting kraken component...RELEASE THE KRAKEN!!!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, mux))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, authAgent.Wrap(mux)))
 }

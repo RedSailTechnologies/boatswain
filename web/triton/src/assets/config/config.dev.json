@@ -1,0 +1,7 @@
+{
+    "oidc": {
+        "authority": "http://localhost:4011",
+        "clientId": "implicit-mock-client",
+        "scope": "openid profile boatswain roles"
+    }
+}

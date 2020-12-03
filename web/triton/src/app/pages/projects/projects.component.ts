@@ -1,12 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ApplicationRead, DefaultApplication, Application } from 'src/app/services/application/application';
+import {
+  ApplicationRead,
+  DefaultApplication,
+  Application,
+} from 'src/app/services/application/application';
 import * as fetch from 'isomorphic-fetch';
+import { AuthService } from 'src/app/utils/auth/auth.service';
 
 @Component({
   selector: 'app-projects',
   templateUrl: './projects.component.html',
-  styleUrls: ['./projects.component.sass']
+  styleUrls: ['./projects.component.sass'],
 })
 export class ProjectsComponent implements OnInit {
   private client: Application;
@@ -14,8 +19,11 @@ export class ProjectsComponent implements OnInit {
   private applications: ApplicationRead[];
   public projects: Project[];
 
-  constructor(private snackBar: MatSnackBar) {
-    this.client = new DefaultApplication(`${location.protocol}//${location.host}/api`, fetch['default']);
+  constructor(private snackBar: MatSnackBar, public auth: AuthService) {
+    this.client = new DefaultApplication(
+      `${location.protocol}//${location.host}/api`,
+      auth.fetch()
+    );
   }
 
   ngOnInit(): void {
@@ -25,27 +33,30 @@ export class ProjectsComponent implements OnInit {
   refresh(): void {
     if (this.retries < 5) {
       this.retries++;
-      this.client.all({}).then(value => {
-        this.applications = value.applications;
-        this.populateProjects();
-      }).catch(_ => {
-        setTimeout(() => this.refresh(), 2 * 1000)
-      });
+      this.client
+        .all({})
+        .then((value) => {
+          this.applications = value.applications;
+          this.populateProjects();
+        })
+        .catch((_) => {
+          setTimeout(() => this.refresh(), 2 * 1000);
+        });
     } else {
-      console.log("could not update applications after 5 retries");
+      console.log('could not update applications after 5 retries');
       this.retries = 0;
       this.applications = new Array<ApplicationRead>();
-      this.snackBar.open(`Error getting projects`, "Dismiss", {
+      this.snackBar.open(`Error getting projects`, 'Dismiss', {
         duration: 5 * 1000,
-        panelClass: ["warn-snack"]
+        panelClass: ['warn-snack'],
       });
     }
   }
 
   populateProjects(): void {
     this.projects = new Array<Project>();
-    this.applications.forEach(app => {
-      if (this.projects.find(x => x.name == app.project) == undefined) {
+    this.applications.forEach((app) => {
+      if (this.projects.find((x) => x.name == app.project) == undefined) {
         var project = new Project();
         project.name = app.project;
         project.applications = new Array<ProjectApp>();
@@ -55,8 +66,8 @@ export class ProjectsComponent implements OnInit {
       var pApp = new ProjectApp();
       pApp.name = app.name;
       pApp.clusters = new Array<string>();
-      app.clusters.forEach(x => pApp.clusters.push(x.clusterName));
-      this.projects.forEach(x => {
+      app.clusters.forEach((x) => pApp.clusters.push(x.clusterName));
+      this.projects.forEach((x) => {
         if (x.name == app.project) {
           x.applications.push(pApp);
         }
@@ -67,7 +78,7 @@ export class ProjectsComponent implements OnInit {
 
 class Project {
   public name: string;
-  public applications: ProjectApp[]
+  public applications: ProjectApp[];
 }
 
 class ProjectApp {
