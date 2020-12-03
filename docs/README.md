@@ -3,13 +3,6 @@
 ## About
 A kubernetes-native CD tool with first-class support for Helm v3.
 
-## Getting Started
-[Installation](https://redsailtechnologies.github.io/boatswain/installation.html)
-
-[About Templates](https://redsailtechnologies.github.io/boatswain/templates.html)
-
-[API Docs](https://redsailtechnologies.github.io/boatswain/api.html)
-
 ## Design
 * Kubernetes native technologies
   * Angular frontend
