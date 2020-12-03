@@ -26,7 +26,8 @@ global:
   oidc:
     url: https://login.microsoftonline.com/<azure-directory>/v2.0/
     clientId: <app-registration-client-id>
-    scope: "openid profile api://<app-registration-client-id>/boatswain"
+    clientScopes: "openid profile api://<app-registration-client-id>/boatswain"
+    apiScope: "boatswain"
     roles:
       admin: Boatswain.Admin
       editor: Boatswain.Editor
