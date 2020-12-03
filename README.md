@@ -32,12 +32,8 @@ A kubernetes-native CD tool with first-class support for Helm v3.
   * Github SCM plugin
 
 ## Roadmap
-* 0.3
-  * Users/auth (LDAP)
-  * RBAC
-  * Client login/cookies
-  * Service health checks
 * 0.4
+  * Service health checks
   * Dev/debug canaries
   * mongodb security (for helm)
 * 0.5
@@ -45,3 +41,5 @@ A kubernetes-native CD tool with first-class support for Helm v3.
     * azdo plugin
     * triggers
     * PR canaries
+* 0.6
+  * Change logs/history

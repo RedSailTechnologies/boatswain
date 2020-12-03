@@ -1,6 +1,6 @@
 <div class="page" *ngIf="repos; else noData">
     <div class="right-button">
-        <button mat-raised-button color="accent" (click)="add()">
+        <button mat-raised-button [disabled]="!auth.isAdmin()" color="accent" (click)="add()">
             <mat-icon>add</mat-icon>
             Add
         </button>
@@ -16,11 +16,11 @@
                     Status: 
                     <button mat-mini-fab class="shrink-button" [ngClass]="{'status-online':repo.ready,'status-offline':!repo.ready}"></button>
                     <span style="width:100px;"></span>
-                    <button mat-raised-button color="accent" class="action-button" (click)="edit(repo);$event.stopPropagation();">
+                    <button mat-raised-button [disabled]="!auth.isAdmin()" color="accent" class="action-button" (click)="edit(repo);$event.stopPropagation();">
                         <mat-icon>edit</mat-icon>
                         Edit
                     </button>
-                    <button mat-raised-button color="warn" class="action-button" (click)="delete(repo);$event.stopPropagation();">
+                    <button mat-raised-button [disabled]="!auth.isAdmin()" color="warn" class="action-button" (click)="delete(repo);$event.stopPropagation();">
                         <mat-icon>delete</mat-icon>
                         Delete
                     </button>

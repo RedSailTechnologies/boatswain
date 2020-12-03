@@ -36,6 +36,16 @@ spec:
           env:
             - name: MONGO_CONNECTION_STRING
               value: {{ .Values.config.mongoConn }}
+            - name: OIDC_URL
+              value: {{ printf "%s/%s" .Values.global.oidc.url ".well-known/openid-configuration" }}
+            - name: USER_SCOPE
+              value: {{ .Values.global.oidc.apiScope }}
+            - name: USER_ADMIN_ROLE
+              value: {{ .Values.global.oidc.roles.admin }}
+            - name: USER_EDITOR_ROLE
+              value: {{ .Values.global.oidc.roles.editor }}
+            - name: USER_READER_ROLE
+              value: {{ .Values.global.oidc.roles.reader }}
           ports:
             - name: http
               containerPort: 8080

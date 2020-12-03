@@ -1,6 +1,7 @@
-import { NgModule } from "@angular/core";
+import { APP_INITIALIZER, NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { ReactiveFormsModule } from "@angular/forms";
 
 import { MatButtonModule } from "@angular/material/button";
@@ -39,6 +40,13 @@ import { RepoDialogComponent } from "./dialogs/repo-dialog/repo-dialog.component
 import { ConfirmDialogComponent } from "./dialogs/confirm-dialog/confirm-dialog.component";
 import { ApplicationsComponent } from './pages/applications/applications.component';
 import { ProjectsComponent } from './pages/projects/projects.component';
+import { LoginComponent } from './pages/login/login.component';
+import { LogoutComponent } from './pages/logout/logout.component';
+import { ConfigService } from './utils/config/config.service';
+
+export function initializeConfig(config: ConfigService) {
+  return () => config.load();
+}
 
 @NgModule({
   declarations: [
@@ -53,12 +61,15 @@ import { ProjectsComponent } from './pages/projects/projects.component';
     RepoDialogComponent,
     ConfirmDialogComponent,
     ApplicationsComponent,
-    ProjectsComponent
+    ProjectsComponent,
+    LoginComponent,
+    LogoutComponent
   ],
   imports: [
     AppRoutingModule,
     BrowserModule,
     BrowserAnimationsModule,
+    HttpClientModule,
     ReactiveFormsModule,
 
     MatButtonModule,
@@ -83,6 +94,14 @@ import { ProjectsComponent } from './pages/projects/projects.component';
     NgScrollbarModule
   ],
   providers: [
+    ConfigService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeConfig,
+      deps: [ConfigService],
+      multi: true
+    },
+    HttpClient,
     StyleManager,
     ThemeStorage
   ],

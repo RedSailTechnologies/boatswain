@@ -12,6 +12,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
+const (
+	uuidKey    = "uuid"
+	versionKey = "version"
+)
+
 // Mongo uses a mongodb for storage
 type Mongo struct {
 	conn string
@@ -174,9 +179,8 @@ func (m *Mongo) checkCollection(coll string) error {
 		}
 		_, err = client.Database(m.db).Collection(coll).Indexes().CreateOne(ctx, mongo.IndexModel{
 			Keys: bson.M{
-				// TODO AdamP - should this be a constant?
-				"uuid":    1,
-				"version": 1,
+				uuidKey:    1,
+				versionKey: 1,
 			},
 			Options: options.Index().SetUnique(true),
 		}, nil)

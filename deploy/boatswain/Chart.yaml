@@ -3,22 +3,22 @@ name: boatswain
 description: Chart for the boatswain deployment tool.
 
 type: application
-version: 0.1.0
-appVersion: 0.1.0
+version: 0.3.0
+appVersion: 0.3.0
 
 dependencies:
   - name: kraken
     repository: file://../kraken
-    version: "0.1.0"
+    version: "0.2.0"
   - name: poseidon
     repository: file://../poseidon
-    version: "0.1.0"
+    version: "0.2.0"
   - name: mate
     repository: file://../mate
-    version: "0.1.0"
+    version: "0.2.0"
   - name: mongodb
     repository: https://charts.bitnami.com/bitnami
     version: "10.0.5"
   - name: triton
     repository: file://../triton
-    version: "0.1.0"
+    version: "0.2.0"

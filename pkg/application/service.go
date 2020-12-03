@@ -7,28 +7,36 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
+	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
+	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
 	pb "github.com/redsailtechnologies/boatswain/rpc/application"
 	"github.com/redsailtechnologies/boatswain/rpc/cluster"
 )
 
 // Service is the implementation of the application service
 type Service struct {
-	cl  cluster.Cluster
-	k8s kube.Agent
+	cl   cluster.Cluster
+	k8s  kube.Agent
+	auth auth.Agent
 }
 
 // NewService returns an initialized instance of the service
-func NewService(cluster cluster.Cluster, kube kube.Agent) *Service {
+func NewService(a auth.Agent, c cluster.Cluster, k kube.Agent) *Service {
 	return &Service{
-		cl:  cluster,
-		k8s: kube,
+		auth: a,
+		cl:   c,
+		k8s:  k,
 	}
 }
 
 // All gets all applications currently found in each cluster and their status
 func (s Service) All(ctx context.Context, req *pb.ReadApplications) (*pb.ApplicationsRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
 	response := &pb.ApplicationsRead{}
 
 	clusters, err := s.cl.All(context.TODO(), &cluster.ReadClusters{})

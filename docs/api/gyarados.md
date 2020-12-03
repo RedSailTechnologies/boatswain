@@ -30,7 +30,8 @@
 <p align="right"><a href="#top">Top</a></p>
 
 ## gyarados.proto
-TODO
+Gyarados manages delivery objects and their conversion to/from yaml. This
+will likely get moved to individual entity services.
 
 
 <a name="redsail.bosn.Delivery"></a>

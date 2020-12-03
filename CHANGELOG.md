@@ -1,4 +1,28 @@
 # CHANGELOG
+
+## 0.3.0
+* TODO Feature/init authentication (#18)
+* f41d073 Update all version numbers and make minor Makefile tweaks (#17)
+
+## 0.2.0
+* 6fcfa57 Feature/mongo helm updates (#16)
+* 0ec3aff Feature/initialize persistence (#15)
+* 92b1a90 Hotfix/projects page load
+* d2ea54a Feature/projects apps pages (#13)
+* 463875a Feature/init execution (#12)
+* 1d0aecc Feature/client add clusters repos (#11)
+* 45c6527 Feature/configuration enhancement (#10)
+* 472dc99 feature/planning finish future planing (#9)
+* cb12bc2 Delete kraken-0.1.1.tgz
+* 39aff47 hotfix fix workflow file deps
+* f0c510c hotfix fix docker buildx functionality inside ci runners (#8)
+* 7d7c7a4 hotfix fix ci pushing (#7)
+* 0174ebd feature create test ci (#6)
+* 29f2065 fix ci to push correctly (#5)
+* 0b07fc5 Merge pull request #4 from RedSailTechnologies/feature/cicd
+* c54fec9 Merge branch main of github.com:RedSailTechnologies/boatswain into main
+* cd81823 add initial development workflow
+
 ## 0.1.0
 * a1e343e Finish initial architecture.
 * d848aa1 Finish the update functionality!

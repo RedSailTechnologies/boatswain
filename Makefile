@@ -1,6 +1,6 @@
 .PHONY: client echo help kraken target version
 
-# ENV
+# Build env
 DEBUG=false
 CHART_LIST=boatswain mate triton $(SERVICE_LIST)
 DOCKER_BUILDKIT=1
@@ -11,7 +11,6 @@ GEN_DOC=docs/api/
 GEN_GO=rpc/
 GEN_TS=$(TRITON_PATH)src/app/services/
 HELM_OUT=bin/
-LEVI_CLIENT=true
 LEVI_CMD=cmd/leviathan/
 LEVI_OUT=bin/
 PROJECT_NAME=null
@@ -28,6 +27,7 @@ all: echo proto kraken poseidon triton
 clean:
 	@echo Running clean
 	@rm -f main
+	@rm -f coverage.out
 	@rm -rf $(TRITON_PATH)dist
 	@rm -rf $(LEVI_OUT)
 	@rm -rf $(GEN_DOC)
@@ -43,9 +43,9 @@ clean:
 	done
 
 changes: 
-	@cat docs/Installation.md
+	@cat docs/installation.md
 	@echo \\n## Changes:
-	@git log $$(make version-previous)..$$(make version) --oneline --first-parent | xargs -i echo "*" "{}"
+	@git log $(shell make versionprev)..$(shell make version) --oneline --first-parent | xargs -i echo "*" "{}"
 
 ## docs: builds the documentation into docs/
 docs: proto
@@ -78,13 +78,8 @@ leviathan: echo proto
 	@echo Building leviathan server to $(LEVI_OUT)
 	@ rm -rf $(LEVI_OUT)
 	@go build -o $(LEVI_OUT)leviathan $(LEVI_CMD)main.go
-ifeq ($(LEVI_CLIENT),true)
 	@cd $(WORKDIR)/$(TRITON_PATH); npm run build
 	@cp -r $(TRITON_PATH)dist/triton $(LEVI_OUT)
-endif
-ifeq ($(DEBUG),true)
-	./bin/leviathan --cache ./bin/temp
-endif
 
 ## poseidon: builds the poseidon image
 poseidon: echo
@@ -109,7 +104,7 @@ package: echo
 	@mkdir -p $(HELM_OUT)
 	@helm dependency update deploy/boatswain
 	@for chart in $(CHART_LIST); do \
-		helm package deploy/$$chart --version $$(make version) --app-version $$(make version) --destination $(HELM_OUT); \
+		helm package deploy/$$chart --version $(shell make version) --app-version $(shell make version) --destination $(HELM_OUT); \
 	done
 
 template:
@@ -145,5 +140,5 @@ endif
 version:
 	@git describe --tags --abbrev=0
 
-version-previous:
-	@git describe --tags --abbrev=0 --tags $$(make version)^
+versionprev:
+	@version=$(shell make version);git describe --tags --abbrev=0 --tags $$version^
