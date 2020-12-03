@@ -47,6 +47,13 @@ changes:
 	@echo \\n## Changes:
 	@git log $$(make version-previous)..$$(make version) --oneline --first-parent | xargs -i echo "*" "{}"
 
+## docs: builds the documentation into docs/
+docs: proto
+	@echo "# Boatswain Api\n\n" > docs/api.md
+	@for doc in $$(ls docs/api); do \
+	  echo "[$$(echo $$doc | cut -d '.' -f1)](https://github.com/RedSailTechnologies/boatswain/blob/main/docs/api/$$doc)" >> docs/api.md; \
+	done
+
 echo:
 	@echo Project directory: $(WORKDIR)
 

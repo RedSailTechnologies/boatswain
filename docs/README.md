@@ -1,9 +1,14 @@
 # Boatswain (bow·sn)
 
-[Templates][https://github.com/RedSailTechnologies/boatswain/blob/main/docs/templates.md]
-
 ## About
 A kubernetes-native CD tool with first-class support for Helm v3.
+
+## Getting Started
+[Installation](https://github.com/RedSailTechnologies/boatswain/blob/main/docs/Installation.md)
+
+[Templates](https://github.com/RedSailTechnologies/boatswain/blob/main/docs/templates.md)
+
+[API](https://github.com/RedSailTechnologies/boatswain/blob/feature/gh-pages/docs/api.md)
 
 ## Design
 * Kubernetes native technologies
