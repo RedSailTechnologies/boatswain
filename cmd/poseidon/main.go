@@ -6,6 +6,7 @@ import (
 
 	"github.com/twitchtv/twirp"
 
+	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
@@ -19,6 +20,7 @@ func main() {
 	var httpPort, mongoConn string
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
 	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
+	authCfg := auth.Flags()
 	flag.Parse()
 
 	store, err := storage.NewMongo(mongoConn, "poseidon")
@@ -26,8 +28,12 @@ func main() {
 		logger.Fatal("mongo init failed")
 	}
 
-	repo := repo.NewService(helm.DefaultAgent{}, store)
-	repTwirp := rep.NewRepoServer(repo, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
+	authAgent := auth.NewOIDCAgent(authCfg)
+
+	hooks := twirp.ChainHooks(tw.JWTHook(authAgent), tw.LoggingHooks())
+
+	repo := repo.NewService(authAgent, helm.DefaultAgent{}, store)
+	repTwirp := rep.NewRepoServer(repo, hooks, twirp.WithServerPathPrefix("/api"))
 	logger.Info("starting poseidon component...I am Poseidon!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, repTwirp))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, authAgent.Wrap(repTwirp)))
 }
