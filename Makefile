@@ -49,9 +49,9 @@ changes:
 
 ## docs: builds the documentation into docs/
 docs: proto
-	@echo "# Boatswain Api\n\n" > docs/api.md
+	@echo "# Boatswain Api\nClick below for each service's documentation.\n" > docs/api.md
 	@for doc in $$(ls docs/api); do \
-	  echo "[$$(echo $$doc | cut -d '.' -f1)](https://redsailtechnologies.github.io/boatswain/api/$$doc)" >> docs/api.md; \
+	  echo "* [$$(echo $$doc | cut -d '.' -f1)](https://redsailtechnologies.github.io/boatswain/api/$$doc)" >> docs/api.md; \
 	done
 
 echo:
