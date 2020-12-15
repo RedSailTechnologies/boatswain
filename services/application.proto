@@ -3,7 +3,7 @@ Application is the service for reading data about deployed applications.
 */
 syntax = "proto3";
 package redsail.bosn;
-option go_package = "github.com/redsailtechnologies/boatswain/rpc/kraken";
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/application;application";
 
 service Application {
     // gets all applications currently found in each cluster and their status

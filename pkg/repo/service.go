@@ -215,6 +215,11 @@ func (s Service) Charts(ctx context.Context, req *pb.ReadRepo) (*pb.ChartsRead, 
 	return &pb.ChartsRead{Charts: charts}, nil
 }
 
+// Ready implements the ReadyService method so this service can be part of a health check routine
+func (s Service) Ready() error {
+	return s.repo.store.CheckReady()
+}
+
 func buildChartURL(repoURL string, chart string) string {
 	if repoURL[len(repoURL)-1] != byte('/') {
 		repoURL = repoURL + "/"

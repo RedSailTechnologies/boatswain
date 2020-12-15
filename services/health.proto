@@ -1,0 +1,21 @@
+/*
+Health is the service each server uses to implement health  checks when in kubernetes.
+By default it just includes the two routes with empty handlers, but we could expose these
+later if desired, do service statuses, etc.
+*/
+syntax = "proto3";
+package redsail.bosn;
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/health;health";
+
+service Health {
+    // gets if the server is alive
+    rpc Live (CheckLive) returns (LiveCheck);
+
+    // gets if the server is ready for traffic
+    rpc Ready (CheckReady) returns (ReadyCheck); 
+}
+
+message CheckLive {}
+message LiveCheck {}
+message CheckReady {}
+message ReadyCheck {}

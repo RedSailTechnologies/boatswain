@@ -107,6 +107,12 @@ package: echo
 		helm package deploy/$$chart --version $(shell make version) --app-version $(shell make version) --destination $(HELM_OUT); \
 	done
 
+## push: pushes local images
+push:
+	@for service in $(SERVICE_LIST); do \
+	  docker push $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
+	done
+
 template:
 ifeq ($(DEBUG),true)
 	@echo Building $(PROJECT_NAME) debug container
