@@ -43,7 +43,7 @@ deployments:
     helm: # can only specify either helm or docker
       chart: sample-app # the name of the chart for the deployment
       repo: myrepo # the name of the helm repo, note this must be configured in bosn
-      version: ${{ .Params.sampleAppChartVersion }} # the version of the chart, note the template syntax
+      version: ${{ .Parameters.sampleAppChartVersion }} # the version of the chart, note the template syntax
   - name: sample-routing
     helm:
       chart: sample-routing

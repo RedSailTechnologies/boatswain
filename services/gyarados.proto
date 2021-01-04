@@ -112,4 +112,3 @@ message Step {
     string template = 9;
     string arguments = 10;
 }
-

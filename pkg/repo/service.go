@@ -99,8 +99,7 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyRepo) (*pb.RepoDest
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
-	err = r.Destroy(ddd.NewTimestamp())
-	if err != nil {
+	if err = r.Destroy(ddd.NewTimestamp()); err != nil {
 		logger.Error("error destroying Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "Repo could not be destroyed")
 	}

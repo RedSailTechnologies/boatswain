@@ -70,8 +70,7 @@ func Create(uuid, name, endpoint, token, cert string, timestamp int64) (*Cluster
 	if uuid == "" {
 		return nil, ddd.IDError{}
 	}
-	err := validateFields(name, endpoint, token, cert)
-	if err != nil {
+	if err := validateFields(name, endpoint, token, cert); err != nil {
 		return nil, err
 	}
 
@@ -100,13 +99,13 @@ func (c *Cluster) Destroy(timestamp int64) error {
 
 // Update handles update commands
 func (c *Cluster) Update(name, endpoint, token, cert string, timestamp int64) error {
-	err := validateFields(name, endpoint, token, cert)
-	if err != nil {
+	if err := validateFields(name, endpoint, token, cert); err != nil {
 		return err
 	}
 	if c.destroyed {
 		return ddd.DestroyedError{Entity: entityName}
 	}
+
 	c.on(&Updated{
 		Timestamp: timestamp,
 		Name:      name,

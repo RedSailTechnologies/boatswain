@@ -64,7 +64,7 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.Cluster
 
 	c, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
-		logger.Error("error loading cluster", "error", err)
+		logger.Error("error loading Cluster", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Cluster")
 	}
 
@@ -100,8 +100,7 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyCluster) (*pb.Clust
 		return nil, tw.ToTwirpError(err, "error loading Cluster")
 	}
 
-	err = c.Destroy(ddd.NewTimestamp())
-	if err != nil {
+	if err = c.Destroy(ddd.NewTimestamp()); err != nil {
 		logger.Error("error destroying Cluster", "error", err)
 		return nil, tw.ToTwirpError(err, "Cluster could not be destroyed")
 	}

@@ -64,8 +64,7 @@ func Create(uuid, name, endpoint string, timestamp int64) (*Repo, error) {
 	if uuid == "" {
 		return nil, ddd.IDError{}
 	}
-	err := validateFields(name, endpoint)
-	if err != nil {
+	if err := validateFields(name, endpoint); err != nil {
 		return nil, err
 	}
 
