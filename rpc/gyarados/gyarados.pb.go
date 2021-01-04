@@ -82,55 +82,6 @@ func (Step_StepAction_Helm_HelmAction) EnumDescriptor() ([]byte, []int) {
 	return file_gyarados_proto_rawDescGZIP(), []int{3, 0, 1, 0}
 }
 
-type Template_TemplateType int32
-
-const (
-	Template_deployment Template_TemplateType = 0
-	Template_step       Template_TemplateType = 1
-	Template_trigger    Template_TemplateType = 2
-)
-
-// Enum value maps for Template_TemplateType.
-var (
-	Template_TemplateType_name = map[int32]string{
-		0: "deployment",
-		1: "step",
-		2: "trigger",
-	}
-	Template_TemplateType_value = map[string]int32{
-		"deployment": 0,
-		"step":       1,
-		"trigger":    2,
-	}
-)
-
-func (x Template_TemplateType) Enum() *Template_TemplateType {
-	p := new(Template_TemplateType)
-	*p = x
-	return p
-}
-
-func (x Template_TemplateType) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (Template_TemplateType) Descriptor() protoreflect.EnumDescriptor {
-	return file_gyarados_proto_enumTypes[1].Descriptor()
-}
-
-func (Template_TemplateType) Type() protoreflect.EnumType {
-	return &file_gyarados_proto_enumTypes[1]
-}
-
-func (x Template_TemplateType) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use Template_TemplateType.Descriptor instead.
-func (Template_TemplateType) EnumDescriptor() ([]byte, []int) {
-	return file_gyarados_proto_rawDescGZIP(), []int{4, 0}
-}
-
 type Delivery struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -567,77 +518,6 @@ func (x *Step) GetArguments() string {
 	return ""
 }
 
-type Template struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Uuid string                `protobuf:"bytes,1,opt,name=uuid,proto3" json:"uuid,omitempty"`
-	Name string                `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Type Template_TemplateType `protobuf:"varint,3,opt,name=type,proto3,enum=redsail.bosn.Template_TemplateType" json:"type,omitempty"`
-	Yaml string                `protobuf:"bytes,4,opt,name=yaml,proto3" json:"yaml,omitempty"`
-}
-
-func (x *Template) Reset() {
-	*x = Template{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_gyarados_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Template) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Template) ProtoMessage() {}
-
-func (x *Template) ProtoReflect() protoreflect.Message {
-	mi := &file_gyarados_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Template.ProtoReflect.Descriptor instead.
-func (*Template) Descriptor() ([]byte, []int) {
-	return file_gyarados_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *Template) GetUuid() string {
-	if x != nil {
-		return x.Uuid
-	}
-	return ""
-}
-
-func (x *Template) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *Template) GetType() Template_TemplateType {
-	if x != nil {
-		return x.Type
-	}
-	return Template_deployment
-}
-
-func (x *Template) GetYaml() string {
-	if x != nil {
-		return x.Yaml
-	}
-	return ""
-}
-
 type Delivery_Application struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -650,7 +530,7 @@ type Delivery_Application struct {
 func (x *Delivery_Application) Reset() {
 	*x = Delivery_Application{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_gyarados_proto_msgTypes[5]
+		mi := &file_gyarados_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -663,7 +543,7 @@ func (x *Delivery_Application) String() string {
 func (*Delivery_Application) ProtoMessage() {}
 
 func (x *Delivery_Application) ProtoReflect() protoreflect.Message {
-	mi := &file_gyarados_proto_msgTypes[5]
+	mi := &file_gyarados_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -705,7 +585,7 @@ type Deployment_Docker struct {
 func (x *Deployment_Docker) Reset() {
 	*x = Deployment_Docker{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_gyarados_proto_msgTypes[6]
+		mi := &file_gyarados_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -718,7 +598,7 @@ func (x *Deployment_Docker) String() string {
 func (*Deployment_Docker) ProtoMessage() {}
 
 func (x *Deployment_Docker) ProtoReflect() protoreflect.Message {
-	mi := &file_gyarados_proto_msgTypes[6]
+	mi := &file_gyarados_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -761,7 +641,7 @@ type Deployment_Helm struct {
 func (x *Deployment_Helm) Reset() {
 	*x = Deployment_Helm{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_gyarados_proto_msgTypes[7]
+		mi := &file_gyarados_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -774,7 +654,7 @@ func (x *Deployment_Helm) String() string {
 func (*Deployment_Helm) ProtoMessage() {}
 
 func (x *Deployment_Helm) ProtoReflect() protoreflect.Message {
-	mi := &file_gyarados_proto_msgTypes[7]
+	mi := &file_gyarados_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -824,7 +704,7 @@ type Trigger_Approval struct {
 func (x *Trigger_Approval) Reset() {
 	*x = Trigger_Approval{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_gyarados_proto_msgTypes[8]
+		mi := &file_gyarados_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -837,7 +717,7 @@ func (x *Trigger_Approval) String() string {
 func (*Trigger_Approval) ProtoMessage() {}
 
 func (x *Trigger_Approval) ProtoReflect() protoreflect.Message {
-	mi := &file_gyarados_proto_msgTypes[8]
+	mi := &file_gyarados_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -886,7 +766,7 @@ type Trigger_Delivery struct {
 func (x *Trigger_Delivery) Reset() {
 	*x = Trigger_Delivery{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_gyarados_proto_msgTypes[9]
+		mi := &file_gyarados_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -899,7 +779,7 @@ func (x *Trigger_Delivery) String() string {
 func (*Trigger_Delivery) ProtoMessage() {}
 
 func (x *Trigger_Delivery) ProtoReflect() protoreflect.Message {
-	mi := &file_gyarados_proto_msgTypes[9]
+	mi := &file_gyarados_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -941,7 +821,7 @@ type Trigger_Web struct {
 func (x *Trigger_Web) Reset() {
 	*x = Trigger_Web{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_gyarados_proto_msgTypes[10]
+		mi := &file_gyarados_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -954,7 +834,7 @@ func (x *Trigger_Web) String() string {
 func (*Trigger_Web) ProtoMessage() {}
 
 func (x *Trigger_Web) ProtoReflect() protoreflect.Message {
-	mi := &file_gyarados_proto_msgTypes[10]
+	mi := &file_gyarados_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -999,7 +879,7 @@ type Step_StepAction struct {
 func (x *Step_StepAction) Reset() {
 	*x = Step_StepAction{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_gyarados_proto_msgTypes[11]
+		mi := &file_gyarados_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1012,7 +892,7 @@ func (x *Step_StepAction) String() string {
 func (*Step_StepAction) ProtoMessage() {}
 
 func (x *Step_StepAction) ProtoReflect() protoreflect.Message {
-	mi := &file_gyarados_proto_msgTypes[11]
+	mi := &file_gyarados_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1076,7 +956,7 @@ type Step_StepAction_Docker struct {
 func (x *Step_StepAction_Docker) Reset() {
 	*x = Step_StepAction_Docker{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_gyarados_proto_msgTypes[12]
+		mi := &file_gyarados_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1089,7 +969,7 @@ func (x *Step_StepAction_Docker) String() string {
 func (*Step_StepAction_Docker) ProtoMessage() {}
 
 func (x *Step_StepAction_Docker) ProtoReflect() protoreflect.Message {
-	mi := &file_gyarados_proto_msgTypes[12]
+	mi := &file_gyarados_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1140,7 +1020,7 @@ type Step_StepAction_Helm struct {
 func (x *Step_StepAction_Helm) Reset() {
 	*x = Step_StepAction_Helm{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_gyarados_proto_msgTypes[13]
+		mi := &file_gyarados_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1153,7 +1033,7 @@ func (x *Step_StepAction_Helm) String() string {
 func (*Step_StepAction_Helm) ProtoMessage() {}
 
 func (x *Step_StepAction_Helm) ProtoReflect() protoreflect.Message {
-	mi := &file_gyarados_proto_msgTypes[13]
+	mi := &file_gyarados_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1341,23 +1221,11 @@ var file_gyarados_proto_rawDesc = []byte{
 	0x6c, 0x6d, 0x41, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x0b, 0x0a, 0x07, 0x69, 0x6e, 0x73, 0x74,
 	0x61, 0x6c, 0x6c, 0x10, 0x00, 0x12, 0x0b, 0x0a, 0x07, 0x75, 0x70, 0x67, 0x72, 0x61, 0x64, 0x65,
 	0x10, 0x01, 0x12, 0x0c, 0x0a, 0x08, 0x72, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x10, 0x02,
-	0x12, 0x0d, 0x0a, 0x09, 0x75, 0x6e, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6c, 0x6c, 0x10, 0x03, 0x22,
-	0xb6, 0x01, 0x0a, 0x08, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x12, 0x0a, 0x04,
-	0x75, 0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x75, 0x75, 0x69, 0x64,
-	0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
-	0x6e, 0x61, 0x6d, 0x65, 0x12, 0x37, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x0e, 0x32, 0x23, 0x2e, 0x72, 0x65, 0x64, 0x73, 0x61, 0x69, 0x6c, 0x2e, 0x62, 0x6f, 0x73,
-	0x6e, 0x2e, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x2e, 0x54, 0x65, 0x6d, 0x70, 0x6c,
-	0x61, 0x74, 0x65, 0x54, 0x79, 0x70, 0x65, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x12, 0x0a,
-	0x04, 0x79, 0x61, 0x6d, 0x6c, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x79, 0x61, 0x6d,
-	0x6c, 0x22, 0x35, 0x0a, 0x0c, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x54, 0x79, 0x70,
-	0x65, 0x12, 0x0e, 0x0a, 0x0a, 0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x10,
-	0x00, 0x12, 0x08, 0x0a, 0x04, 0x73, 0x74, 0x65, 0x70, 0x10, 0x01, 0x12, 0x0b, 0x0a, 0x07, 0x74,
-	0x72, 0x69, 0x67, 0x67, 0x65, 0x72, 0x10, 0x02, 0x42, 0x36, 0x5a, 0x34, 0x67, 0x69, 0x74, 0x68,
-	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x72, 0x65, 0x64, 0x73, 0x61, 0x69, 0x6c, 0x74, 0x65,
-	0x63, 0x68, 0x6e, 0x6f, 0x6c, 0x6f, 0x67, 0x69, 0x65, 0x73, 0x2f, 0x62, 0x6f, 0x61, 0x74, 0x73,
-	0x77, 0x61, 0x69, 0x6e, 0x2f, 0x72, 0x70, 0x63, 0x2f, 0x67, 0x79, 0x72, 0x61, 0x64, 0x6f, 0x73,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x12, 0x0d, 0x0a, 0x09, 0x75, 0x6e, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6c, 0x6c, 0x10, 0x03, 0x42,
+	0x36, 0x5a, 0x34, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x72, 0x65,
+	0x64, 0x73, 0x61, 0x69, 0x6c, 0x74, 0x65, 0x63, 0x68, 0x6e, 0x6f, 0x6c, 0x6f, 0x67, 0x69, 0x65,
+	0x73, 0x2f, 0x62, 0x6f, 0x61, 0x74, 0x73, 0x77, 0x61, 0x69, 0x6e, 0x2f, 0x72, 0x70, 0x63, 0x2f,
+	0x67, 0x79, 0x72, 0x61, 0x64, 0x6f, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1372,51 +1240,48 @@ func file_gyarados_proto_rawDescGZIP() []byte {
 	return file_gyarados_proto_rawDescData
 }
 
-var file_gyarados_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_gyarados_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_gyarados_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_gyarados_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_gyarados_proto_goTypes = []interface{}{
 	(Step_StepAction_Helm_HelmAction)(0), // 0: redsail.bosn.Step.StepAction.Helm.HelmAction
-	(Template_TemplateType)(0),           // 1: redsail.bosn.Template.TemplateType
-	(*Delivery)(nil),                     // 2: redsail.bosn.Delivery
-	(*Deployment)(nil),                   // 3: redsail.bosn.Deployment
-	(*Trigger)(nil),                      // 4: redsail.bosn.Trigger
-	(*Step)(nil),                         // 5: redsail.bosn.Step
-	(*Template)(nil),                     // 6: redsail.bosn.Template
-	(*Delivery_Application)(nil),         // 7: redsail.bosn.Delivery.Application
-	(*Deployment_Docker)(nil),            // 8: redsail.bosn.Deployment.Docker
-	(*Deployment_Helm)(nil),              // 9: redsail.bosn.Deployment.Helm
-	(*Trigger_Approval)(nil),             // 10: redsail.bosn.Trigger.Approval
-	(*Trigger_Delivery)(nil),             // 11: redsail.bosn.Trigger.Delivery
-	(*Trigger_Web)(nil),                  // 12: redsail.bosn.Trigger.Web
-	(*Step_StepAction)(nil),              // 13: redsail.bosn.Step.StepAction
-	(*Step_StepAction_Docker)(nil),       // 14: redsail.bosn.Step.StepAction.Docker
-	(*Step_StepAction_Helm)(nil),         // 15: redsail.bosn.Step.StepAction.Helm
+	(*Delivery)(nil),                     // 1: redsail.bosn.Delivery
+	(*Deployment)(nil),                   // 2: redsail.bosn.Deployment
+	(*Trigger)(nil),                      // 3: redsail.bosn.Trigger
+	(*Step)(nil),                         // 4: redsail.bosn.Step
+	(*Delivery_Application)(nil),         // 5: redsail.bosn.Delivery.Application
+	(*Deployment_Docker)(nil),            // 6: redsail.bosn.Deployment.Docker
+	(*Deployment_Helm)(nil),              // 7: redsail.bosn.Deployment.Helm
+	(*Trigger_Approval)(nil),             // 8: redsail.bosn.Trigger.Approval
+	(*Trigger_Delivery)(nil),             // 9: redsail.bosn.Trigger.Delivery
+	(*Trigger_Web)(nil),                  // 10: redsail.bosn.Trigger.Web
+	(*Step_StepAction)(nil),              // 11: redsail.bosn.Step.StepAction
+	(*Step_StepAction_Docker)(nil),       // 12: redsail.bosn.Step.StepAction.Docker
+	(*Step_StepAction_Helm)(nil),         // 13: redsail.bosn.Step.StepAction.Helm
 }
 var file_gyarados_proto_depIdxs = []int32{
-	7,  // 0: redsail.bosn.Delivery.application:type_name -> redsail.bosn.Delivery.Application
-	3,  // 1: redsail.bosn.Delivery.deployments:type_name -> redsail.bosn.Deployment
-	3,  // 2: redsail.bosn.Delivery.tests:type_name -> redsail.bosn.Deployment
-	4,  // 3: redsail.bosn.Delivery.triggers:type_name -> redsail.bosn.Trigger
-	5,  // 4: redsail.bosn.Delivery.strategy:type_name -> redsail.bosn.Step
-	8,  // 5: redsail.bosn.Deployment.docker:type_name -> redsail.bosn.Deployment.Docker
-	9,  // 6: redsail.bosn.Deployment.helm:type_name -> redsail.bosn.Deployment.Helm
-	10, // 7: redsail.bosn.Trigger.approval:type_name -> redsail.bosn.Trigger.Approval
-	11, // 8: redsail.bosn.Trigger.delivery:type_name -> redsail.bosn.Trigger.Delivery
-	10, // 9: redsail.bosn.Trigger.manual:type_name -> redsail.bosn.Trigger.Approval
-	12, // 10: redsail.bosn.Trigger.web:type_name -> redsail.bosn.Trigger.Web
-	13, // 11: redsail.bosn.Step.success:type_name -> redsail.bosn.Step.StepAction
-	13, // 12: redsail.bosn.Step.failure:type_name -> redsail.bosn.Step.StepAction
-	13, // 13: redsail.bosn.Step.any:type_name -> redsail.bosn.Step.StepAction
-	13, // 14: redsail.bosn.Step.always:type_name -> redsail.bosn.Step.StepAction
-	1,  // 15: redsail.bosn.Template.type:type_name -> redsail.bosn.Template.TemplateType
-	14, // 16: redsail.bosn.Step.StepAction.docker:type_name -> redsail.bosn.Step.StepAction.Docker
-	15, // 17: redsail.bosn.Step.StepAction.helm:type_name -> redsail.bosn.Step.StepAction.Helm
-	0,  // 18: redsail.bosn.Step.StepAction.Helm.type:type_name -> redsail.bosn.Step.StepAction.Helm.HelmAction
-	19, // [19:19] is the sub-list for method output_type
-	19, // [19:19] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	5,  // 0: redsail.bosn.Delivery.application:type_name -> redsail.bosn.Delivery.Application
+	2,  // 1: redsail.bosn.Delivery.deployments:type_name -> redsail.bosn.Deployment
+	2,  // 2: redsail.bosn.Delivery.tests:type_name -> redsail.bosn.Deployment
+	3,  // 3: redsail.bosn.Delivery.triggers:type_name -> redsail.bosn.Trigger
+	4,  // 4: redsail.bosn.Delivery.strategy:type_name -> redsail.bosn.Step
+	6,  // 5: redsail.bosn.Deployment.docker:type_name -> redsail.bosn.Deployment.Docker
+	7,  // 6: redsail.bosn.Deployment.helm:type_name -> redsail.bosn.Deployment.Helm
+	8,  // 7: redsail.bosn.Trigger.approval:type_name -> redsail.bosn.Trigger.Approval
+	9,  // 8: redsail.bosn.Trigger.delivery:type_name -> redsail.bosn.Trigger.Delivery
+	8,  // 9: redsail.bosn.Trigger.manual:type_name -> redsail.bosn.Trigger.Approval
+	10, // 10: redsail.bosn.Trigger.web:type_name -> redsail.bosn.Trigger.Web
+	11, // 11: redsail.bosn.Step.success:type_name -> redsail.bosn.Step.StepAction
+	11, // 12: redsail.bosn.Step.failure:type_name -> redsail.bosn.Step.StepAction
+	11, // 13: redsail.bosn.Step.any:type_name -> redsail.bosn.Step.StepAction
+	11, // 14: redsail.bosn.Step.always:type_name -> redsail.bosn.Step.StepAction
+	12, // 15: redsail.bosn.Step.StepAction.docker:type_name -> redsail.bosn.Step.StepAction.Docker
+	13, // 16: redsail.bosn.Step.StepAction.helm:type_name -> redsail.bosn.Step.StepAction.Helm
+	0,  // 17: redsail.bosn.Step.StepAction.Helm.type:type_name -> redsail.bosn.Step.StepAction.Helm.HelmAction
+	18, // [18:18] is the sub-list for method output_type
+	18, // [18:18] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_gyarados_proto_init() }
@@ -1474,18 +1339,6 @@ func file_gyarados_proto_init() {
 			}
 		}
 		file_gyarados_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Template); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_gyarados_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Delivery_Application); i {
 			case 0:
 				return &v.state
@@ -1497,7 +1350,7 @@ func file_gyarados_proto_init() {
 				return nil
 			}
 		}
-		file_gyarados_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+		file_gyarados_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Deployment_Docker); i {
 			case 0:
 				return &v.state
@@ -1509,7 +1362,7 @@ func file_gyarados_proto_init() {
 				return nil
 			}
 		}
-		file_gyarados_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+		file_gyarados_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Deployment_Helm); i {
 			case 0:
 				return &v.state
@@ -1521,7 +1374,7 @@ func file_gyarados_proto_init() {
 				return nil
 			}
 		}
-		file_gyarados_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+		file_gyarados_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Trigger_Approval); i {
 			case 0:
 				return &v.state
@@ -1533,7 +1386,7 @@ func file_gyarados_proto_init() {
 				return nil
 			}
 		}
-		file_gyarados_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+		file_gyarados_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Trigger_Delivery); i {
 			case 0:
 				return &v.state
@@ -1545,7 +1398,7 @@ func file_gyarados_proto_init() {
 				return nil
 			}
 		}
-		file_gyarados_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+		file_gyarados_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Trigger_Web); i {
 			case 0:
 				return &v.state
@@ -1557,7 +1410,7 @@ func file_gyarados_proto_init() {
 				return nil
 			}
 		}
-		file_gyarados_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+		file_gyarados_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Step_StepAction); i {
 			case 0:
 				return &v.state
@@ -1569,7 +1422,7 @@ func file_gyarados_proto_init() {
 				return nil
 			}
 		}
-		file_gyarados_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+		file_gyarados_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Step_StepAction_Docker); i {
 			case 0:
 				return &v.state
@@ -1581,7 +1434,7 @@ func file_gyarados_proto_init() {
 				return nil
 			}
 		}
-		file_gyarados_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+		file_gyarados_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Step_StepAction_Helm); i {
 			case 0:
 				return &v.state
@@ -1599,8 +1452,8 @@ func file_gyarados_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_gyarados_proto_rawDesc,
-			NumEnums:      2,
-			NumMessages:   14,
+			NumEnums:      1,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

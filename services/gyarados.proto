@@ -113,15 +113,3 @@ message Step {
     string arguments = 10;
 }
 
-message Template {
-    enum TemplateType {
-        deployment = 0;
-        step = 1;
-        trigger = 2;
-    }
-
-    string uuid = 1;
-    string name = 2;
-    TemplateType type = 3;
-    string yaml = 4;
-}

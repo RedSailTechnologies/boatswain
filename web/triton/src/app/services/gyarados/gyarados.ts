@@ -108,20 +108,3 @@ interface StepJSON {
 }
 
 
-export interface Template {
-    uuid: string;
-    name: string;
-    type: string;
-    yaml: string;
-    
-}
-
-interface TemplateJSON {
-    uuid: string;
-    name: string;
-    type: string;
-    yaml: string;
-    
-}
-
-

@@ -2,6 +2,8 @@ package cluster
 
 import "github.com/redsailtechnologies/boatswain/pkg/ddd"
 
+var entityName = "Cluster"
+
 // Created is the event for when a new cluster is created
 type Created struct {
 	Timestamp int64
@@ -40,8 +42,6 @@ type Updated struct {
 func (e Updated) EventType() string {
 	return entityName + "Updated"
 }
-
-var entityName = "Cluster"
 
 // Cluster represents a kubernetes cluster we are monitoring/deploying to
 type Cluster struct {

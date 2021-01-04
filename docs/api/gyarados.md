@@ -13,14 +13,12 @@
     - [Step.StepAction](#redsail.bosn.Step.StepAction)
     - [Step.StepAction.Docker](#redsail.bosn.Step.StepAction.Docker)
     - [Step.StepAction.Helm](#redsail.bosn.Step.StepAction.Helm)
-    - [Template](#redsail.bosn.Template)
     - [Trigger](#redsail.bosn.Trigger)
     - [Trigger.Approval](#redsail.bosn.Trigger.Approval)
     - [Trigger.Delivery](#redsail.bosn.Trigger.Delivery)
     - [Trigger.Web](#redsail.bosn.Trigger.Web)
   
     - [Step.StepAction.Helm.HelmAction](#redsail.bosn.Step.StepAction.Helm.HelmAction)
-    - [Template.TemplateType](#redsail.bosn.Template.TemplateType)
   
 - [Scalar Value Types](#scalar-value-types)
 
@@ -207,24 +205,6 @@ IMPORTANT: This service is undergoing rapid changes and is likely to be broken i
 
 
 
-<a name="redsail.bosn.Template"></a>
-
-### Template
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| uuid | [string](#string) |  |  |
-| name | [string](#string) |  |  |
-| type | [Template.TemplateType](#redsail.bosn.Template.TemplateType) |  |  |
-| yaml | [string](#string) |  |  |
-
-
-
-
-
-
 <a name="redsail.bosn.Trigger"></a>
 
 ### Trigger
@@ -309,19 +289,6 @@ IMPORTANT: This service is undergoing rapid changes and is likely to be broken i
 | upgrade | 1 |  |
 | rollback | 2 |  |
 | uninstall | 3 |  |
-
-
-
-<a name="redsail.bosn.Template.TemplateType"></a>
-
-### Template.TemplateType
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| deployment | 0 |  |
-| step | 1 |  |
-| trigger | 2 |  |
 
 
  

@@ -2,6 +2,8 @@ package repo
 
 import "github.com/redsailtechnologies/boatswain/pkg/ddd"
 
+var entityName = "Repo"
+
 // Created is the event for when a new repo is created
 type Created struct {
 	Timestamp int64
@@ -36,8 +38,6 @@ type Updated struct {
 func (e Updated) EventType() string {
 	return entityName + "Updated"
 }
-
-var entityName = "Repo"
 
 // Repo represents a repository, for now helm only
 type Repo struct {
