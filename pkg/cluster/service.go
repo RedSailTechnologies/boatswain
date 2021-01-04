@@ -178,6 +178,11 @@ func (s Service) All(ctx context.Context, req *pb.ReadClusters) (*pb.ClustersRea
 	return resp, nil
 }
 
+// Ready implements the ReadyService method so this service can be part of a health check routine
+func (s Service) Ready() error {
+	return s.repo.store.CheckReady()
+}
+
 func (c *Cluster) toClientset() (*kubernetes.Clientset, error) {
 	restConfig := &rest.Config{
 		Host:        c.Endpoint(),

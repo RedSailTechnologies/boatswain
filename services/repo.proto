@@ -3,7 +3,7 @@ Repo is the service managing external repositories, such as helm.
 */
 syntax = "proto3";
 package redsail.bosn;
-option go_package = "github.com/redsailtechnologies/boatswain/rpc/repo";
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/repo;repo";
 
 service Repo {
     // adds a repo to the list of configurations

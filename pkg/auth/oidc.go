@@ -81,38 +81,38 @@ func (o *OIDCAgent) Authenticate(ctx context.Context) (context.Context, error) {
 	tokenVal := ctx.Value(o.jwtKey)
 	if tokenVal == nil {
 		logger.Warn("jwt token not found")
-		return nil, AuthenticationError{}
+		return ctx, AuthenticationError{}
 	}
 	token := tokenVal.(string)
 
 	parsedToken, err := jwt.ParseSigned(token)
 	if err != nil {
 		logger.Error("couldn't parse signed jwt", "error", err)
-		return nil, AuthenticationError{}
+		return ctx, AuthenticationError{}
 	}
 
 	if len(parsedToken.Headers) < 1 {
 		logger.Error("parsed token did not contain any headers", "token", parsedToken)
-		return nil, AuthenticationError{}
+		return ctx, AuthenticationError{}
 	}
 	keyID := parsedToken.Headers[0].KeyID
 
 	key, err := o.getJWK(keyID)
 	if err != nil {
 		logger.Error("couldn't get key to verify jwt", "error", err)
-		return nil, AuthenticationError{}
+		return ctx, AuthenticationError{}
 	}
 
 	user := User{}
 	err = parsedToken.Claims(key.Key, &user)
 	if err != nil {
 		logger.Error("couldn't parse user claims", "error", err)
-		return nil, AuthenticationError{}
+		return ctx, AuthenticationError{}
 	}
 
 	if err = user.validateScope(o.cfg.Scope); err != nil {
 		logger.Warn("error validating user scope", "error", err)
-		return nil, AuthenticationError{}
+		return ctx, AuthenticationError{}
 	}
 
 	return context.WithValue(ctx, o.userKey, user), nil

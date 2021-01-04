@@ -15,6 +15,15 @@ type mockStorage struct {
 	mock.Mock
 }
 
+func (ms *mockStorage) CheckReady() error {
+	args := ms.Called(collection)
+	err := args.Get(0)
+	if err != nil {
+		return err.(error)
+	}
+	return nil
+}
+
 func (ms *mockStorage) IDs(collection string) ([]string, error) {
 	args := ms.Called(collection)
 	err := args.Get(1)

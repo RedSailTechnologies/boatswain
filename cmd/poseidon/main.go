@@ -8,11 +8,13 @@ import (
 
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
+	"github.com/redsailtechnologies/boatswain/pkg/health"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/repo"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
+	hl "github.com/redsailtechnologies/boatswain/rpc/health"
 	rep "github.com/redsailtechnologies/boatswain/rpc/repo"
 )
 
@@ -34,6 +36,14 @@ func main() {
 
 	repo := repo.NewService(authAgent, helm.DefaultAgent{}, store)
 	repTwirp := rep.NewRepoServer(repo, hooks, twirp.WithServerPathPrefix("/api"))
+
+	health := health.NewService(repo)
+	healthTwirp := hl.NewHealthServer(health, twirp.WithServerPathPrefix("/health"))
+
+	mux := http.NewServeMux()
+	mux.Handle(repTwirp.PathPrefix(), repTwirp)
+	mux.Handle(healthTwirp.PathPrefix(), healthTwirp)
+
 	logger.Info("starting poseidon component...I am Poseidon!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, authAgent.Wrap(repTwirp)))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, authAgent.Wrap(mux)))
 }

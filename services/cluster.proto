@@ -3,7 +3,7 @@ Cluster is the service managing external clusters.
 */
 syntax = "proto3";
 package redsail.bosn;
-option go_package = "github.com/redsailtechnologies/boatswain/rpc/cluster";
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/cluster;cluster";
 
 service Cluster {
     // adds a cluster to the list of configurations
