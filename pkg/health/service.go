@@ -28,7 +28,7 @@ func (s Service) Live(context.Context, *pb.CheckLive) (*pb.LiveCheck, error) {
 }
 
 // Ready gets if the server is ready for traffic
-func (s Service) Ready(ctx context.Context, req *pb.CheckReady) (*pb.ReadyCheck, error) {
+func (s Service) Ready(context.Context, *pb.CheckReady) (*pb.ReadyCheck, error) {
 	// for ready we wanna do a bit more-the services we get passed in the
 	// new method give us a list of services to ready over
 	for _, svc := range s.services {
