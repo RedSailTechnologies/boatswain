@@ -61,7 +61,7 @@ spec:
               command:
                 - sh
                 - -c
-                - 'wget -O- --post-data=''{}'' --header=''Content-Type:application/json'' http://localhost:8080/health/redsail.bosn.Health/Live'
+                - 'wget -O- --post-data=''{}'' --header=''Content-Type:application/json'' http://localhost:8080/health/redsail.bosn.Health/Ready'
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
