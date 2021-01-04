@@ -101,6 +101,11 @@ func (s Service) All(ctx context.Context, req *pb.ReadApplications) (*pb.Applica
 	return response, nil
 }
 
+// Ready implements the ReadyService method so this service can be part of a health check routine
+func (s Service) Ready() error {
+	return nil
+}
+
 func addApplication(resp *pb.ApplicationsRead, name, partOf, version, cluster, namespace string, ready bool) {
 	if name == "" || partOf == "" {
 		return
