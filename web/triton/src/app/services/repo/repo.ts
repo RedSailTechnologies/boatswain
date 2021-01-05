@@ -5,12 +5,14 @@ import {createTwirpRequest, throwTwirpError, Fetch} from './twirp';
 export interface CreateRepo {
     name: string;
     endpoint: string;
+    type: string;
     
 }
 
 interface CreateRepoJSON {
     name: string;
     endpoint: string;
+    type: string;
     
 }
 
@@ -19,6 +21,7 @@ const CreateRepoToJSON = (m: CreateRepo): CreateRepoJSON => {
     return {
         name: m.name,
         endpoint: m.endpoint,
+        type: m.type,
         
     };
 };
@@ -43,6 +46,7 @@ export interface UpdateRepo {
     uuid: string;
     name: string;
     endpoint: string;
+    type: string;
     
 }
 
@@ -50,6 +54,7 @@ interface UpdateRepoJSON {
     uuid: string;
     name: string;
     endpoint: string;
+    type: string;
     
 }
 
@@ -59,6 +64,7 @@ const UpdateRepoToJSON = (m: UpdateRepo): UpdateRepoJSON => {
         uuid: m.uuid,
         name: m.name,
         endpoint: m.endpoint,
+        type: m.type,
         
     };
 };
@@ -135,6 +141,7 @@ export interface RepoRead {
     uuid: string;
     name: string;
     endpoint: string;
+    type: string;
     ready: boolean;
     
 }
@@ -143,6 +150,7 @@ interface RepoReadJSON {
     uuid: string;
     name: string;
     endpoint: string;
+    type: string;
     ready: boolean;
     
 }
@@ -154,6 +162,7 @@ const JSONToRepoRead = (m: RepoRead | RepoReadJSON): RepoRead => {
         uuid: m.uuid,
         name: m.name,
         endpoint: m.endpoint,
+        type: m.type,
         ready: m.ready,
         
     };
@@ -246,6 +255,24 @@ const JSONToVersionRead = (m: VersionRead | VersionReadJSON): VersionRead => {
     };
 };
 
+export interface ReadCharts {
+    repoId: string;
+    
+}
+
+interface ReadChartsJSON {
+    repo_id: string;
+    
+}
+
+
+const ReadChartsToJSON = (m: ReadCharts): ReadChartsJSON => {
+    return {
+        repo_id: m.repoId,
+        
+    };
+};
+
 export interface ChartsRead {
     charts: ChartRead[];
     
@@ -276,7 +303,7 @@ export interface Repo {
     
     all: (readRepos: ReadRepos) => Promise<ReposRead>;
     
-    charts: (readRepo: ReadRepo) => Promise<ChartsRead>;
+    charts: (readCharts: ReadCharts) => Promise<ChartsRead>;
     
 }
 
@@ -366,11 +393,11 @@ export class DefaultRepo implements Repo {
         });
     }
     
-    charts(readRepo: ReadRepo): Promise<ChartsRead> {
+    charts(readCharts: ReadCharts): Promise<ChartsRead> {
         const url = this.hostname + this.pathPrefix + "Charts";
-        let body: ReadRepo | ReadRepoJSON = readRepo;
+        let body: ReadCharts | ReadChartsJSON = readCharts;
         if (!this.writeCamelCase) {
-            body = ReadRepoToJSON(readRepo);
+            body = ReadChartsToJSON(readCharts);
         }
         return this.fetch(createTwirpRequest(url, body)).then((resp) => {
             if (!resp.ok) {

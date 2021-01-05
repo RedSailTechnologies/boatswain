@@ -21,13 +21,18 @@ service Repo {
     // gets all repos currently configured and their status
     rpc All (ReadRepos) returns (ReposRead);
 
-    // gets all the charts for this repository
-    rpc Charts (ReadRepo) returns (ChartsRead);
+    // gets all the charts for this helm repository
+    rpc Charts (ReadCharts) returns (ChartsRead);
+
+    // gets the contents of a file from this git repository
+    // note: mostly used internally
+    // rpc File (ReadFile) returns (FileRead);
 }
 
 message CreateRepo {
     string name = 1; // name of the repo
     string endpoint = 2; // repo endpoint
+    RepoType type = 3; // type of repo
 }
 
 message RepoCreated {}
@@ -36,6 +41,7 @@ message UpdateRepo {
     string uuid = 1; // unique id of the repo
     string name = 2; // name of the repo
     string endpoint = 3; // repo endpoint
+    RepoType type = 4; // type of repo
 }
 
 message RepoUpdated {}
@@ -54,6 +60,7 @@ message RepoRead {
     string uuid = 1; // unique id of the repo
     string name = 2; // name of the repo
     string endpoint = 3; // repo endpoint
+    RepoType type = 4; // type of repo
     bool ready = 6; // repo ready status, based on whether index.yaml can be fetched
 }
 
@@ -76,6 +83,25 @@ message VersionRead {
     string url = 5; // the url for this specific version of the chart
 }
 
+message ReadCharts {
+    string repo_id = 1; // unique id of the repo
+}
+
 message ChartsRead {
     repeated ChartRead charts = 1; // the list of charts
+}
+
+// message ReadFile {
+//     string repo = 1; // repo name to read from
+//     string branch = 2; // the branch to read the file from
+//     string file_path = 3; // relative path to the file
+// }
+
+// message FileRead {
+//     bytes file = 1; // the contents of the file read
+// }
+
+enum RepoType{
+    HELM = 0;
+    GIT = 1;
 }

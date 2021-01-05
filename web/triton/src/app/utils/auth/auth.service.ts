@@ -19,7 +19,7 @@ export class AuthService {
   public static IN_PROGRESS: boolean = (sessionStorage.getItem(actionKey) ?? "false") != "false";
   public events: EventEmitter<User> = new EventEmitter<User>();
 
-  constructor(private router: Router, private configService: ConfigService) {
+  constructor(private router: Router, configService: ConfigService) {
     if (AuthService.settings == null) {
       const config = configService.getOIDC();
       AuthService.settings = {
@@ -33,7 +33,6 @@ export class AuthService {
         filterProtocolClaims: true,
         loadUserInfo: false
       };
-      console.log(AuthService.settings);
     }
     this.mgr = new UserManager(AuthService.settings);
 
@@ -53,6 +52,7 @@ export class AuthService {
     if (this.user == null) {
       return null;
     }
+    console.log(`${this.user.token_type} ${this.user.access_token}`);
     return `${this.user.token_type} ${this.user.access_token}`;
   }
 

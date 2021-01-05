@@ -40,7 +40,7 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreate
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, ddd.NewTimestamp())
+	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, RepoType(cmd.Type), ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "could not create Repo")
@@ -67,7 +67,7 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdate
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
-	err = r.Update(cmd.Name, cmd.Endpoint, ddd.NewTimestamp())
+	err = r.Update(cmd.Name, cmd.Endpoint, RepoType(cmd.Type), ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error updating Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "Repo could not be updated")
@@ -135,6 +135,7 @@ func (s Service) Read(ctx context.Context, req *pb.ReadRepo) (*pb.RepoRead, erro
 		Uuid:     r.UUID(),
 		Name:     r.Name(),
 		Endpoint: r.Endpoint(),
+		Type:     pb.RepoType(r.Type()),
 		Ready:    s.helm.CheckIndex(cr),
 	}, nil
 }
@@ -166,6 +167,7 @@ func (s Service) All(ctx context.Context, req *pb.ReadRepos) (*pb.ReposRead, err
 			Uuid:     r.UUID(),
 			Name:     r.Name(),
 			Endpoint: r.Endpoint(),
+			Type:     pb.RepoType(r.Type()),
 			Ready:    s.helm.CheckIndex(cr),
 		})
 	}
@@ -173,8 +175,8 @@ func (s Service) All(ctx context.Context, req *pb.ReadRepos) (*pb.ReposRead, err
 }
 
 // Charts gets all the charts for this repository
-func (s Service) Charts(ctx context.Context, req *pb.ReadRepo) (*pb.ChartsRead, error) {
-	r, err := s.repo.Load(req.Uuid)
+func (s Service) Charts(ctx context.Context, req *pb.ReadCharts) (*pb.ChartsRead, error) {
+	r, err := s.repo.Load(req.RepoId)
 	if err != nil {
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}

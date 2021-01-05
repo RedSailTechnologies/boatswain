@@ -8,6 +8,7 @@
     - [ChartsRead](#redsail.bosn.ChartsRead)
     - [CreateRepo](#redsail.bosn.CreateRepo)
     - [DestroyRepo](#redsail.bosn.DestroyRepo)
+    - [ReadCharts](#redsail.bosn.ReadCharts)
     - [ReadRepo](#redsail.bosn.ReadRepo)
     - [ReadRepos](#redsail.bosn.ReadRepos)
     - [RepoCreated](#redsail.bosn.RepoCreated)
@@ -17,6 +18,8 @@
     - [ReposRead](#redsail.bosn.ReposRead)
     - [UpdateRepo](#redsail.bosn.UpdateRepo)
     - [VersionRead](#redsail.bosn.VersionRead)
+  
+    - [RepoType](#redsail.bosn.RepoType)
   
     - [Repo](#redsail.bosn.Repo)
   
@@ -72,6 +75,7 @@ Repo is the service managing external repositories, such as helm.
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  | name of the repo |
 | endpoint | [string](#string) |  | repo endpoint |
+| type | [RepoType](#redsail.bosn.RepoType) |  | type of repo |
 
 
 
@@ -87,6 +91,21 @@ Repo is the service managing external repositories, such as helm.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | uuid | [string](#string) |  | unique id of the repo |
+
+
+
+
+
+
+<a name="redsail.bosn.ReadCharts"></a>
+
+### ReadCharts
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| repo_id | [string](#string) |  | unique id of the repo |
 
 
 
@@ -149,6 +168,7 @@ Repo is the service managing external repositories, such as helm.
 | uuid | [string](#string) |  | unique id of the repo |
 | name | [string](#string) |  | name of the repo |
 | endpoint | [string](#string) |  | repo endpoint |
+| type | [RepoType](#redsail.bosn.RepoType) |  | type of repo |
 | ready | [bool](#bool) |  | repo ready status, based on whether index.yaml can be fetched |
 
 
@@ -192,6 +212,7 @@ Repo is the service managing external repositories, such as helm.
 | uuid | [string](#string) |  | unique id of the repo |
 | name | [string](#string) |  | name of the repo |
 | endpoint | [string](#string) |  | repo endpoint |
+| type | [RepoType](#redsail.bosn.RepoType) |  | type of repo |
 
 
 
@@ -218,6 +239,18 @@ Repo is the service managing external repositories, such as helm.
 
  
 
+
+<a name="redsail.bosn.RepoType"></a>
+
+### RepoType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| HELM | 0 |  |
+| GIT | 1 |  |
+
+
  
 
  
@@ -235,7 +268,7 @@ Repo is the service managing external repositories, such as helm.
 | Destroy | [DestroyRepo](#redsail.bosn.DestroyRepo) | [RepoDestroyed](#redsail.bosn.RepoDestroyed) | removes a repo from the list of configurations |
 | Read | [ReadRepo](#redsail.bosn.ReadRepo) | [RepoRead](#redsail.bosn.RepoRead) | reads out a repo |
 | All | [ReadRepos](#redsail.bosn.ReadRepos) | [ReposRead](#redsail.bosn.ReposRead) | gets all repos currently configured and their status |
-| Charts | [ReadRepo](#redsail.bosn.ReadRepo) | [ChartsRead](#redsail.bosn.ChartsRead) | gets all the charts for this repository |
+| Charts | [ReadCharts](#redsail.bosn.ReadCharts) | [ChartsRead](#redsail.bosn.ChartsRead) | gets all the charts for this helm repository |
 
  
 

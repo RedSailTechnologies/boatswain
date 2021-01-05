@@ -4,6 +4,7 @@ import {
   ChartRead,
   Repo,
   DefaultRepo,
+  ReadCharts,
 } from 'src/app/services/repo/repo';
 import { RepoDialogComponent } from 'src/app/dialogs/repo-dialog/repo-dialog.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -114,7 +115,7 @@ export class ReposComponent implements OnInit {
           value.repos.forEach((repo) => {
             if (repo.ready) {
               this.client
-                .charts(repo)
+                .charts(<ReadCharts>{repoId: repo.uuid})
                 .then((results) => {
                   this.charts.set(repo, results.charts);
                 })
