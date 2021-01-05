@@ -52,7 +52,6 @@ export class AuthService {
     if (this.user == null) {
       return null;
     }
-    console.log(`${this.user.token_type} ${this.user.access_token}`);
     return `${this.user.token_type} ${this.user.access_token}`;
   }
 

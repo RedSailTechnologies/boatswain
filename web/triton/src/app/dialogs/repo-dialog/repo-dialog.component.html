@@ -22,12 +22,11 @@
         </mat-form-field>
         <br />
         <mat-form-field>
-            <mat-label>Type</mat-label>
-            <select matNativeControl formControlName="type">
-                <option *ngFor="let type of repoTypes">
+            <mat-select required placeholder="Type" formControlName="type">
+                <mat-option *ngFor="let type of repoTypes" [value]="type">
                     {{type}}
-                </option>
-            </select>
+                </mat-option>
+            </mat-select>
         </mat-form-field>
     </form>
     <br />

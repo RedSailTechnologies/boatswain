@@ -1,8 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { RepoRead, ChartRead, Repo, DefaultRepo, UpdateRepo, CreateRepo } from 'src/app/services/repo/repo';
-import * as fetch from 'isomorphic-fetch';
+import { RepoRead, Repo, DefaultRepo, UpdateRepo, CreateRepo } from 'src/app/services/repo/repo';
 import { BusyComponent } from '../busy/busy.component';
 import { MessageDialogComponent } from '../message-dialog/message-dialog.component';
 import { AuthService } from 'src/app/utils/auth/auth.service';
@@ -16,7 +15,7 @@ export class RepoDialogComponent implements OnInit {
   private client: Repo;
   private repo: RepoRead;
   
-  public repoTypes = ["HELM", "GIT"];
+  public repoTypes: string[] = ["HELM", "GIT"];
   public repoForm: FormGroup = new FormGroup({
     name: new FormControl(''),
     endpoint: new FormControl(''),
@@ -36,6 +35,8 @@ export class RepoDialogComponent implements OnInit {
       this.repo = data["repo"];
       this.repoForm.controls["name"].setValue(this.repo.name);
       this.repoForm.controls["endpoint"].setValue(this.repo.endpoint);
+      this.repoForm.controls["type"].setValue(this.repo.type);
+      console.log(this.repoForm.controls["type"].value)
     }
     this.client = new DefaultRepo(`${location.protocol}//${location.host}/api`, auth.fetch());
   }
@@ -63,7 +64,7 @@ export class RepoDialogComponent implements OnInit {
         "uuid": this.repo != null ? this.repo.uuid : null,
         "name": this.repoForm.controls["name"].value,
         "endpoint": this.repoForm.controls["endpoint"].value,
-        "type": this.typeEnum(),
+        "type": <string><unknown>this.typeEnum(),
       };
       promise = this.client.create(repo);
     } else {
@@ -71,7 +72,7 @@ export class RepoDialogComponent implements OnInit {
         "uuid": this.repo != null ? this.repo.uuid : null,
         "name": this.repoForm.controls["name"].value,
         "endpoint": this.repoForm.controls["endpoint"].value,
-        "type": this.repoForm.controls["type"].value == "helm" ? "0" : "1",
+        "type": <string><unknown>this.typeEnum(),
       };
       promise = this.client.update(repo);
     }
