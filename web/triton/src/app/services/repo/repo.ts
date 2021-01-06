@@ -202,15 +202,37 @@ const JSONToReposRead = (m: ReposRead | ReposReadJSON): ReposRead => {
     };
 };
 
-export interface ChartRead {
+export interface ReadChart {
+    repoId: string;
     name: string;
-    versions: VersionRead[];
+    version: string;
+    
+}
+
+interface ReadChartJSON {
+    repo_id: string;
+    name: string;
+    version: string;
+    
+}
+
+
+const ReadChartToJSON = (m: ReadChart): ReadChartJSON => {
+    return {
+        repo_id: m.repoId,
+        name: m.name,
+        version: m.version,
+        
+    };
+};
+
+export interface ChartRead {
+    chart: string;
     
 }
 
 interface ChartReadJSON {
-    name: string;
-    versions: VersionReadJSON[];
+    chart: string;
     
 }
 
@@ -218,76 +240,50 @@ interface ChartReadJSON {
 const JSONToChartRead = (m: ChartRead | ChartReadJSON): ChartRead => {
     
     return {
-        name: m.name,
-        versions: (m.versions as (VersionRead | VersionReadJSON)[]).map(JSONToVersionRead),
+        chart: m.chart,
         
     };
 };
 
-export interface VersionRead {
-    name: string;
-    chartVersion: string;
-    appVersion: string;
-    description: string;
-    url: string;
-    
-}
-
-interface VersionReadJSON {
-    name: string;
-    chart_version: string;
-    app_version: string;
-    description: string;
-    url: string;
-    
-}
-
-
-const JSONToVersionRead = (m: VersionRead | VersionReadJSON): VersionRead => {
-    
-    return {
-        name: m.name,
-        chartVersion: (((m as VersionRead).chartVersion) ? (m as VersionRead).chartVersion : (m as VersionReadJSON).chart_version),
-        appVersion: (((m as VersionRead).appVersion) ? (m as VersionRead).appVersion : (m as VersionReadJSON).app_version),
-        description: m.description,
-        url: m.url,
-        
-    };
-};
-
-export interface ReadCharts {
+export interface ReadFile {
     repoId: string;
+    branch: string;
+    filePath: string;
     
 }
 
-interface ReadChartsJSON {
+interface ReadFileJSON {
     repo_id: string;
+    branch: string;
+    file_path: string;
     
 }
 
 
-const ReadChartsToJSON = (m: ReadCharts): ReadChartsJSON => {
+const ReadFileToJSON = (m: ReadFile): ReadFileJSON => {
     return {
         repo_id: m.repoId,
+        branch: m.branch,
+        file_path: m.filePath,
         
     };
 };
 
-export interface ChartsRead {
-    charts: ChartRead[];
+export interface FileRead {
+    file: string;
     
 }
 
-interface ChartsReadJSON {
-    charts: ChartReadJSON[];
+interface FileReadJSON {
+    file: string;
     
 }
 
 
-const JSONToChartsRead = (m: ChartsRead | ChartsReadJSON): ChartsRead => {
+const JSONToFileRead = (m: FileRead | FileReadJSON): FileRead => {
     
     return {
-        charts: (m.charts as (ChartRead | ChartReadJSON)[]).map(JSONToChartRead),
+        file: m.file,
         
     };
 };
@@ -303,7 +299,9 @@ export interface Repo {
     
     all: (readRepos: ReadRepos) => Promise<ReposRead>;
     
-    charts: (readCharts: ReadCharts) => Promise<ChartsRead>;
+    chart: (readChart: ReadChart) => Promise<ChartRead>;
+    
+    file: (readFile: ReadFile) => Promise<FileRead>;
     
 }
 
@@ -393,18 +391,33 @@ export class DefaultRepo implements Repo {
         });
     }
     
-    charts(readCharts: ReadCharts): Promise<ChartsRead> {
-        const url = this.hostname + this.pathPrefix + "Charts";
-        let body: ReadCharts | ReadChartsJSON = readCharts;
+    chart(readChart: ReadChart): Promise<ChartRead> {
+        const url = this.hostname + this.pathPrefix + "Chart";
+        let body: ReadChart | ReadChartJSON = readChart;
         if (!this.writeCamelCase) {
-            body = ReadChartsToJSON(readCharts);
+            body = ReadChartToJSON(readChart);
         }
         return this.fetch(createTwirpRequest(url, body)).then((resp) => {
             if (!resp.ok) {
                 return throwTwirpError(resp);
             }
 
-            return resp.json().then(JSONToChartsRead);
+            return resp.json().then(JSONToChartRead);
+        });
+    }
+    
+    file(readFile: ReadFile): Promise<FileRead> {
+        const url = this.hostname + this.pathPrefix + "File";
+        let body: ReadFile | ReadFileJSON = readFile;
+        if (!this.writeCamelCase) {
+            body = ReadFileToJSON(readFile);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToFileRead);
         });
     }
     

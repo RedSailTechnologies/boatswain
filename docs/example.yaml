@@ -2,13 +2,13 @@
 ### NOTES ###
 #############
 # Everything in an array other than the clusters list can be substituted for a template, to
-# include: deployments, tests, triggers, and strategies.
+# include: apps, tests, triggers, and strategies.
 
-# This means that a delivery can be an aggregation of a bunch of different templates, overwriting
+# This means that a deployment can be an aggregation of a bunch of different templates, overwriting
 # and specifying values as needed either by an input file or parameters from triggers
 
 # .Inputs vs .Parameters
-# Inputs come from merging a template with another file when setting up a delivery, or specified
+# Inputs come from merging a template with another file when setting up a deployment, or specified
 # when calling a template from another template. An easy way to think of them are compile-time variables.
 # Parameters on the other hand are decidedly runtime variables-coming from trigger inputs or manually
 # specified values at runtime.
@@ -18,58 +18,41 @@
 ### METADATA ###
 ################
 
-# the name of this delivery
-name: sample-app-canary
-
-# the version of this delivery, note this won't impact parts of the delivery
-# unless they use it but it should probably be unique for each delivery
+# the version of this deployment, note this won't impact parts of the deployment
+# unless they use it but it should probably be unique for each deployment
 version: ${{ .Parameters.version }}
 
-# found with app.kubernetes.io/name labels for the name and
-# app.kubernetes.io/part-of for the project
-application: 
-  name: sample-app
-  project: samples
-
-# the names of clusters currently configured in bosn
-# note these can be added through the ui or specified as a configuration file on installing bosn
+# the names of clusters currently configured in bosn - these can be added through 
+# the ui or specified as a configuration file on installing bosn but must be in
+# this list prior to execution of the deployment
 clusters:
   - dev
   - staging
 
-# deployments are one of the objects we can use in a strategy, meant for long-lived apps/changes
-deployments:
-  - name: sample-app # the name of the deployment, used with helm and with bosn output
-    helm: # can only specify either helm or docker
-      chart: sample-app # the name of the chart for the deployment
+# apps are one of the objects we can use in a strategy, meant for long-lived applications/changes
+apps:
+  - name: sample-app # the name of the app, used with helm and with bosn output
+    helm: # specifics of this application
+      chart: sample-app # the name of the chart for the app
       repo: myrepo # the name of the helm repo, note this must be configured in bosn
       version: ${{ .Parameters.sampleAppChartVersion }} # the version of the chart, note the template syntax
-  - name: sample-routing
-    helm:
-      chart: sample-routing
-      repo: myrepo
-      version: 1.0
-  # the name of another template in boatswain
-  - template: default-deployment
-    # this replaces the .Inputs object in the template called, templating must be quoted like below
-    arguments: ${{ .Inputs }}
-
-# tests are another deployment object we can use in a strategy, not meant to be long lived, but otherwise are
-# the same as deployments in their specs
-tests:
-  # tests can be specified much like a deployment, the expectation here is that
-  # this is a job or collection of jobs, and after the install with wait the tests should be done
-  - name: sample-app-tests
-    helm:
-      chart: sample-app-tests
-      repo: myrepo
-      version: ${{ .Params.testVersion }}
   
-  # tests can also be specified as just a single container, which bosn will make into a job when run
+  # the name of another template in boatswain, note the path@branch syntax
+  - template: path/to/default-app.yaml@branch
+    repo: git-repo # name of the git repo to find this template in
+    # these will populate in the template under the Inputs object
+    arguments:
+      version: '1.0' # example usage inside the template: ${{ .Inputs.version }}
+
+# tests are another object we can use in a strategy, not meant to be long lived, but otherwise are
+# the same as apps in their specs
+tests:
+  # tests can be specified much like an app, the expectation here is that this is a job or 
+  # collection of jobs, and after the install with wait the tests should be done
   - name: sample-app-load
-    docker:
-      image: docker.io/myrepo/sample-app-load
-      tag: ${{ .Params.testVersion }}
+    helm:
+      name: sample-app
+      timeout: 10m # similar to the --timeout flag for helm test, defaults to 5m
 
 
 #################
@@ -78,29 +61,17 @@ tests:
 
 # triggers are what start the strategy's execution, all must be met for the trigger to fire
 triggers:
-  # deliveries can trigger other deliveries
-  - delivery: 
-      name: another-app-canary # the other delivery's name
+  # deployments can trigger other deployments
+  - deployment: 
+      name: another-app-canary # the other deployment's name
       trigger: deploy-sample-app # the name of the trigger step, see below
   
-  # trigger a delivery by the rpc/json call, calling this delivery name and sending required params
+  # trigger a deployment by the rpc/json call, calling this deployment name and sending required params
   - web:
       name: mywebtrigger
-      params: []
-
-  # trigger a delivery by requiring a person or group's approval, may be a part of any condition, meant for
-  # requiring approval for a delivery with or without other conditions
-  - approval:
-      groups:
-        - group-name # groups that can approve/start this trigger
-      users: [] # same for groups but with users
-      # with an approval we can specify what params the user must set when approving or may overwrite
-      params:
-        - paramA
-        - paramB
+      params: {}
         
-  # trigger a delivery manually, which can only be a part of top level or conditions, meant for starting
-  # deliveries manually
+  # trigger a deployment manually
   - manual:
       groups: []
       users:
@@ -113,21 +84,23 @@ triggers:
 strategy:
   - name: deploy-app
     always:
-      # run a deployment from above
-      - deployment: sample-app
+      # run an app deployment from above
+      - app: sample-app
+        cluster: dev
         helm:
           type: upgrade # install, upgrade, rollback, uninstall - defaults to install
           values:
             # specify the values individually
             raw:
-              someValue: ${{ .Inputs.sampleApp.someValue }}
+              someValue: ${{ .Parameters.someValue }}
               # ...
           wait: true # whether to deploy helm with the wait flag, defaults to false
-          test: false # whether to run helm tests against this deployment, defaults to false
+          test: false # whether to run helm tests against this chart, defaults to false
 
-      # also run this deployment, note that within a strategy entry no guarantee is made about execution,
+      # also run this app deployment, note that within a strategy entry no guarantee is made about execution,
       # so this chart could be installed before the chart above
-      - deployment: sample-routing
+      - app: sample-routing
+        cluster: dev
         helm:
           values:
             # use part or all of a library chart as values
@@ -140,45 +113,46 @@ strategy:
           wait: false
           test: false
 
-  # following start we specify two conditions: success and failure (or optionally any for both)
-  # they are executed based on the previous entry's output but neither are required, however
-  # if a previous entry fails and no failure is marked for this entry, execution stops
+  # this step will run after the previous step, note that the success and failure
+  # conditions depend on all portions of the previous step
   - name: run-tests
-    hold: 10m # note that this wait is executed before any conditional execution starts
+    hold: 10m # a wait, executed before any conditional-defaults to 0m
     success:
-      - test: sample-app-load
-        # docker gets run as a helm job technically, but we give some of the same options
-        # as a normal docker run command
-        docker:
-          entrypoint: ./load-tests.sh
-          env: |
-            someEnv: ${{ .Inputs.sampleAppLoad.someEnv }}
-          rm: true
+      - test: sample-app-tests
     failure:
-      # failures have special values for helm and docker
-      - deployment: sample-app
+      - app: sample-app
         helm:
-          # whether or not to uninstall the deployment in question
+          # whether or not to uninstall the app in question
           # note that this takes precedence over rollback!
           type: uninstall
-      - deployment: sample-routing
+      - app: sample-routing
         helm:
           type: rollback
           version: 2
   
-  # run this step no matter what the previous condition was if the previous condition was run
-  - name: load-tests
+  - name: approvals
+    hold: 2h
     any:
-      - test: sample-app-tests
-        helm:
-          values: {}
-          wait: true # the default for tests as its expected they'll be removed on completion
-
+      # approvals are how specific parts of a deployment can require manual intervention
+      # note the hold happens before the approval is accepted but any parts of this step following
+      # the approval are gated
+      - approval:
+        groups:
+          - group-name # groups that can approve/start this trigger
+        users: [] # same for groups but with users
+        # with an approval we can specify what params the user must set when approving or may overwrite
+        params:
+          - paramA
+          - paramB
+      - test: runs-after-approval-is-met
+  
+  # run this step no matter what the previous condition was if the previous condition was run
+  - name: trigger-following
+    any:
       # send a trigger with this name, all other deliveries that listen to this pipeline's name
       # and for this trigger name will have that portion of their triggers met for execution
       - trigger: deploy-next-app
-  
-  
+
   # run this step always, regardless of whether the previous condition was run
   - name: cleanup
     always:

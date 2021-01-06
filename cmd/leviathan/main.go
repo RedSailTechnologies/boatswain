@@ -12,6 +12,7 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
+	"github.com/redsailtechnologies/boatswain/pkg/git"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
@@ -48,7 +49,7 @@ func main() {
 	application := application.NewService(authAgent, cluster, kube.DefaultAgent{})
 	appTwirp := app.NewApplicationServer(application, hooks, twirp.WithServerPathPrefix("/api"))
 
-	repo := repo.NewService(authAgent, helm.DefaultAgent{}, store)
+	repo := repo.NewService(authAgent, git.DefaultAgent{}, helm.DefaultAgent{}, store)
 	repTwirp := rep.NewRepoServer(repo, hooks, twirp.WithServerPathPrefix("/api"))
 
 	// Client

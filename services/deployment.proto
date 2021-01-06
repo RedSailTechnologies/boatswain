@@ -1,0 +1,75 @@
+/*
+Deployment is the service for creation and management of application installs/upgrades.
+*/
+syntax = "proto3";
+package redsail.bosn;
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/delivery;delivery";
+
+service Deployment {
+    // creates a new delivery
+    rpc Create (CreateDeployment) returns (DeploymentCreated);
+
+    // edits an already existing deployment
+    rpc Update (UpdateDeployment) returns (DeploymentUpdated);
+    
+    // removes a deployment from the list of configurations
+    rpc Destroy (DestroyDeployment) returns (DeploymentDestroyed);
+
+    // reads out a deployment
+    rpc Read (ReadDeployment) returns (DeploymentRead);
+    
+    // gets all deployments currently configured and their status
+    rpc All (ReadDeployments) returns (DeploymentsRead);
+}
+
+message CreateDeployment {
+    string name = 1; // the name of this deployment
+    string repo_id = 2; // the unique id of the repo to get the deployment yaml from
+    string branch = 3; // the branch from the repo to get the file from
+    string file_path = 4; // the path to the deployment file
+}
+
+message DeploymentCreated {}
+
+message UpdateDeployment {
+    string uuid = 1; // unique id of the deployment
+    string name = 2; // the name of this deployment
+    string repo_id = 3; // the unique id of the repo to get the deployment yaml from
+    string branch = 4; // the branch from the repo to get the file from
+    string file_path = 5; // the path to the deployment file
+}
+
+message DeploymentUpdated {}
+
+message DestroyDeployment {
+    string uuid = 1; // unique id of the deployment
+}
+
+message DeploymentDestroyed {}
+
+message ReadDeployment {
+    string uuid = 1; // unique id of the deployment
+}
+
+message DeploymentRead {
+    string uuid = 1; // unique id of the deployment
+    string name = 2; // the name of this deployment
+    string repo_id = 3; // the unique id of the repo to get the deployment yaml from
+    string repo_name = 4; // the name of the repo
+    string branch = 5; // the branch from the repo to get the file from
+    string file_path = 6; // the path to the deployment file
+    bytes yaml = 7; // the templated yaml of this deployment
+}
+
+message DeploymentReadSummary {
+    string uuid = 1; // unique id of the deployment
+    string name = 2; // name of the deployment
+    string repo_id = 3; // the name of the repo
+    string repo_name = 4; // the name of the repo
+}
+
+message ReadDeployments {}
+
+message DeploymentsRead {
+    repeated DeploymentReadSummary deployments = 1; // the list of deployments
+}

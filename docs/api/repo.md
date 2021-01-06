@@ -5,10 +5,11 @@
 
 - [repo.proto](#repo.proto)
     - [ChartRead](#redsail.bosn.ChartRead)
-    - [ChartsRead](#redsail.bosn.ChartsRead)
     - [CreateRepo](#redsail.bosn.CreateRepo)
     - [DestroyRepo](#redsail.bosn.DestroyRepo)
-    - [ReadCharts](#redsail.bosn.ReadCharts)
+    - [FileRead](#redsail.bosn.FileRead)
+    - [ReadChart](#redsail.bosn.ReadChart)
+    - [ReadFile](#redsail.bosn.ReadFile)
     - [ReadRepo](#redsail.bosn.ReadRepo)
     - [ReadRepos](#redsail.bosn.ReadRepos)
     - [RepoCreated](#redsail.bosn.RepoCreated)
@@ -17,7 +18,6 @@
     - [RepoUpdated](#redsail.bosn.RepoUpdated)
     - [ReposRead](#redsail.bosn.ReposRead)
     - [UpdateRepo](#redsail.bosn.UpdateRepo)
-    - [VersionRead](#redsail.bosn.VersionRead)
   
     - [RepoType](#redsail.bosn.RepoType)
   
@@ -42,23 +42,7 @@ Repo is the service managing external repositories, such as helm.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | the chart name |
-| versions | [VersionRead](#redsail.bosn.VersionRead) | repeated | the versions available for this chart |
-
-
-
-
-
-
-<a name="redsail.bosn.ChartsRead"></a>
-
-### ChartsRead
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| charts | [ChartRead](#redsail.bosn.ChartRead) | repeated | the list of charts |
+| chart | [bytes](#bytes) |  | the contents of the chart |
 
 
 
@@ -97,15 +81,49 @@ Repo is the service managing external repositories, such as helm.
 
 
 
-<a name="redsail.bosn.ReadCharts"></a>
+<a name="redsail.bosn.FileRead"></a>
 
-### ReadCharts
+### FileRead
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| file | [bytes](#bytes) |  | the contents of the file read |
+
+
+
+
+
+
+<a name="redsail.bosn.ReadChart"></a>
+
+### ReadChart
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | repo_id | [string](#string) |  | unique id of the repo |
+| name | [string](#string) |  | name of the chart |
+| version | [string](#string) |  | chart version |
+
+
+
+
+
+
+<a name="redsail.bosn.ReadFile"></a>
+
+### ReadFile
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| repo_id | [string](#string) |  | unique id of the repo |
+| branch | [string](#string) |  | the branch to read the file from |
+| file_path | [string](#string) |  | relative path to the file |
 
 
 
@@ -218,25 +236,6 @@ Repo is the service managing external repositories, such as helm.
 
 
 
-
-<a name="redsail.bosn.VersionRead"></a>
-
-### VersionRead
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | the name of the chart |
-| chart_version | [string](#string) |  | the chart version |
-| app_version | [string](#string) |  | the chart&#39;s default app version |
-| description | [string](#string) |  | description of the chart |
-| url | [string](#string) |  | the url for this specific version of the chart |
-
-
-
-
-
  
 
 
@@ -268,7 +267,8 @@ Repo is the service managing external repositories, such as helm.
 | Destroy | [DestroyRepo](#redsail.bosn.DestroyRepo) | [RepoDestroyed](#redsail.bosn.RepoDestroyed) | removes a repo from the list of configurations |
 | Read | [ReadRepo](#redsail.bosn.ReadRepo) | [RepoRead](#redsail.bosn.RepoRead) | reads out a repo |
 | All | [ReadRepos](#redsail.bosn.ReadRepos) | [ReposRead](#redsail.bosn.ReposRead) | gets all repos currently configured and their status |
-| Charts | [ReadCharts](#redsail.bosn.ReadCharts) | [ChartsRead](#redsail.bosn.ChartsRead) | gets all the charts for this helm repository |
+| Chart | [ReadChart](#redsail.bosn.ReadChart) | [ChartRead](#redsail.bosn.ChartRead) | gets a chart from this helm repository |
+| File | [ReadFile](#redsail.bosn.ReadFile) | [FileRead](#redsail.bosn.FileRead) | gets the contents of a file from this git repository |
 
  
 
