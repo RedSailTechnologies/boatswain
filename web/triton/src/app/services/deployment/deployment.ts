@@ -242,43 +242,6 @@ const JSONToDeploymentsRead = (m: DeploymentsRead | DeploymentsReadJSON): Deploy
     };
 };
 
-export interface TriggerDeployment {
-    name: string;
-    params: string;
-    
-}
-
-interface TriggerDeploymentJSON {
-    name: string;
-    params: string;
-    
-}
-
-
-const TriggerDeploymentToJSON = (m: TriggerDeployment): TriggerDeploymentJSON => {
-    return {
-        name: m.name,
-        params: m.params,
-        
-    };
-};
-
-export interface DeploymentTriggered {
-    
-}
-
-interface DeploymentTriggeredJSON {
-    
-}
-
-
-const JSONToDeploymentTriggered = (m: DeploymentTriggered | DeploymentTriggeredJSON): DeploymentTriggered => {
-    
-    return {
-        
-    };
-};
-
 export interface Deployment {
     create: (createDeployment: CreateDeployment) => Promise<DeploymentCreated>;
     
@@ -289,8 +252,6 @@ export interface Deployment {
     read: (readDeployment: ReadDeployment) => Promise<DeploymentRead>;
     
     all: (readDeployments: ReadDeployments) => Promise<DeploymentsRead>;
-    
-    trigger: (triggerDeployment: TriggerDeployment) => Promise<DeploymentTriggered>;
     
 }
 
@@ -377,21 +338,6 @@ export class DefaultDeployment implements Deployment {
             }
 
             return resp.json().then(JSONToDeploymentsRead);
-        });
-    }
-    
-    trigger(triggerDeployment: TriggerDeployment): Promise<DeploymentTriggered> {
-        const url = this.hostname + this.pathPrefix + "Trigger";
-        let body: TriggerDeployment | TriggerDeploymentJSON = triggerDeployment;
-        if (!this.writeCamelCase) {
-            body = TriggerDeploymentToJSON(triggerDeployment);
-        }
-        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
-            if (!resp.ok) {
-                return throwTwirpError(resp);
-            }
-
-            return resp.json().then(JSONToDeploymentTriggered);
         });
     }
     

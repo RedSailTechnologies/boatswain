@@ -118,7 +118,7 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyRepo) (*pb.RepoDest
 
 // Read reads out a repo
 func (s Service) Read(ctx context.Context, req *pb.ReadRepo) (*pb.RepoRead, error) {
-	if err := s.auth.Authorize(ctx, auth.Editor); err != nil {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
@@ -145,6 +145,29 @@ func (s Service) Read(ctx context.Context, req *pb.ReadRepo) (*pb.RepoRead, erro
 		Type:     pb.RepoType(r.Type()),
 		Ready:    ready,
 	}, nil
+}
+
+// Find finds the repo uuid by name
+func (s Service) Find(ctx context.Context, req *pb.FindRepo) (*pb.RepoFound, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
+	repos, err := s.repo.All()
+	if err != nil {
+		logger.Error("error getting Repos", "error", err)
+		return nil, twirp.InternalError("error loading Repos")
+	}
+
+	for _, repo := range repos {
+		if repo.Name() == req.Name {
+			return &pb.RepoFound{
+				Uuid: repo.UUID(),
+			}, nil
+		}
+	}
+
+	return nil, twirp.NotFoundError("could not find repo with that name")
 }
 
 // All gets all repos currently configured and their status

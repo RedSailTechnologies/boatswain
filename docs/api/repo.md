@@ -8,12 +8,14 @@
     - [CreateRepo](#redsail.bosn.CreateRepo)
     - [DestroyRepo](#redsail.bosn.DestroyRepo)
     - [FileRead](#redsail.bosn.FileRead)
+    - [FindRepo](#redsail.bosn.FindRepo)
     - [ReadChart](#redsail.bosn.ReadChart)
     - [ReadFile](#redsail.bosn.ReadFile)
     - [ReadRepo](#redsail.bosn.ReadRepo)
     - [ReadRepos](#redsail.bosn.ReadRepos)
     - [RepoCreated](#redsail.bosn.RepoCreated)
     - [RepoDestroyed](#redsail.bosn.RepoDestroyed)
+    - [RepoFound](#redsail.bosn.RepoFound)
     - [RepoRead](#redsail.bosn.RepoRead)
     - [RepoUpdated](#redsail.bosn.RepoUpdated)
     - [ReposRead](#redsail.bosn.ReposRead)
@@ -96,6 +98,21 @@ Repo is the service managing external repositories, such as helm.
 
 
 
+<a name="redsail.bosn.FindRepo"></a>
+
+### FindRepo
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | the name of the repo to search for |
+
+
+
+
+
+
 <a name="redsail.bosn.ReadChart"></a>
 
 ### ReadChart
@@ -169,6 +186,21 @@ Repo is the service managing external repositories, such as helm.
 
 ### RepoDestroyed
 
+
+
+
+
+
+
+<a name="redsail.bosn.RepoFound"></a>
+
+### RepoFound
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| uuid | [string](#string) |  | unique id of the repo found |
 
 
 
@@ -266,6 +298,7 @@ Repo is the service managing external repositories, such as helm.
 | Update | [UpdateRepo](#redsail.bosn.UpdateRepo) | [RepoUpdated](#redsail.bosn.RepoUpdated) | edits an already existing repo |
 | Destroy | [DestroyRepo](#redsail.bosn.DestroyRepo) | [RepoDestroyed](#redsail.bosn.RepoDestroyed) | removes a repo from the list of configurations |
 | Read | [ReadRepo](#redsail.bosn.ReadRepo) | [RepoRead](#redsail.bosn.RepoRead) | reads out a repo |
+| Find | [FindRepo](#redsail.bosn.FindRepo) | [RepoFound](#redsail.bosn.RepoFound) | finds the repo uuid by name |
 | All | [ReadRepos](#redsail.bosn.ReadRepos) | [ReposRead](#redsail.bosn.ReposRead) | gets all repos currently configured and their status |
 | Chart | [ReadChart](#redsail.bosn.ReadChart) | [ChartRead](#redsail.bosn.ChartRead) | gets a chart from this helm repository |
 | File | [ReadFile](#redsail.bosn.ReadFile) | [FileRead](#redsail.bosn.FileRead) | gets the contents of a file from this git repository |

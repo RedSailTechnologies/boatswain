@@ -63,72 +63,76 @@ tests:
 triggers:
   # deployments can trigger other deployments
   - deployment: 
-      name: another-app-canary # the other deployment's name
-      trigger: deploy-sample-app # the name of the trigger step, see below
+      name: named-deploy-trigger # the other deployment's name
   
   # trigger a deployment by the rpc/json call, calling this deployment name and sending required params
   - web:
       name: mywebtrigger
-      params: {}
         
   # trigger a deployment manually
   - manual:
-      groups: []
+      groups:
+        - fun.squad
       users:
         - some.body
         - i.used
         - to.know
-      params: [] # with a manual trigger the person triggering must specify all required parameters
 
 # strategy is the backbone of the execution flow that specifies how deployments and tests are run
 strategy:
   - name: deploy-app
     always:
       # run an app deployment from above
-      - app: sample-app
-        cluster: dev
-        helm:
-          type: upgrade # install, upgrade, rollback, uninstall - defaults to install
-          values:
-            # specify the values individually
-            raw:
-              someValue: ${{ .Parameters.someValue }}
-              # ...
-          wait: true # whether to deploy helm with the wait flag, defaults to false
-          test: false # whether to run helm tests against this chart, defaults to false
+      - app: 
+          name: sample-app
+          cluster: dev
+          helm:
+            command: upgrade # install, upgrade, rollback, uninstall - defaults to install
+            wait: true # whether to deploy helm with the wait flag, defaults to false
+            values:
+              # specify the values individually
+              raw:
+                someValue: ${{ .Parameters.someValue }}
+                # ...
 
       # also run this app deployment, note that within a strategy entry no guarantee is made about execution,
       # so this chart could be installed before the chart above
-      - app: sample-routing
-        cluster: dev
-        helm:
-          values:
-            # use part or all of a library chart as values
-            library:
-              chart: sample-routing-values
-              repo: myrepo
-              version: 1.0
-              files:
-                - sample-app.yaml
-          wait: false
-          test: false
+      - app: 
+          name: sample-routing
+          cluster: dev
+          helm:
+            wait: false
+            values:
+              # use part or all of a library chart as values
+              library:
+                chart: sample-routing-values
+                repo: myrepo
+                version: '1.0'
+                files:
+                  - sample-app.yaml
 
   # this step will run after the previous step, note that the success and failure
   # conditions depend on all portions of the previous step
   - name: run-tests
     hold: 10m # a wait, executed before any conditional-defaults to 0m
     success:
-      - test: sample-app-tests
+      - test: 
+          name: sample-app-tests
+          cluster: dev
     failure:
-      - app: sample-app
-        helm:
-          # whether or not to uninstall the app in question
-          # note that this takes precedence over rollback!
-          type: uninstall
-      - app: sample-routing
-        helm:
-          type: rollback
-          version: 2
+      - app: 
+          name: sample-app
+          cluster: dev
+          helm:
+            # whether or not to uninstall the app in question
+            # note that this takes precedence over rollback!
+            command: uninstall
+      - app: 
+          name: sample-routing
+          cluster: dev
+          helm:
+            command: rollback
+            version: 2
   
   - name: approvals
     hold: 2h
@@ -137,26 +141,30 @@ strategy:
       # note the hold happens before the approval is accepted but any parts of this step following
       # the approval are gated
       - approval:
-        groups:
-          - group-name # groups that can approve/start this trigger
-        users: [] # same for groups but with users
-        # with an approval we can specify what params the user must set when approving or may overwrite
-        params:
-          - paramA
-          - paramB
-      - test: runs-after-approval-is-met
+          groups:
+            - group-name # groups that can approve/start this trigger
+          users: 
+            - some-body # same for groups but with users
+      - test: 
+          name: runs-after-approval-is-met
+          cluster: dev
   
   # run this step no matter what the previous condition was if the previous condition was run
   - name: trigger-following
     any:
-      # send a trigger with this name, all other deliveries that listen to this pipeline's name
-      # and for this trigger name will have that portion of their triggers met for execution
-      - trigger: deploy-next-app
+      # trigger another deployment by using its name and the trigger name
+      - trigger:
+          name: another-app-deployment-trigger
+          deployment: another-app
+          arguments: 
+            a: b
 
   # run this step always, regardless of whether the previous condition was run
   - name: cleanup
     always:
-      - deployment: sample-app
-        helm: 
-          values: {}
-          wait: true
+      - app: 
+          name: sample-app
+          cluster: staging
+          helm: 
+            wait: true
+ 

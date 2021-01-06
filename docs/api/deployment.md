@@ -9,13 +9,11 @@
     - [DeploymentDestroyed](#redsail.bosn.DeploymentDestroyed)
     - [DeploymentRead](#redsail.bosn.DeploymentRead)
     - [DeploymentReadSummary](#redsail.bosn.DeploymentReadSummary)
-    - [DeploymentTriggered](#redsail.bosn.DeploymentTriggered)
     - [DeploymentUpdated](#redsail.bosn.DeploymentUpdated)
     - [DeploymentsRead](#redsail.bosn.DeploymentsRead)
     - [DestroyDeployment](#redsail.bosn.DestroyDeployment)
     - [ReadDeployment](#redsail.bosn.ReadDeployment)
     - [ReadDeployments](#redsail.bosn.ReadDeployments)
-    - [TriggerDeployment](#redsail.bosn.TriggerDeployment)
     - [UpdateDeployment](#redsail.bosn.UpdateDeployment)
   
     - [Deployment](#redsail.bosn.Deployment)
@@ -108,16 +106,6 @@ Deployment is the service for creation and management of application installs/up
 
 
 
-<a name="redsail.bosn.DeploymentTriggered"></a>
-
-### DeploymentTriggered
-
-
-
-
-
-
-
 <a name="redsail.bosn.DeploymentUpdated"></a>
 
 ### DeploymentUpdated
@@ -183,22 +171,6 @@ Deployment is the service for creation and management of application installs/up
 
 
 
-<a name="redsail.bosn.TriggerDeployment"></a>
-
-### TriggerDeployment
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | the name of the deployment trigger to fire |
-| params | [bytes](#bytes) |  | parameters for the deployment |
-
-
-
-
-
-
 <a name="redsail.bosn.UpdateDeployment"></a>
 
 ### UpdateDeployment
@@ -236,7 +208,6 @@ Deployment is the service for creation and management of application installs/up
 | Destroy | [DestroyDeployment](#redsail.bosn.DestroyDeployment) | [DeploymentDestroyed](#redsail.bosn.DeploymentDestroyed) | removes a deployment from the list of configurations |
 | Read | [ReadDeployment](#redsail.bosn.ReadDeployment) | [DeploymentRead](#redsail.bosn.DeploymentRead) | reads out a deployment |
 | All | [ReadDeployments](#redsail.bosn.ReadDeployments) | [DeploymentsRead](#redsail.bosn.DeploymentsRead) | gets all deployments currently configured and their status |
-| Trigger | [TriggerDeployment](#redsail.bosn.TriggerDeployment) | [DeploymentTriggered](#redsail.bosn.DeploymentTriggered) | triggers a deployment |
 
  
 

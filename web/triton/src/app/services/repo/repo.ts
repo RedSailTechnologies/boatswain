@@ -168,6 +168,43 @@ const JSONToRepoRead = (m: RepoRead | RepoReadJSON): RepoRead => {
     };
 };
 
+export interface FindRepo {
+    name: string;
+    
+}
+
+interface FindRepoJSON {
+    name: string;
+    
+}
+
+
+const FindRepoToJSON = (m: FindRepo): FindRepoJSON => {
+    return {
+        name: m.name,
+        
+    };
+};
+
+export interface RepoFound {
+    uuid: string;
+    
+}
+
+interface RepoFoundJSON {
+    uuid: string;
+    
+}
+
+
+const JSONToRepoFound = (m: RepoFound | RepoFoundJSON): RepoFound => {
+    
+    return {
+        uuid: m.uuid,
+        
+    };
+};
+
 export interface ReadRepos {
     
 }
@@ -297,6 +334,8 @@ export interface Repo {
     
     read: (readRepo: ReadRepo) => Promise<RepoRead>;
     
+    find: (findRepo: FindRepo) => Promise<RepoFound>;
+    
     all: (readRepos: ReadRepos) => Promise<ReposRead>;
     
     chart: (readChart: ReadChart) => Promise<ChartRead>;
@@ -373,6 +412,21 @@ export class DefaultRepo implements Repo {
             }
 
             return resp.json().then(JSONToRepoRead);
+        });
+    }
+    
+    find(findRepo: FindRepo): Promise<RepoFound> {
+        const url = this.hostname + this.pathPrefix + "Find";
+        let body: FindRepo | FindRepoJSON = findRepo;
+        if (!this.writeCamelCase) {
+            body = FindRepoToJSON(findRepo);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToRepoFound);
         });
     }
     

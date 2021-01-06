@@ -18,6 +18,9 @@ service Repo {
     // reads out a repo
     rpc Read (ReadRepo) returns (RepoRead);
     
+    // finds the repo uuid by name
+    rpc Find (FindRepo) returns (RepoFound);
+    
     // gets all repos currently configured and their status
     rpc All (ReadRepos) returns (ReposRead);
 
@@ -61,6 +64,14 @@ message RepoRead {
     string endpoint = 3; // repo endpoint
     RepoType type = 4; // type of repo
     bool ready = 6; // repo ready status, based on whether index.yaml can be fetched
+}
+
+message FindRepo {
+    string name = 1; // the name of the repo to search for
+}
+
+message RepoFound {
+    string uuid = 1; //unique id of the repo found
 }
 
 message ReadRepos {}

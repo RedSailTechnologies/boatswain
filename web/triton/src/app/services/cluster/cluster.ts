@@ -177,6 +177,43 @@ const JSONToClusterRead = (m: ClusterRead | ClusterReadJSON): ClusterRead => {
     };
 };
 
+export interface FindCluster {
+    name: string;
+    
+}
+
+interface FindClusterJSON {
+    name: string;
+    
+}
+
+
+const FindClusterToJSON = (m: FindCluster): FindClusterJSON => {
+    return {
+        name: m.name,
+        
+    };
+};
+
+export interface ClusterFound {
+    uuid: string;
+    
+}
+
+interface ClusterFoundJSON {
+    uuid: string;
+    
+}
+
+
+const JSONToClusterFound = (m: ClusterFound | ClusterFoundJSON): ClusterFound => {
+    
+    return {
+        uuid: m.uuid,
+        
+    };
+};
+
 export interface ReadClusters {
     
 }
@@ -219,6 +256,8 @@ export interface Cluster {
     destroy: (destroyCluster: DestroyCluster) => Promise<ClusterDestroyed>;
     
     read: (readCluster: ReadCluster) => Promise<ClusterRead>;
+    
+    find: (findCluster: FindCluster) => Promise<ClusterFound>;
     
     all: (readClusters: ReadClusters) => Promise<ClustersRead>;
     
@@ -292,6 +331,21 @@ export class DefaultCluster implements Cluster {
             }
 
             return resp.json().then(JSONToClusterRead);
+        });
+    }
+    
+    find(findCluster: FindCluster): Promise<ClusterFound> {
+        const url = this.hostname + this.pathPrefix + "Find";
+        let body: FindCluster | FindClusterJSON = findCluster;
+        if (!this.writeCamelCase) {
+            body = FindClusterToJSON(findCluster);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToClusterFound);
         });
     }
     
