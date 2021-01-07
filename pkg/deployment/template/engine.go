@@ -1,6 +1,13 @@
 package template
 
 import (
+	"bytes"
+	"context"
+	"fmt"
+	"regexp"
+	"strings"
+	tpl "text/template"
+
 	"gopkg.in/yaml.v3"
 
 	"github.com/redsailtechnologies/boatswain/rpc/repo"
@@ -13,27 +20,84 @@ import (
 
 // The Engine is the worker that performs all templating steps
 type Engine struct {
+	ctx  context.Context
 	repo repo.Repo
 }
 
 // NewEngine initializes the engine with required dependencies
-func NewEngine(r repo.Repo) *Engine {
+func NewEngine(c context.Context, r repo.Repo) *Engine {
 	return &Engine{
+		ctx:  c,
 		repo: r,
 	}
 }
 
 // Run performs all templating steps with the given file contents
-func (e *Engine) Run(f []byte) (*deployment, error) {
+func (e *Engine) Run(f []byte, v []byte) (*Deployment, error) {
 	raw := make(map[string]interface{})
 	err := yaml.Unmarshal(f, &raw)
 	if err != nil {
 		return nil, err
 	}
-	templates, err := getTemplates(raw, make([]template, 0))
+
+	templated, err := e.replaceTemplates(raw)
+	if err != nil {
+		return nil, err
+	}
+
+	vals := make(map[string]interface{})
+	err = yaml.Unmarshal(v, &vals)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := yaml.Marshal(templated)
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := replaceValues(string(b), ".Parameters", vals)
+	if err != nil {
+		return nil, err
+	}
+
+	d := Deployment{}
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(out)
+
+	err = yaml.Unmarshal([]byte(out), &d)
+	if err != nil {
+		return nil, err
+	}
+
+	return &d, nil
 }
 
-func getTemplates(y map[string]interface{}, l []template) ([]template, error) {
+// Template performs all templating steps save the final values substitution and unmarshal
+func (e *Engine) Template(f []byte) (string, error) {
+	raw := make(map[string]interface{})
+	err := yaml.Unmarshal(f, &raw)
+	if err != nil {
+		return "", err
+	}
+
+	templated, err := e.replaceTemplates(raw)
+	if err != nil {
+		return "", err
+	}
+
+	b, err := yaml.Marshal(templated)
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
+}
+
+func (e *Engine) replaceTemplates(y map[string]interface{}) (map[string]interface{}, error) {
 	for key := range y {
 		if value, ok := y[key]; ok {
 			if key == "template" {
@@ -53,56 +117,81 @@ func getTemplates(y map[string]interface{}, l []template) ([]template, error) {
 				if err != nil {
 					return nil, err
 				}
-				return append(l, t), nil
+				y, err = e.replaceTemplate(y, key, t)
+				if err != nil {
+					return nil, err
+				}
 			}
 
-			var err error
 			if recurse, ok := value.(map[string]interface{}); ok {
-				l, err = getTemplates(recurse, l)
+				_, err := e.replaceTemplates(recurse)
 				if err != nil {
 					return nil, err
 				}
 			} else if list, ok := value.([]interface{}); ok {
 				for v := range list {
 					if r, ok := list[v].(map[string]interface{}); ok {
-						l, err = getTemplates(r, l)
+						out, err := e.replaceTemplates(r)
 						if err != nil {
 							return nil, err
 						}
+						list[v] = out
 					}
 				}
 			}
 		}
 	}
-	return l, nil
+	return y, nil
 }
 
-func replaceTemplates(y map[string]interface{}) map[string]interface{} {
-	for key := range y {
-		if value, ok := y[key]; ok {
-			if key == "template" {
-				// get template
-				// replace template
-				return replaceTemplate(y, key)
-			}
-			if recurse, ok := value.(map[string]interface{}); ok {
-				replaceTemplates(recurse)
-			} else if list, ok := value.([]interface{}); ok {
-				for v := range list {
-					if r, ok := list[v].(map[string]interface{}); ok {
-						list[v] = replaceTemplates(r)
-					}
-				}
-			}
-		}
+func (e *Engine) replaceTemplate(y map[string]interface{}, k string, t template) (map[string]interface{}, error) {
+	r, err := e.repo.Find(e.ctx, &repo.FindRepo{Name: t.Repo})
+	if err != nil {
+		return nil, err
 	}
-	return y
-}
 
-func replaceTemplate(y map[string]interface{}, k string) map[string]interface{} {
+	name, branch := splitTemplateRef(t.Ref)
+	file, err := e.repo.File(e.ctx, &repo.ReadFile{
+		RepoId:   r.Uuid,
+		Branch:   branch,
+		FilePath: name,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	withVals, err := replaceValues(string(file.File), ".Inputs", *t.Arguments)
+	if err != nil {
+		return nil, err
+	}
+
 	o := make(map[string]interface{})
+	err = yaml.Unmarshal([]byte(withVals), &o)
+	if err != nil {
+		return nil, err
+	}
 
-	// TODO AdamP -  replace values from inputs
-	o["template substituted"] = nil
-	return o
+	return o, nil
+}
+
+func splitTemplateRef(ref string) (string, string) {
+	s := strings.Split(ref, "@")
+	if len(s) != 2 {
+		return "", ""
+	}
+	return s[0], s[1]
+}
+
+func replaceValues(in, prefix string, vals map[string]interface{}) (string, error) {
+	re := regexp.MustCompile(fmt.Sprintf("([^\\\\])\\${{ %s", prefix))
+	escaped := re.ReplaceAllString(in, "$1{{ ")
+
+	t, err := tpl.New("tpl").Parse(escaped)
+	if err != nil {
+		return "", err
+	}
+
+	out := new(bytes.Buffer)
+	t.Execute(out, vals)
+	return out.String(), nil
 }

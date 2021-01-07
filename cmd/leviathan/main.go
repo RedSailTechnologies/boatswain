@@ -12,6 +12,7 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
+	"github.com/redsailtechnologies/boatswain/pkg/deployment"
 	"github.com/redsailtechnologies/boatswain/pkg/git"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
@@ -21,6 +22,7 @@ import (
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
 	app "github.com/redsailtechnologies/boatswain/rpc/application"
 	cl "github.com/redsailtechnologies/boatswain/rpc/cluster"
+	dl "github.com/redsailtechnologies/boatswain/rpc/deployment"
 	rep "github.com/redsailtechnologies/boatswain/rpc/repo"
 )
 
@@ -52,6 +54,9 @@ func main() {
 	repo := repo.NewService(authAgent, git.DefaultAgent{}, helm.DefaultAgent{}, store)
 	repTwirp := rep.NewRepoServer(repo, hooks, twirp.WithServerPathPrefix("/api"))
 
+	deploy := deployment.NewService(authAgent, repo, store)
+	depTwirp := dl.NewDeploymentServer(deploy, hooks, twirp.WithServerPathPrefix("/api"))
+
 	// Client
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
@@ -62,6 +67,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle(appTwirp.PathPrefix(), appTwirp)
 	mux.Handle(clTwirp.PathPrefix(), clTwirp)
+	mux.Handle(depTwirp.PathPrefix(), depTwirp)
 	mux.Handle(repTwirp.PathPrefix(), repTwirp)
 	mux.Handle("/", tritonServer) // TODO AdamP - fix multiplexer
 

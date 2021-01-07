@@ -14,14 +14,14 @@ HELM_OUT=bin/
 LEVI_CMD=cmd/leviathan/
 LEVI_OUT=bin/
 PROJECT_NAME=null
-SERVICE_LIST=kraken poseidon
+SERVICE_LIST=gyarados kraken poseidon
 TRITON_PATH=web/triton/
 TEST_OUT=
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
 ## all: builds the client and all services
-all: echo proto kraken poseidon triton
+all: echo proto gyarados kraken poseidon triton
 
 ## clean: removes binaries, images, etc
 clean:
@@ -68,6 +68,10 @@ init: echo
 	@go get github.com/twitchtv/twirp/protoc-gen-twirp
 	@go get -u go.larrymyers.com/protoc-gen-twirp_typescript
 	@go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
+
+## gyarados: builds the kraken image
+gyarados: echo
+	@$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=gyarados template
 
 ## kraken: builds the kraken image
 kraken: echo
@@ -143,6 +147,7 @@ else
 	@docker build web/triton --target=release --tag $(DOCKER_REPO)triton:$(DOCKER_TAG) $(DOCKER_OPTS)
 endif
 
+## version: gets the current version of the repo
 version:
 	@git describe --tags --abbrev=0
 

@@ -20,6 +20,11 @@ service Deployment {
     
     // gets all deployments currently configured and their status
     rpc All (ReadDeployments) returns (DeploymentsRead);
+
+    // rpc Template (...) returns (...)
+    // rpc Trigger (...) returns (...)
+    // rpc Manual (...) returns (...)
+    // rpc Run (...) returns (...)
 }
 
 message CreateDeployment {

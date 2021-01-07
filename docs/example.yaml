@@ -42,7 +42,7 @@ apps:
     repo: git-repo # name of the git repo to find this template in
     # these will populate in the template under the Inputs object
     arguments:
-      version: '1.0' # example usage inside the template: ${{ .Inputs.version }}
+      version: '1.0.1' # example usage inside the template: ${{ .Inputs.version }}
 
 # tests are another object we can use in a strategy, not meant to be long lived, but otherwise are
 # the same as apps in their specs
@@ -107,7 +107,7 @@ strategy:
               library:
                 chart: sample-routing-values
                 repo: myrepo
-                version: '1.0'
+                version: '10.0.2'
                 files:
                   - sample-app.yaml
 
@@ -132,7 +132,7 @@ strategy:
           cluster: dev
           helm:
             command: rollback
-            version: 2
+            version: '2'
   
   - name: approvals
     hold: 2h

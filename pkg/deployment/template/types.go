@@ -1,13 +1,13 @@
 package template
 
 type template struct {
-	Ref       string                 `yaml:"template"`
-	Repo      string                 `yaml:"repo"`
-	Arguments map[string]interface{} `yaml:"arguments"`
-	value     map[string]interface{}
+	Ref       string                  `yaml:"template"`
+	Repo      string                  `yaml:"repo"`
+	Arguments *map[string]interface{} `yaml:"arguments,omitempty"`
 }
 
-type deployment struct {
+// Deployment is the templated version of a deployment
+type Deployment struct {
 	Version  string     `yaml:"version"`
 	Clusters []string   `yaml:"clusters"`
 	Apps     *[]app     `yaml:"apps,omitempty"`

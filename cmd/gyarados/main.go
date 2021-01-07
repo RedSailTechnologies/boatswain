@@ -3,20 +3,20 @@ package main
 import (
 	"flag"
 	"net/http"
+	"os"
 
 	"github.com/twitchtv/twirp"
 
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
-	"github.com/redsailtechnologies/boatswain/pkg/git"
+	"github.com/redsailtechnologies/boatswain/pkg/deployment"
 	"github.com/redsailtechnologies/boatswain/pkg/health"
-	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
-	"github.com/redsailtechnologies/boatswain/pkg/repo"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
+	dl "github.com/redsailtechnologies/boatswain/rpc/deployment"
 	hl "github.com/redsailtechnologies/boatswain/rpc/health"
-	rep "github.com/redsailtechnologies/boatswain/rpc/repo"
+	"github.com/redsailtechnologies/boatswain/rpc/repo"
 )
 
 func main() {
@@ -26,7 +26,7 @@ func main() {
 	authCfg := auth.Flags()
 	flag.Parse()
 
-	store, err := storage.NewMongo(mongoConn, "poseidon")
+	store, err := storage.NewMongo(mongoConn, "gyarados")
 	if err != nil {
 		logger.Fatal("mongo init failed")
 	}
@@ -35,16 +35,21 @@ func main() {
 
 	hooks := twirp.ChainHooks(tw.JWTHook(authAgent), tw.LoggingHooks())
 
-	r := repo.NewService(authAgent, git.DefaultAgent{}, helm.DefaultAgent{}, store)
-	repTwirp := rep.NewRepoServer(r, hooks, twirp.WithServerPathPrefix("/api"))
+	rh := os.Getenv("POSEIDON_SERVICE_HOST")
+	rp := os.Getenv("POSEIDON_SERVICE_PORT")
+	re := "http://" + rh + ":" + rp
+	repoClient := repo.NewRepoProtobufClient(re, &http.Client{}, twirp.WithClientPathPrefix("/api"))
 
-	health := health.NewService(r)
+	deploy := deployment.NewService(authAgent, repoClient, store)
+	dTwirp := dl.NewDeploymentServer(deploy, hooks, twirp.WithServerPathPrefix("/api"))
+
+	health := health.NewService(deploy)
 	healthTwirp := hl.NewHealthServer(health, twirp.WithServerPathPrefix("/health"))
 
 	mux := http.NewServeMux()
-	mux.Handle(repTwirp.PathPrefix(), repTwirp)
+	mux.Handle(dTwirp.PathPrefix(), dTwirp)
 	mux.Handle(healthTwirp.PathPrefix(), healthTwirp)
 
-	logger.Info("starting poseidon component...I am Poseidon!")
+	logger.Info("What? MAGIKARP is evolving?")
 	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, authAgent.Wrap(mux)))
 }

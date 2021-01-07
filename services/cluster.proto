@@ -17,9 +17,6 @@ service Cluster {
 
     // reads out a cluster
     rpc Read (ReadCluster) returns (ClusterRead);
-
-    // finds a cluster
-    rpc Find (FindCluster) returns (ClusterFound);
     
     // gets all clusters currently configured and their status
     rpc All (ReadClusters) returns (ClustersRead);
@@ -61,14 +58,6 @@ message ClusterRead {
     string token = 4; // authentication token
     string cert = 5; // server certificate
     bool ready = 6; // server ready status, based on node status
-}
-
-message FindCluster {
-    string name = 1; // the name of the cluster to search for
-}
-
-message ClusterFound {
-    string uuid = 1; // unique id of the cluster found
 }
 
 message ReadClusters {}
