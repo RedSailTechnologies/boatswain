@@ -1,44 +1,38 @@
 import { Component, OnInit } from '@angular/core';
-import {
-  RepoRead,
-  ChartRead,
-  Repo,
-  DefaultRepo,
-} from 'src/app/services/repo/repo';
-import { RepoDialogComponent } from 'src/app/dialogs/repo-dialog/repo-dialog.component';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-dialog.component';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { DeploymentDialogComponent } from 'src/app/dialogs/deployment-dialog/deployment-dialog.component';
+import { DefaultDeployment, Deployment, DeploymentReadSummary } from 'src/app/services/deployment/deployment';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 
 @Component({
-  selector: 'app-repos',
-  templateUrl: './repos.component.html',
-  styleUrls: ['./repos.component.sass'],
+  selector: 'app-deployments',
+  templateUrl: './deployments.component.html',
+  styleUrls: ['./deployments.component.sass']
 })
-export class ReposComponent implements OnInit {
-  private client: Repo;
+export class DeploymentsComponent implements OnInit {
+  private client: Deployment;
   private retries = 0;
-  public repos: RepoRead[];
+  public deployments: DeploymentReadSummary[];
 
   constructor(
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     public auth: AuthService
   ) {
-    this.client = new DefaultRepo(
+    this.client = new DefaultDeployment(
       `${location.protocol}//${location.host}/api`,
       auth.fetch()
     );
   }
 
   ngOnInit(): void {
-    this.refreshRepos();
+    this.refreshDeployments();
   }
 
   add(): void {
     this.dialog
-      .open(RepoDialogComponent, {
+      .open(DeploymentDialogComponent, { // create
         minWidth: '33%',
         panelClass: 'custom-dialog-container',
         data: {
@@ -48,13 +42,13 @@ export class ReposComponent implements OnInit {
       })
       .afterClosed()
       .subscribe((_) => {
-        this.refreshRepos();
+        this.refreshDeployments();
       });
   }
 
-  edit(repo: RepoRead): void {
+  edit(repo: DeploymentReadSummary): void {
     this.dialog
-      .open(RepoDialogComponent, {
+      .open(DeploymentDialogComponent, {
         minWidth: '33%',
         panelClass: 'custom-dialog-container',
         data: {
@@ -65,13 +59,13 @@ export class ReposComponent implements OnInit {
       })
       .afterClosed()
       .subscribe((_) => {
-        this.refreshRepos();
+        this.refreshDeployments();
       });
   }
 
-  delete(repo: RepoRead): void {
+  delete(repo: DeploymentReadSummary): void {
     this.dialog
-      .open(ConfirmDialogComponent, {
+      .open(DeploymentDialogComponent, {
         panelClass: 'message-box',
         data: {
           reason: `Delete ${repo.name}`,
@@ -94,27 +88,27 @@ export class ReposComponent implements OnInit {
               );
             })
             .then(() => {
-              this.refreshRepos();
+              this.refreshDeployments();
             });
         }
       });
   }
 
-  refreshRepos(): void {
+  refreshDeployments(): void {
     if (this.retries < 5) {
       this.retries++;
       this.client
         .all({})
         .then((value) => {
-          this.repos = value.repos;
+          this.deployments = value.deployments;
         })
         .catch((_) => {
-          setTimeout(() => this.refreshRepos(), 2 * 1000);
+          setTimeout(() => this.refreshDeployments(), 2 * 1000);
         });
     } else {
       console.log('could not update repos after 5 retries');
       this.retries = 0;
-      this.repos = new Array<RepoRead>();
+      this.deployments = new Array<DeploymentReadSummary>();
       this.snackBar.open(`Error getting repos`, 'Dismiss', {
         duration: 5 * 1000,
         panelClass: ['warn-snack'],

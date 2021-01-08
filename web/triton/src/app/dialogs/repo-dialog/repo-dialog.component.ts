@@ -32,11 +32,10 @@ export class RepoDialogComponent implements OnInit {
     this.title = data["title"];
     this.isAdd = data["type"] == "add";
     if (!this.isAdd) {
-      this.repo = data["repo"];
-      this.repoForm.controls["name"].setValue(this.repo.name);
-      this.repoForm.controls["endpoint"].setValue(this.repo.endpoint);
-      this.repoForm.controls["type"].setValue(this.repo.type);
-      console.log(this.repoForm.controls["type"].value)
+      var repo = data["repo"];
+      this.repoForm.controls["name"].setValue(repo.name);
+      this.repoForm.controls["endpoint"].setValue(repo.endpoint);
+      this.repoForm.controls["type"].setValue(repo.type);
     }
     this.client = new DefaultRepo(`${location.protocol}//${location.host}/api`, auth.fetch());
   }

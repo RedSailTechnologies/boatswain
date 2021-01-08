@@ -100,6 +100,8 @@ Deployment is the service for creation and management of application installs/up
 | name | [string](#string) |  | name of the deployment |
 | repo_id | [string](#string) |  | the name of the repo |
 | repo_name | [string](#string) |  | the name of the repo |
+| branch | [string](#string) |  | the branch from the repo to get the file from |
+| file_path | [string](#string) |  | the path to the deployment file |
 
 
 

@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
+import { MatSelectChange } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   ApplicationRead,
   DefaultApplication,
   Application,
 } from 'src/app/services/application/application';
-import * as fetch from 'isomorphic-fetch';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 
 @Component({
@@ -16,7 +16,10 @@ import { AuthService } from 'src/app/utils/auth/auth.service';
 export class ApplicationsComponent implements OnInit {
   private client: Application;
   private retries = 0;
+  private rawApplications: ApplicationRead[];
   public applications: ApplicationRead[];
+  public projects: string[];
+  public selectedProject: string = "";
 
   constructor(private snackBar: MatSnackBar, public auth: AuthService) {
     this.client = new DefaultApplication(
@@ -29,13 +32,27 @@ export class ApplicationsComponent implements OnInit {
     this.refresh();
   }
 
+  filterByProject(event: MatSelectChange): void {
+    this.selectedProject = event.value;
+    if (this.selectedProject === "") {
+      this.applications = this.rawApplications;
+    } else {
+      this.applications = this.applications.filter(x => x.project == this.selectedProject);
+    }
+  }
+
   refresh(): void {
     if (this.retries < 5) {
       this.retries++;
       this.client
         .all({})
         .then((value) => {
-          this.applications = value.applications;
+          this.rawApplications = value.applications;
+          var set = new Set(this.rawApplications.map((x => { return x.project; })));
+          set.add("");
+          this.projects = Array.from(set).sort();
+          this.selectedProject = "";
+          this.applications = this.rawApplications;
         })
         .catch((_) => {
           setTimeout(() => this.refresh(), 2 * 1000);

@@ -186,6 +186,8 @@ func (s Service) All(ctx context.Context, req *pb.ReadDeployments) (*pb.Deployme
 			Name:     d.Name(),
 			RepoId:   d.RepoID(),
 			RepoName: r.Name,
+			Branch:   d.Branch(),
+			FilePath: d.FilePath(),
 		})
 	}
 	return resp, nil

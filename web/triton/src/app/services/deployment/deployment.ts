@@ -185,6 +185,8 @@ export interface DeploymentReadSummary {
     name: string;
     repoId: string;
     repoName: string;
+    branch: string;
+    filePath: string;
     
 }
 
@@ -193,6 +195,8 @@ interface DeploymentReadSummaryJSON {
     name: string;
     repo_id: string;
     repo_name: string;
+    branch: string;
+    file_path: string;
     
 }
 
@@ -204,6 +208,8 @@ const JSONToDeploymentReadSummary = (m: DeploymentReadSummary | DeploymentReadSu
         name: m.name,
         repoId: (((m as DeploymentReadSummary).repoId) ? (m as DeploymentReadSummary).repoId : (m as DeploymentReadSummaryJSON).repo_id),
         repoName: (((m as DeploymentReadSummary).repoName) ? (m as DeploymentReadSummary).repoName : (m as DeploymentReadSummaryJSON).repo_name),
+        branch: m.branch,
+        filePath: (((m as DeploymentReadSummary).filePath) ? (m as DeploymentReadSummary).filePath : (m as DeploymentReadSummaryJSON).file_path),
         
     };
 };

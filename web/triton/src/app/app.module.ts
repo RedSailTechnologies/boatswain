@@ -43,6 +43,8 @@ import { ProjectsComponent } from './pages/projects/projects.component';
 import { LoginComponent } from './pages/login/login.component';
 import { LogoutComponent } from './pages/logout/logout.component';
 import { ConfigService } from './utils/config/config.service';
+import { DeploymentsComponent } from './pages/deployments/deployments.component';
+import { DeploymentDialogComponent } from './dialogs/deployment-dialog/deployment-dialog.component';
 
 export function initializeConfig(config: ConfigService) {
   return () => config.load();
@@ -63,7 +65,9 @@ export function initializeConfig(config: ConfigService) {
     ApplicationsComponent,
     ProjectsComponent,
     LoginComponent,
-    LogoutComponent
+    LogoutComponent,
+    DeploymentsComponent,
+    DeploymentDialogComponent
   ],
   imports: [
     AppRoutingModule,

@@ -1,4 +1,12 @@
 <div class="page" *ngIf="applications; else noData">
+    <mat-form-field style="width:25%;float:middle;" appearance="outline">
+        <mat-label>filter</mat-label>
+        <mat-select matNativeControl color="secondary" [(value)]="selectedProject" (selectionChange)="filterByProject($event)">
+            <mat-option *ngFor="let project of projects" [value]="project">
+                {{project}}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
     <mat-accordion>
         <mat-expansion-panel class="panel" *ngFor="let app of applications">
             <mat-expansion-panel-header>

@@ -71,6 +71,8 @@ message DeploymentReadSummary {
     string name = 2; // name of the deployment
     string repo_id = 3; // the name of the repo
     string repo_name = 4; // the name of the repo
+    string branch = 5; // the branch from the repo to get the file from
+    string file_path = 6; // the path to the deployment file
 }
 
 message ReadDeployments {}
