@@ -1,0 +1,3 @@
+template: test/yaml/simple.yaml
+branch: feature/delivery-execution
+repo: boatswain
