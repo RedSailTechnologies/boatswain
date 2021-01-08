@@ -1,0 +1,4 @@
+name: wordpress
+helm:
+    chart: ${{ .Inputs.chart }}
+    repo: bitnami

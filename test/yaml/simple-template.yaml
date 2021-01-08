@@ -1,0 +1,20 @@
+version: '1.0.0'
+clusters:
+  - test
+apps:
+  - template: test/yaml/simple-template.yaml
+    repo: boatswain
+    arguments:
+      chart: wordpress
+triggers:
+  - web:
+      name: wordpress-trigger
+strategy:
+  - name: deploy-wordpress
+    always:
+      - app:
+          name: wordpress
+          cluster: test
+          helm:
+            command: install
+            wait: true
