@@ -1,3 +1,5 @@
-template: test/yaml/simple.yaml
+template: test/yaml/deployment-template.yaml
 branch: feature/delivery-execution
 repo: boatswain
+arguments:
+  appName: full-template-test
