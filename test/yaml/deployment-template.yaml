@@ -2,10 +2,11 @@ version: '1.0.0'
 clusters:
   - test
 apps:
-  - name: ${{ .Inputs.appName }}
-    helm:
-      chart: wordpress
-      repo: bitnami
+  - template: test/yaml/app-template.yaml
+    branch: feature/delivery-execution
+    repo: boatswain
+    arguments:
+      chart: ${{ .Inputs.appName }}
 triggers:
   - web:
       name: wordpress-trigger
