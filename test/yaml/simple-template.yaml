@@ -2,7 +2,7 @@ version: '1.0.0'
 clusters:
   - test
 apps:
-  - template: test/yaml/simple-template.yaml@feature/delivery-execution
+  - template: test/yaml/app-template.yaml@feature/delivery-execution
     repo: boatswain
     arguments:
       chart: wordpress
