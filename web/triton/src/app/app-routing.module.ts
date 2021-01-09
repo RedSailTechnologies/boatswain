@@ -9,6 +9,7 @@ import { LoginComponent } from './pages/login/login.component';
 import { CheckService } from './utils/auth/check.service';
 import { LogoutComponent } from './pages/logout/logout.component';
 import { DeploymentsComponent } from './pages/deployments/deployments.component';
+import { DeploymentComponent } from './pages/deployment/deployment.component';
 
 const routes: Routes = [
   {path: '', component: HomeComponent},
@@ -18,7 +19,8 @@ const routes: Routes = [
   {path: 'repos', component: ReposComponent, canActivate: [CheckService]},
   {path: 'projects', component: ProjectsComponent, canActivate: [CheckService]},
   {path: 'applications', component: ApplicationsComponent, canActivate: [CheckService]},
-  {path: 'deployments', component: DeploymentsComponent, canActivate: [CheckService]}
+  {path: 'deployments', component: DeploymentsComponent, canActivate: [CheckService]},
+  {path: 'deployment/:uuid', component: DeploymentComponent, canActivate: [CheckService]}
 ];
 
 @NgModule({

@@ -38,7 +38,8 @@ apps:
       version: ${{ .Parameters.sampleAppChartVersion }} # the version of the chart, note the template syntax
   
   # the name of another template in boatswain, note the path@branch syntax
-  - template: path/to/default-app.yaml@branch
+  - template: path/to/default-app.yaml
+    branch: branch
     repo: git-repo # name of the git repo to find this template in
     # these will populate in the template under the Inputs object
     arguments:

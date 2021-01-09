@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 	tpl "text/template"
 
 	"gopkg.in/yaml.v3"
@@ -108,14 +107,16 @@ func (e *Engine) replaceTemplates(y map[string]interface{}) (map[string]interfac
 					return nil, err
 				}
 
-				b, err = yaml.Marshal(y["arguments"].(map[string]interface{}))
-				if err != nil {
-					return nil, err
-				}
+				if args, ok := y["arguments"]; ok {
+					b, err = yaml.Marshal(args.(map[string]interface{}))
+					if err != nil {
+						return nil, err
+					}
 
-				err = yaml.Unmarshal(b, &t.Arguments)
-				if err != nil {
-					return nil, err
+					err = yaml.Unmarshal(b, &t.Arguments)
+					if err != nil {
+						return nil, err
+					}
 				}
 				y, err = e.replaceTemplate(y, key, t)
 				if err != nil {
@@ -150,19 +151,23 @@ func (e *Engine) replaceTemplate(y map[string]interface{}, k string, t template)
 		return nil, err
 	}
 
-	name, branch := splitTemplateRef(t.Ref)
 	file, err := e.repo.File(e.ctx, &repo.ReadFile{
 		RepoId:   r.Uuid,
-		Branch:   branch,
-		FilePath: name,
+		Branch:   t.Branch,
+		FilePath: t.Name,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	withVals, err := replaceValues(string(file.File), ".Inputs", *t.Arguments)
-	if err != nil {
-		return nil, err
+	var withVals string
+	if t.Arguments != nil {
+		withVals, err = replaceValues(string(file.File), ".Inputs", *t.Arguments)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		withVals = string(file.File)
 	}
 
 	o := make(map[string]interface{})
@@ -171,15 +176,12 @@ func (e *Engine) replaceTemplate(y map[string]interface{}, k string, t template)
 		return nil, err
 	}
 
-	return o, nil
-}
-
-func splitTemplateRef(ref string) (string, string) {
-	s := strings.Split(ref, "@")
-	if len(s) != 2 {
-		return "", ""
+	o, err = e.replaceTemplates(o)
+	if err != nil {
+		return nil, err
 	}
-	return s[0], s[1]
+
+	return o, nil
 }
 
 func replaceValues(in, prefix string, vals map[string]interface{}) (string, error) {

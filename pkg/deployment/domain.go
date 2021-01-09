@@ -138,7 +138,7 @@ func (c *Deployment) Branch() string {
 
 // FilePath returns the file path of the repo for this deployment's yaml file
 func (c *Deployment) FilePath() string {
-	return c.name
+	return c.filePath
 }
 
 // Events returns this deployment's event history

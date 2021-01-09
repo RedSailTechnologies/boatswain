@@ -37,7 +37,7 @@ export class ApplicationsComponent implements OnInit {
     if (this.selectedProject === "") {
       this.applications = this.rawApplications;
     } else {
-      this.applications = this.applications.filter(x => x.project == this.selectedProject);
+      this.applications = this.rawApplications.filter(x => x.project == this.selectedProject);
     }
   }
 

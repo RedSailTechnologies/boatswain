@@ -1,0 +1,28 @@
+<div class="page" *ngIf="deployment; else noData">
+    <mat-card style="margin:50px 25% 50px 25%;">
+        <mat-card-title style="text-align:center;">{{deployment.name}}</mat-card-title>
+        <mat-card-subtitle>
+            Repo: {{deployment.repoName}}
+            <br />
+            Branch: {{deployment.branch}}
+            <br />
+            File Path: {{deployment.filePath}}
+        </mat-card-subtitle>
+        <mat-card-content style="white-space:pre;">
+            <mat-accordion>
+                <mat-expansion-panel hideToggle="true">
+                    <mat-expansion-panel-header>
+                        <mat-panel-title>YAML</mat-panel-title>
+                        <mat-panel-description>
+                          (click to view templated yaml)
+                        </mat-panel-description>
+                      </mat-expansion-panel-header>
+                      {{deployment.yaml}}
+                </mat-expansion-panel>
+            </mat-accordion>
+        </mat-card-content>
+    </mat-card>
+</div>
+<ng-template #noData>
+    <mat-spinner color="primary" class="page-spinner"></mat-spinner>
+</ng-template>

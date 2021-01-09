@@ -154,7 +154,7 @@ func (s Service) Read(ctx context.Context, req *pb.ReadDeployment) (*pb.Deployme
 		RepoName: r.Name,
 		Branch:   d.Branch(),
 		FilePath: d.FilePath(),
-		Yaml:     []byte(yaml),
+		Yaml:     yaml,
 	}, nil
 }
 

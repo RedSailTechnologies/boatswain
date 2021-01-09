@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router'; 
 import { DeploymentDialogComponent } from 'src/app/dialogs/deployment-dialog/deployment-dialog.component';
 import { DefaultDeployment, Deployment, DeploymentReadSummary } from 'src/app/services/deployment/deployment';
 import { AuthService } from 'src/app/utils/auth/auth.service';
@@ -18,7 +19,8 @@ export class DeploymentsComponent implements OnInit {
   constructor(
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    public auth: AuthService
+    private router: Router,
+    private auth: AuthService
   ) {
     this.client = new DefaultDeployment(
       `${location.protocol}//${location.host}/api`,
@@ -37,7 +39,7 @@ export class DeploymentsComponent implements OnInit {
         panelClass: 'custom-dialog-container',
         data: {
           type: 'add',
-          title: 'Add Repo',
+          title: 'Add Deployment',
         },
       })
       .afterClosed()
@@ -46,15 +48,15 @@ export class DeploymentsComponent implements OnInit {
       });
   }
 
-  edit(repo: DeploymentReadSummary): void {
+  edit(deployment: DeploymentReadSummary): void {
     this.dialog
       .open(DeploymentDialogComponent, {
         minWidth: '33%',
         panelClass: 'custom-dialog-container',
         data: {
           type: 'edit',
-          title: `Edit ${repo.name}`,
-          repo: repo,
+          title: `Edit ${deployment.name}`,
+          deployment: deployment,
         },
       })
       .afterClosed()
@@ -63,23 +65,23 @@ export class DeploymentsComponent implements OnInit {
       });
   }
 
-  delete(repo: DeploymentReadSummary): void {
+  delete(deployment: DeploymentReadSummary): void {
     this.dialog
       .open(DeploymentDialogComponent, {
         panelClass: 'message-box',
         data: {
-          reason: `Delete ${repo.name}`,
-          message: 'Do you really want to delete this repo?',
+          reason: `Delete ${deployment.name}`,
+          message: 'Do you really want to delete this deployment?',
         },
       })
       .afterClosed()
       .subscribe((result: Boolean) => {
         if (result) {
           this.client
-            .destroy(repo)
+            .destroy(deployment)
             .catch((_) => {
               this.snackBar.open(
-                `${repo.name} could not be deleted`,
+                `${deployment.name} could not be deleted`,
                 'Dismiss',
                 {
                   duration: 5 * 1000,
@@ -94,6 +96,10 @@ export class DeploymentsComponent implements OnInit {
       });
   }
 
+  redirect(deployment: DeploymentReadSummary): void {
+    this.router.navigate(['/deployment/' + deployment.uuid])
+  }
+
   refreshDeployments(): void {
     if (this.retries < 5) {
       this.retries++;
@@ -106,10 +112,10 @@ export class DeploymentsComponent implements OnInit {
           setTimeout(() => this.refreshDeployments(), 2 * 1000);
         });
     } else {
-      console.log('could not update repos after 5 retries');
+      console.log('could not update deployments after 5 retries');
       this.retries = 0;
       this.deployments = new Array<DeploymentReadSummary>();
-      this.snackBar.open(`Error getting repos`, 'Dismiss', {
+      this.snackBar.open(`Error getting deployments`, 'Dismiss', {
         duration: 5 * 1000,
         panelClass: ['warn-snack'],
       });

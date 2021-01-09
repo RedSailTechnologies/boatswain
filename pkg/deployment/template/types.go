@@ -1,7 +1,8 @@
 package template
 
 type template struct {
-	Ref       string                  `yaml:"template"`
+	Name      string                  `yaml:"template"`
+	Branch    string                  `yaml:"branch"`
 	Repo      string                  `yaml:"repo"`
 	Arguments *map[string]interface{} `yaml:"arguments,omitempty"`
 }

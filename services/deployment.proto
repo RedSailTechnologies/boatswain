@@ -63,7 +63,7 @@ message DeploymentRead {
     string repo_name = 4; // the name of the repo
     string branch = 5; // the branch from the repo to get the file from
     string file_path = 6; // the path to the deployment file
-    bytes yaml = 7; // the templated yaml of this deployment
+    string yaml = 7; // the templated yaml of this deployment
 }
 
 message DeploymentReadSummary {
