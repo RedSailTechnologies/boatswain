@@ -9,11 +9,13 @@
     - [DeploymentDestroyed](#redsail.bosn.DeploymentDestroyed)
     - [DeploymentRead](#redsail.bosn.DeploymentRead)
     - [DeploymentReadSummary](#redsail.bosn.DeploymentReadSummary)
+    - [DeploymentTemplated](#redsail.bosn.DeploymentTemplated)
     - [DeploymentUpdated](#redsail.bosn.DeploymentUpdated)
     - [DeploymentsRead](#redsail.bosn.DeploymentsRead)
     - [DestroyDeployment](#redsail.bosn.DestroyDeployment)
     - [ReadDeployment](#redsail.bosn.ReadDeployment)
     - [ReadDeployments](#redsail.bosn.ReadDeployments)
+    - [TemplateDeployment](#redsail.bosn.TemplateDeployment)
     - [UpdateDeployment](#redsail.bosn.UpdateDeployment)
   
     - [Deployment](#redsail.bosn.Deployment)
@@ -81,7 +83,6 @@ Deployment is the service for creation and management of application installs/up
 | repo_name | [string](#string) |  | the name of the repo |
 | branch | [string](#string) |  | the branch from the repo to get the file from |
 | file_path | [string](#string) |  | the path to the deployment file |
-| yaml | [string](#string) |  | the templated yaml of this deployment |
 
 
 
@@ -97,11 +98,23 @@ Deployment is the service for creation and management of application installs/up
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | uuid | [string](#string) |  | unique id of the deployment |
-| name | [string](#string) |  | name of the deployment |
-| repo_id | [string](#string) |  | the name of the repo |
-| repo_name | [string](#string) |  | the name of the repo |
-| branch | [string](#string) |  | the branch from the repo to get the file from |
-| file_path | [string](#string) |  | the path to the deployment file |
+| name | [string](#string) |  | the name of this deployment |
+
+
+
+
+
+
+<a name="redsail.bosn.DeploymentTemplated"></a>
+
+### DeploymentTemplated
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| uuid | [string](#string) |  | unique id of the deployment |
+| yaml | [string](#string) |  | the templated yaml for this deployment |
 
 
 
@@ -173,6 +186,21 @@ Deployment is the service for creation and management of application installs/up
 
 
 
+<a name="redsail.bosn.TemplateDeployment"></a>
+
+### TemplateDeployment
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| uuid | [string](#string) |  | unique id of the deployment |
+
+
+
+
+
+
 <a name="redsail.bosn.UpdateDeployment"></a>
 
 ### UpdateDeployment
@@ -210,6 +238,7 @@ Deployment is the service for creation and management of application installs/up
 | Destroy | [DestroyDeployment](#redsail.bosn.DestroyDeployment) | [DeploymentDestroyed](#redsail.bosn.DeploymentDestroyed) | removes a deployment from the list of configurations |
 | Read | [ReadDeployment](#redsail.bosn.ReadDeployment) | [DeploymentRead](#redsail.bosn.DeploymentRead) | reads out a deployment |
 | All | [ReadDeployments](#redsail.bosn.ReadDeployments) | [DeploymentsRead](#redsail.bosn.DeploymentsRead) | gets all deployments currently configured and their status |
+| Template | [TemplateDeployment](#redsail.bosn.TemplateDeployment) | [DeploymentTemplated](#redsail.bosn.DeploymentTemplated) | get the templated version of this deployment |
 
  
 

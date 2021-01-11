@@ -129,7 +129,7 @@ endif
 
 ## test: runs all unit tests, set TEST_OUT=html for html coverage report
 test: echo proto
-	@go test ./pkg/** -cover -coverprofile coverage.out
+	@go test ./... -cover -coverprofile coverage.out
 ifeq ($(TEST_OUT),html)
 	@go tool cover -html=coverage.out
 endif

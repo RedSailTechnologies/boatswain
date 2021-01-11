@@ -14,10 +14,23 @@
                     <mat-expansion-panel-header>
                         <mat-panel-title>YAML</mat-panel-title>
                         <mat-panel-description>
-                          (click to view templated yaml)
+                            (click to view templated yaml)
                         </mat-panel-description>
                       </mat-expansion-panel-header>
-                      {{deployment.yaml}}
+                      <div *ngIf="yaml; else noYaml"></div>
+                      {{yaml}}
+                      <ng-template #noYaml>
+                        <mat-spinner color="primary" class="page-spinner"></mat-spinner>
+                    </ng-template>
+                </mat-expansion-panel>
+                <mat-expansion-panel hideToggle="true">
+                    <mat-expansion-panel-header>
+                        <mat-panel-title>Runs</mat-panel-title>
+                        <mat-panel-description>
+                            (click to view runs for this deployment)
+                        </mat-panel-description>
+                    </mat-expansion-panel-header>
+                    TODO: table or something here with all runs
                 </mat-expansion-panel>
             </mat-accordion>
         </mat-card-content>

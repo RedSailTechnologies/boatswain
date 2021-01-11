@@ -1,7 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { CreateDeployment, DefaultDeployment, Deployment, DeploymentRead, UpdateDeployment } from 'src/app/services/deployment/deployment';
+import { CreateDeployment, DefaultDeployment, Deployment, DeploymentRead, ReadDeployment, UpdateDeployment } from 'src/app/services/deployment/deployment';
 import { DefaultRepo, Repo, RepoRead } from 'src/app/services/repo/repo';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 import { BusyComponent } from '../busy/busy.component';
@@ -33,14 +33,16 @@ export class DeploymentDialogComponent implements OnInit {
               auth: AuthService) {
     this.title = data["title"];
     this.isAdd = data["type"] == "add";
+    this.client = new DefaultDeployment(`${location.protocol}//${location.host}/api`, auth.fetch());
+    
     if (!this.isAdd) {
-      this.deployment = data["deployment"];
+      this.client.read(<ReadDeployment>{uuid:data["uuid"]})
+        .then(value => { this.deployment = value});
       this.deploymentForm.controls["name"].setValue(this.deployment.name);
       this.deploymentForm.controls["repoId"].setValue(this.deployment.repoId);
       this.deploymentForm.controls["branch"].setValue(this.deployment.branch);
       this.deploymentForm.controls["filePath"].setValue(this.deployment.filePath);
     }
-    this.client = new DefaultDeployment(`${location.protocol}//${location.host}/api`, auth.fetch());
     
     var repoClient = new DefaultRepo(`${location.protocol}//${location.host}/api`, auth.fetch());
     repoClient.all({}).then(value => {

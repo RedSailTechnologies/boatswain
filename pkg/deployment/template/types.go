@@ -1,113 +1,132 @@
 package template
 
-type template struct {
+// A Template is the yaml syntax used to substitute yaml from another file
+type Template struct {
 	Name      string                  `yaml:"template"`
 	Branch    string                  `yaml:"branch"`
 	Repo      string                  `yaml:"repo"`
 	Arguments *map[string]interface{} `yaml:"arguments,omitempty"`
 }
 
-// Deployment is the templated version of a deployment
+// A Deployment is the go type representing yaml for a cd object
 type Deployment struct {
 	Version  string     `yaml:"version"`
 	Clusters []string   `yaml:"clusters"`
-	Apps     *[]app     `yaml:"apps,omitempty"`
-	Tests    *[]test    `yaml:"tests,omitempty"`
-	Triggers *[]trigger `yaml:"triggers,omitempty"`
-	Strategy *[]step    `yaml:"strategy,omitempty"`
+	Apps     *[]App     `yaml:"apps,omitempty"`
+	Tests    *[]Test    `yaml:"tests,omitempty"`
+	Triggers *[]Trigger `yaml:"triggers,omitempty"`
+	Strategy *[]Step    `yaml:"strategy,omitempty"`
 }
 
-type app struct {
+// An App is a yaml representation of a deployable asset
+type App struct {
 	Name string  `yaml:"name"`
-	Helm helmApp `yaml:"helm"`
+	Helm HelmApp `yaml:"helm"`
 }
 
-type helmApp struct {
+// A HelmApp is the helm specification for an application
+type HelmApp struct {
 	Chart   string `yaml:"chart"`
 	Repo    string `yaml:"repo"`
 	Version string `yaml:"version"`
 }
 
-type test struct {
+// A Test represents a test to run against a deployment
+type Test struct {
 	Name string    `yaml:"name"`
-	Helm *helmTest `yaml:"helm,omitempty"`
+	Helm *HelmTest `yaml:"helm,omitempty"`
 }
 
-type helmTest struct {
-	Params map[string]interface{} `yaml:"params"`
+// A HelmTest leverages the helm test for a
+type HelmTest struct {
+	Name    string `yaml:"name"`
+	Timeout string `yaml:"timeout"`
 }
 
-type trigger struct {
-	Deployment *deploymentTrigger `yaml:"deployment,omitempty"`
-	Web        *webTrigger        `yaml:"web,omitempty"`
-	Manual     *manualTrigger     `yaml:"manual,omitempty"`
+// A Trigger is the thing which starts a deployment
+type Trigger struct {
+	Deployment *DeploymentTrigger `yaml:"deployment,omitempty"`
+	Web        *WebTrigger        `yaml:"web,omitempty"`
+	Manual     *ManualTrigger     `yaml:"manual,omitempty"`
 }
 
-type deploymentTrigger struct {
+// A DeploymentTrigger is when this deployment can be triggered by another
+type DeploymentTrigger struct {
 	Name string `yaml:"name"`
 }
 
-type webTrigger struct {
+// A WebTrigger is when an endpoint is called triggering this deployment
+type WebTrigger struct {
 	Name string `yaml:"name"`
 }
 
-type manualTrigger struct {
+// A ManualTrigger is when a person (through the ui, generally) triggers a deployment
+type ManualTrigger struct {
 	Groups []string `yaml:"groups"`
 	Users  []string `yaml:"users"`
 }
 
-type step struct {
+// A Step is a particular part of a deployment cycle
+type Step struct {
 	Name    string    `yaml:"name"`
 	Hold    string    `yaml:"hold"`
-	Success *[]action `yaml:"success,omitempty"`
-	Failure *[]action `yaml:"failure,omitempty"`
-	Any     *[]action `yaml:"any,omitempty"`
-	Always  *[]action `yaml:"always,omitempty"`
+	Success *[]Action `yaml:"success,omitempty"`
+	Failure *[]Action `yaml:"failure,omitempty"`
+	Any     *[]Action `yaml:"any,omitempty"`
+	Always  *[]Action `yaml:"always,omitempty"`
 }
 
-type action struct {
-	App      *appAction      `yaml:"app,omitempty"`
-	Test     *testAction     `yaml:"test,omitempty"`
-	Approval *approvalAction `yaml:"approval,omitempty"`
-	Trigger  *triggerAction  `yaml:"trigger,omitempty"`
+// An Action is an action taken within a step
+type Action struct {
+	App      *AppAction      `yaml:"app,omitempty"`
+	Test     *TestAction     `yaml:"test,omitempty"`
+	Approval *ApprovalAction `yaml:"approval,omitempty"`
+	Trigger  *TriggerAction  `yaml:"trigger,omitempty"`
 }
 
-type appAction struct {
+// An AppAction is the action of deploying an application
+type AppAction struct {
 	Name    string         `yaml:"name"`
 	Cluster string         `yaml:"cluster"`
-	Helm    *helmAppAction `yaml:"helm,omitempty"`
+	Helm    *HelmAppAction `yaml:"helm,omitempty"`
 }
 
-type helmAppAction struct {
+// A HelmAppAction is the helm specifics for deploying an app
+type HelmAppAction struct {
 	Command string               `yaml:"command"`
 	Wait    bool                 `yaml:"wait"`
 	Version int                  `yaml:"version"`
-	Values  *helmAppActionValues `yaml:"values,omitempty"`
+	Values  *HelmAppActionValues `yaml:"values,omitempty"`
 }
 
-type helmAppActionValues struct {
-	Library *helmValuesLibrary     `yaml:"library,omitempty"`
+// HelmAppActionValues are the values for a helm command
+type HelmAppActionValues struct {
+	Library *HelmValuesLibrary     `yaml:"library,omitempty"`
 	Raw     map[string]interface{} `yaml:"raw,omitempty"`
 }
 
-type helmValuesLibrary struct {
+// A HelmValuesLibrary are when we get the values from a helm library
+type HelmValuesLibrary struct {
 	Chart   string   `yaml:"chart"`
 	Repo    string   `yaml:"repo"`
 	Version string   `yaml:"version"`
 	Files   []string `yaml:"files"`
 }
 
-type testAction struct {
+// A TestAction is the action which runs tests
+type TestAction struct {
 	Name    string `yaml:"name"`
 	Cluster string `yaml:"cluster"`
 }
 
-type approvalAction struct {
+// An ApprovalAction is when a person must manually approve to unblock further actions
+type ApprovalAction struct {
 	Groups []string `yaml:"groups"`
 	Users  []string `yaml:"users"`
 }
 
-type triggerAction struct {
+// A TriggerAction is where this deployment triggers another
+type TriggerAction struct {
 	Name       string                 `yaml:"name"`
 	Deployment string                 `yaml:"deployment"`
 	Arguments  map[string]interface{} `yaml:"arguments,omitempty"`

@@ -20,7 +20,7 @@ export class DeploymentsComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private router: Router,
-    private auth: AuthService
+    public auth: AuthService
   ) {
     this.client = new DefaultDeployment(
       `${location.protocol}//${location.host}/api`,
@@ -56,7 +56,7 @@ export class DeploymentsComponent implements OnInit {
         data: {
           type: 'edit',
           title: `Edit ${deployment.name}`,
-          deployment: deployment,
+          uuid: deployment.uuid,
         },
       })
       .afterClosed()

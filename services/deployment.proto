@@ -21,9 +21,12 @@ service Deployment {
     // gets all deployments currently configured and their status
     rpc All (ReadDeployments) returns (DeploymentsRead);
 
-    // rpc Template (...) returns (...)
-    // rpc Trigger (...) returns (...)
-    // rpc Manual (...) returns (...)
+    // get the templated version of this deployment
+    rpc Template (TemplateDeployment) returns (DeploymentTemplated);
+
+    // rpc WebTrigger (...) returns (...)
+    // rpc ManualTrigger (...) returns (...)
+    // rpc Runs (...) returns (...)
     // rpc Run (...) returns (...)
 }
 
@@ -63,20 +66,24 @@ message DeploymentRead {
     string repo_name = 4; // the name of the repo
     string branch = 5; // the branch from the repo to get the file from
     string file_path = 6; // the path to the deployment file
-    string yaml = 7; // the templated yaml of this deployment
-}
-
-message DeploymentReadSummary {
-    string uuid = 1; // unique id of the deployment
-    string name = 2; // name of the deployment
-    string repo_id = 3; // the name of the repo
-    string repo_name = 4; // the name of the repo
-    string branch = 5; // the branch from the repo to get the file from
-    string file_path = 6; // the path to the deployment file
 }
 
 message ReadDeployments {}
 
+message DeploymentReadSummary {
+    string uuid = 1; // unique id of the deployment
+    string name = 2; // the name of this deployment
+}
+
 message DeploymentsRead {
     repeated DeploymentReadSummary deployments = 1; // the list of deployments
+}
+
+message TemplateDeployment {
+    string uuid = 1; // unique id of the deployment
+}
+
+message DeploymentTemplated {
+    string uuid = 1; // unique id of the deployment
+    string yaml = 2; // the templated yaml for this deployment
 }

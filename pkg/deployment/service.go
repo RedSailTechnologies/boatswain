@@ -130,23 +130,6 @@ func (s Service) Read(ctx context.Context, req *pb.ReadDeployment) (*pb.Deployme
 		r = &repo.RepoRead{}
 	}
 
-	// get the deployment template
-	f, err := s.repo.File(ctx, &repo.ReadFile{
-		RepoId:   d.RepoID(),
-		Branch:   d.Branch(),
-		FilePath: d.FilePath(),
-	})
-	if err != nil {
-		logger.Error("could not get deployment file", "error", err)
-		return nil, twirp.NotFoundError("deployment file not found")
-	}
-
-	e := template.NewEngine(ctx, s.repo)
-	yaml, err := e.Template(f.File)
-	if err != nil {
-		logger.Error("yaml file could not be templated", "error", err)
-	}
-
 	return &pb.DeploymentRead{
 		Uuid:     d.UUID(),
 		Name:     d.Name(),
@@ -154,7 +137,6 @@ func (s Service) Read(ctx context.Context, req *pb.ReadDeployment) (*pb.Deployme
 		RepoName: r.Name,
 		Branch:   d.Branch(),
 		FilePath: d.FilePath(),
-		Yaml:     yaml,
 	}, nil
 }
 
@@ -175,22 +157,48 @@ func (s Service) All(ctx context.Context, req *pb.ReadDeployments) (*pb.Deployme
 	}
 
 	for _, d := range deployments {
-		r, err := s.repo.Read(ctx, &repo.ReadRepo{Uuid: d.RepoID()})
-		if err != nil {
-			logger.Error("could not find repo in deployment")
-			r = &repo.RepoRead{}
-		}
 
 		resp.Deployments = append(resp.Deployments, &pb.DeploymentReadSummary{
-			Uuid:     d.UUID(),
-			Name:     d.Name(),
-			RepoId:   d.RepoID(),
-			RepoName: r.Name,
-			Branch:   d.Branch(),
-			FilePath: d.FilePath(),
+			Uuid: d.UUID(),
+			Name: d.Name(),
 		})
 	}
 	return resp, nil
+}
+
+// Template takes a deployment and templates its yaml out for verification and viewing
+func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.DeploymentTemplated, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
+	d, err := s.repository.Load(req.Uuid)
+	if err != nil {
+		logger.Error("error reading Deployment", "error", err)
+		return nil, tw.ToTwirpError(err, "error loading Deployment")
+	}
+
+	// get the deployment template
+	f, err := s.repo.File(ctx, &repo.ReadFile{
+		RepoId:   d.RepoID(),
+		Branch:   d.Branch(),
+		FilePath: d.FilePath(),
+	})
+	if err != nil {
+		logger.Error("could not get deployment file", "error", err)
+		return nil, twirp.NotFoundError("deployment file not found")
+	}
+
+	e := template.NewEngine(ctx, s.repo)
+	yaml, err := e.Template(f.File)
+	if err != nil {
+		logger.Error("yaml file could not be templated", "error", err)
+		return nil, twirp.InternalErrorWith(err)
+	}
+
+	return &pb.DeploymentTemplated{
+		Yaml: yaml,
+	}, nil
 }
 
 // Ready implements the ReadyService method so this service can be part of a health check routine

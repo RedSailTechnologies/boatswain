@@ -100,7 +100,7 @@ func (e *Engine) replaceTemplates(y map[string]interface{}) (map[string]interfac
 	for key := range y {
 		if value, ok := y[key]; ok {
 			if key == "template" {
-				t := template{}
+				t := Template{}
 				b, err := yaml.Marshal(y)
 				err = yaml.Unmarshal(b, &t)
 				if err != nil {
@@ -145,7 +145,7 @@ func (e *Engine) replaceTemplates(y map[string]interface{}) (map[string]interfac
 	return y, nil
 }
 
-func (e *Engine) replaceTemplate(y map[string]interface{}, k string, t template) (map[string]interface{}, error) {
+func (e *Engine) replaceTemplate(y map[string]interface{}, k string, t Template) (map[string]interface{}, error) {
 	r, err := e.repo.Find(e.ctx, &repo.FindRepo{Name: t.Repo})
 	if err != nil {
 		return nil, err

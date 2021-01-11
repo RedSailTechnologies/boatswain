@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { DefaultDeployment, Deployment, DeploymentRead, ReadDeployment } from 'src/app/services/deployment/deployment';
+import { DefaultDeployment, Deployment, DeploymentRead, ReadDeployment, TemplateDeployment } from 'src/app/services/deployment/deployment';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 
 @Component({
@@ -24,8 +24,12 @@ export class DeploymentComponent implements OnInit {
         uuid: id,
       }).then(value => {
         this.deployment = value;
-        this.yaml = this.deployment.yaml
-      })
+        this.client.template(<TemplateDeployment>{
+          uuid: this.deployment.uuid,
+        }).then(value => {
+          this.yaml = value.yaml
+        });
+      });
     })
   }
 }
