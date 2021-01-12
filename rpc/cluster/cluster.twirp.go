@@ -52,6 +52,9 @@ type Cluster interface {
 	// reads out a cluster
 	Read(context.Context, *ReadCluster) (*ClusterRead, error)
 
+	// finds the cluster uuid by name
+	Find(context.Context, *FindCluster) (*ClusterFound, error)
+
 	// gets all clusters currently configured and their status
 	All(context.Context, *ReadClusters) (*ClustersRead, error)
 }
@@ -62,7 +65,7 @@ type Cluster interface {
 
 type clusterProtobufClient struct {
 	client      HTTPClient
-	urls        [5]string
+	urls        [6]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -82,11 +85,12 @@ func NewClusterProtobufClient(baseURL string, client HTTPClient, opts ...twirp.C
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Cluster")
-	urls := [5]string{
+	urls := [6]string{
 		serviceURL + "Create",
 		serviceURL + "Update",
 		serviceURL + "Destroy",
 		serviceURL + "Read",
+		serviceURL + "Find",
 		serviceURL + "All",
 	}
 
@@ -282,6 +286,52 @@ func (c *clusterProtobufClient) callRead(ctx context.Context, in *ReadCluster) (
 	return out, nil
 }
 
+func (c *clusterProtobufClient) Find(ctx context.Context, in *FindCluster) (*ClusterFound, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Cluster")
+	ctx = ctxsetters.WithMethodName(ctx, "Find")
+	caller := c.callFind
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *FindCluster) (*ClusterFound, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*FindCluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*FindCluster) when calling interceptor")
+					}
+					return c.callFind(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*ClusterFound)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*ClusterFound) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *clusterProtobufClient) callFind(ctx context.Context, in *FindCluster) (*ClusterFound, error) {
+	out := new(ClusterFound)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 func (c *clusterProtobufClient) All(ctx context.Context, in *ReadClusters) (*ClustersRead, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
 	ctx = ctxsetters.WithServiceName(ctx, "Cluster")
@@ -313,7 +363,7 @@ func (c *clusterProtobufClient) All(ctx context.Context, in *ReadClusters) (*Clu
 
 func (c *clusterProtobufClient) callAll(ctx context.Context, in *ReadClusters) (*ClustersRead, error) {
 	out := new(ClustersRead)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -334,7 +384,7 @@ func (c *clusterProtobufClient) callAll(ctx context.Context, in *ReadClusters) (
 
 type clusterJSONClient struct {
 	client      HTTPClient
-	urls        [5]string
+	urls        [6]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -354,11 +404,12 @@ func NewClusterJSONClient(baseURL string, client HTTPClient, opts ...twirp.Clien
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Cluster")
-	urls := [5]string{
+	urls := [6]string{
 		serviceURL + "Create",
 		serviceURL + "Update",
 		serviceURL + "Destroy",
 		serviceURL + "Read",
+		serviceURL + "Find",
 		serviceURL + "All",
 	}
 
@@ -554,6 +605,52 @@ func (c *clusterJSONClient) callRead(ctx context.Context, in *ReadCluster) (*Clu
 	return out, nil
 }
 
+func (c *clusterJSONClient) Find(ctx context.Context, in *FindCluster) (*ClusterFound, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Cluster")
+	ctx = ctxsetters.WithMethodName(ctx, "Find")
+	caller := c.callFind
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *FindCluster) (*ClusterFound, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*FindCluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*FindCluster) when calling interceptor")
+					}
+					return c.callFind(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*ClusterFound)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*ClusterFound) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *clusterJSONClient) callFind(ctx context.Context, in *FindCluster) (*ClusterFound, error) {
+	out := new(ClusterFound)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 func (c *clusterJSONClient) All(ctx context.Context, in *ReadClusters) (*ClustersRead, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
 	ctx = ctxsetters.WithServiceName(ctx, "Cluster")
@@ -585,7 +682,7 @@ func (c *clusterJSONClient) All(ctx context.Context, in *ReadClusters) (*Cluster
 
 func (c *clusterJSONClient) callAll(ctx context.Context, in *ReadClusters) (*ClustersRead, error) {
 	out := new(ClustersRead)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -695,6 +792,9 @@ func (s *clusterServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		return
 	case "Read":
 		s.serveRead(ctx, resp, req)
+		return
+	case "Find":
+		s.serveFind(ctx, resp, req)
 		return
 	case "All":
 		s.serveAll(ctx, resp, req)
@@ -1383,6 +1483,181 @@ func (s *clusterServer) serveReadProtobuf(ctx context.Context, resp http.Respons
 	}
 	if respContent == nil {
 		s.writeError(ctx, resp, twirp.InternalError("received a nil *ClusterRead and nil error while calling Read. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *clusterServer) serveFind(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveFindJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveFindProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *clusterServer) serveFindJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Find")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(FindCluster)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Cluster.Find
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *FindCluster) (*ClusterFound, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*FindCluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*FindCluster) when calling interceptor")
+					}
+					return s.Cluster.Find(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*ClusterFound)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*ClusterFound) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *ClusterFound
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *ClusterFound and nil error while calling Find. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *clusterServer) serveFindProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Find")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(FindCluster)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Cluster.Find
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *FindCluster) (*ClusterFound, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*FindCluster)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*FindCluster) when calling interceptor")
+					}
+					return s.Cluster.Find(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*ClusterFound)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*ClusterFound) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *ClusterFound
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *ClusterFound and nil error while calling Find. nil responses are not supported"))
 		return
 	}
 
@@ -2143,31 +2418,32 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 402 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x54, 0x4d, 0x6f, 0xa3, 0x30,
-	0x10, 0x15, 0x81, 0x7c, 0xec, 0xe4, 0x43, 0x91, 0xb5, 0x07, 0x96, 0x5d, 0xad, 0x52, 0xab, 0x87,
-	0x9c, 0x40, 0x4a, 0xd5, 0x53, 0xd3, 0x4a, 0x6d, 0x5a, 0xf5, 0x8e, 0xd4, 0x4b, 0x6f, 0x80, 0xad,
-	0x04, 0x95, 0x60, 0x64, 0x1b, 0x55, 0x39, 0xf4, 0x47, 0xf4, 0xe7, 0xf5, 0xdf, 0x54, 0x60, 0x07,
-	0x11, 0x04, 0x39, 0xf6, 0x94, 0x99, 0xcc, 0x9b, 0x37, 0xcf, 0xf3, 0x46, 0xc0, 0x34, 0x4a, 0x72,
-	0x21, 0x29, 0x77, 0x33, 0xce, 0x24, 0x43, 0x13, 0x4e, 0x89, 0x08, 0xe2, 0xc4, 0x0d, 0x99, 0x48,
-	0x71, 0x0c, 0xd3, 0x0d, 0xa7, 0x81, 0xa4, 0x1b, 0x05, 0x42, 0x08, 0xac, 0x34, 0xd8, 0x53, 0xdb,
-	0x58, 0x18, 0xcb, 0x5f, 0x7e, 0x19, 0x23, 0x07, 0x46, 0x34, 0x25, 0x19, 0x8b, 0x53, 0x69, 0xf7,
-	0xca, 0xff, 0xab, 0x1c, 0xfd, 0x86, 0xbe, 0x64, 0x6f, 0x34, 0xb5, 0xcd, 0xb2, 0xa0, 0x92, 0x82,
-	0x25, 0xa2, 0x5c, 0xda, 0x96, 0x62, 0x29, 0x62, 0x3c, 0x87, 0x99, 0x1e, 0xa2, 0x26, 0x12, 0xfc,
-	0x01, 0xd3, 0x97, 0x8c, 0x9c, 0x0e, 0xcf, 0xf3, 0x98, 0x1c, 0x87, 0x17, 0x71, 0x25, 0xa8, 0xd7,
-	0x21, 0xc8, 0xec, 0x12, 0x64, 0xb5, 0x09, 0xea, 0xb7, 0x0a, 0x52, 0x2a, 0x08, 0xbe, 0x84, 0xd9,
-	0x23, 0x15, 0x92, 0xb3, 0xc3, 0x19, 0x45, 0x18, 0xc1, 0x5c, 0x97, 0x35, 0x98, 0x12, 0x7c, 0x01,
-	0x63, 0x9f, 0x06, 0xe4, 0x5c, 0xdb, 0xa7, 0x01, 0x63, 0x5d, 0x2f, 0xa0, 0x3f, 0xfb, 0xd8, 0x02,
-	0xc9, 0x69, 0x40, 0x0e, 0xf6, 0x60, 0x61, 0x2c, 0x47, 0xbe, 0x4a, 0xf0, 0x0c, 0x26, 0x35, 0xd9,
-	0x02, 0x3f, 0xc1, 0xe4, 0x18, 0x97, 0x1a, 0xaf, 0x61, 0xa4, 0xaf, 0x47, 0xd8, 0xc6, 0xc2, 0x5c,
-	0x8e, 0x57, 0x7f, 0xdc, 0xfa, 0xfd, 0xb8, 0xb5, 0x07, 0xf9, 0x15, 0x74, 0xf5, 0xd5, 0x83, 0xe1,
-	0x71, 0x15, 0x1b, 0x18, 0x28, 0xbf, 0xd1, 0xdf, 0x46, 0x6b, 0xfd, 0xee, 0x9c, 0x7f, 0xad, 0xbc,
-	0xfa, 0x52, 0x0a, 0x12, 0xe5, 0x51, 0x93, 0xe4, 0xe4, 0x7e, 0x3a, 0x48, 0xb4, 0xbb, 0xe8, 0x19,
-	0x86, 0xda, 0x30, 0xd4, 0x00, 0x9e, 0x9a, 0xee, 0xfc, 0x6f, 0xa5, 0xa9, 0xcc, 0x46, 0x6b, 0xb0,
-	0xca, 0xed, 0x34, 0x76, 0x51, 0xdb, 0xa4, 0xd3, 0xbd, 0x26, 0x74, 0x0b, 0xe6, 0x7d, 0x92, 0x20,
-	0xa7, 0xb3, 0x59, 0x38, 0x4e, 0x6b, 0x77, 0x69, 0xc9, 0xc3, 0xdd, 0xeb, 0x7a, 0x1b, 0xcb, 0x5d,
-	0x1e, 0xba, 0x11, 0xdb, 0x7b, 0x1a, 0x27, 0x69, 0xb4, 0x4b, 0x59, 0xc2, 0xb6, 0x31, 0x15, 0x5e,
-	0xc8, 0x02, 0x29, 0xde, 0x83, 0x38, 0xf5, 0x78, 0x16, 0x79, 0xda, 0x94, 0x1b, 0xfd, 0x1b, 0x0e,
-	0xca, 0xcf, 0xc0, 0xd5, 0x77, 0x00, 0x00, 0x00, 0xff, 0xff, 0x62, 0x4d, 0x71, 0xd9, 0x17, 0x04,
-	0x00, 0x00,
+	// 430 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x54, 0x3d, 0xaf, 0xd3, 0x30,
+	0x14, 0x55, 0x5e, 0xf2, 0xfa, 0xca, 0xed, 0x87, 0x9e, 0x2c, 0x86, 0x10, 0x10, 0x2a, 0x16, 0x43,
+	0xa7, 0x44, 0x7a, 0x88, 0x89, 0x16, 0x09, 0x0a, 0x65, 0x8f, 0xc4, 0xc2, 0x96, 0xc4, 0x56, 0x6b,
+	0x91, 0xda, 0x91, 0xed, 0x08, 0x75, 0xe0, 0x47, 0xb0, 0xf1, 0x73, 0x91, 0x63, 0x37, 0x4a, 0xa3,
+	0xa4, 0x23, 0x53, 0xed, 0xde, 0x73, 0xcf, 0x3d, 0xbe, 0xe7, 0x28, 0xb0, 0x28, 0xca, 0x5a, 0x69,
+	0x2a, 0xe3, 0x4a, 0x0a, 0x2d, 0xd0, 0x5c, 0x52, 0xa2, 0x32, 0x56, 0xc6, 0xb9, 0x50, 0x1c, 0x33,
+	0x58, 0xec, 0x24, 0xcd, 0x34, 0xdd, 0x59, 0x10, 0x42, 0x10, 0xf0, 0xec, 0x44, 0x43, 0x6f, 0xe5,
+	0xad, 0x9f, 0xa5, 0xcd, 0x19, 0x45, 0x30, 0xa5, 0x9c, 0x54, 0x82, 0x71, 0x1d, 0xde, 0x35, 0xff,
+	0xb7, 0x77, 0xf4, 0x1c, 0xee, 0xb5, 0xf8, 0x49, 0x79, 0xe8, 0x37, 0x05, 0x7b, 0x31, 0x2c, 0x05,
+	0x95, 0x3a, 0x0c, 0x2c, 0x8b, 0x39, 0xe3, 0x47, 0x58, 0xba, 0x21, 0x76, 0x22, 0xc1, 0xbf, 0x61,
+	0xf1, 0xbd, 0x22, 0xd7, 0xc3, 0xeb, 0x9a, 0x91, 0xcb, 0x70, 0x73, 0x6e, 0x05, 0xdd, 0x8d, 0x08,
+	0xf2, 0xc7, 0x04, 0x05, 0x43, 0x82, 0xee, 0x07, 0x05, 0x59, 0x15, 0x04, 0xbf, 0x85, 0xe5, 0x17,
+	0xaa, 0xb4, 0x14, 0xe7, 0x1b, 0x8a, 0x30, 0x82, 0x47, 0x57, 0x76, 0x60, 0x4a, 0xf0, 0x1b, 0x98,
+	0xa5, 0x34, 0x23, 0xb7, 0xda, 0xfe, 0x78, 0x30, 0x73, 0x75, 0x03, 0xfd, 0xbf, 0x8f, 0x35, 0x48,
+	0x49, 0x33, 0x72, 0x0e, 0x27, 0x2b, 0x6f, 0x3d, 0x4d, 0xed, 0xc5, 0xc8, 0xde, 0x33, 0x4e, 0x6e,
+	0x98, 0x8f, 0x31, 0xcc, 0x5d, 0x79, 0x2f, 0x6a, 0x3e, 0x28, 0x1b, 0x2f, 0x61, 0xde, 0x79, 0xbd,
+	0xc2, 0x5f, 0xdb, 0x1e, 0xd5, 0x3c, 0xf5, 0x3d, 0x4c, 0x5d, 0x08, 0x55, 0xe8, 0xad, 0xfc, 0xf5,
+	0xec, 0xe9, 0x45, 0xdc, 0x8d, 0x61, 0xdc, 0xd9, 0x4b, 0xda, 0x42, 0x9f, 0xfe, 0xfa, 0xf0, 0x70,
+	0x91, 0xb6, 0x83, 0x89, 0x8d, 0x0d, 0x7a, 0xd9, 0x6b, 0xed, 0xc6, 0x37, 0x7a, 0x35, 0xc8, 0xeb,
+	0x02, 0x67, 0x48, 0xac, 0xd5, 0x7d, 0x92, 0xab, 0x18, 0x8e, 0x90, 0xb8, 0x90, 0xa0, 0x6f, 0xf0,
+	0xe0, 0x7c, 0x47, 0x3d, 0xe0, 0x75, 0x76, 0xa2, 0xd7, 0x83, 0x34, 0x6d, 0x66, 0xd0, 0x06, 0x82,
+	0x66, 0x3b, 0xbd, 0x5d, 0x74, 0x36, 0x19, 0x8d, 0xaf, 0x09, 0x6d, 0x21, 0x30, 0xd6, 0xf5, 0xbb,
+	0x3b, 0x76, 0x46, 0xd1, 0x60, 0xb7, 0xb5, 0x71, 0x0b, 0xfe, 0xa7, 0xb2, 0x44, 0xd1, 0xe8, 0x6c,
+	0x35, 0xd2, 0xde, 0x38, 0xfa, 0xf9, 0xe3, 0x8f, 0xcd, 0x81, 0xe9, 0x63, 0x9d, 0xc7, 0x85, 0x38,
+	0x25, 0x0e, 0xa7, 0x69, 0x71, 0xe4, 0xa2, 0x14, 0x07, 0x46, 0x55, 0x92, 0x8b, 0x4c, 0xab, 0x5f,
+	0x19, 0xe3, 0x89, 0xac, 0x8a, 0xc4, 0x79, 0xfa, 0xc1, 0xfd, 0xe6, 0x93, 0xe6, 0x63, 0xf4, 0xee,
+	0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xad, 0x04, 0x63, 0x92, 0x9d, 0x04, 0x00, 0x00,
 }

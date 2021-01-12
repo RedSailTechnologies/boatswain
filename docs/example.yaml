@@ -64,7 +64,7 @@ tests:
 triggers:
   # deployments can trigger other deployments
   - deployment: 
-      name: named-deploy-trigger # the other deployment's name
+      name: mydeploymenttrigger
   
   # trigger a deployment by the rpc/json call, calling this deployment name and sending required params
   - web:

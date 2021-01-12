@@ -149,6 +149,11 @@ func (o *OIDCAgent) Authorize(ctx context.Context, role Role) error {
 	return NotAuthorizedError{}
 }
 
+// User gets the user from the context
+func (o *OIDCAgent) User(ctx context.Context) User {
+	return *o.userFromContext(ctx)
+}
+
 // Wrap wraps an existing http hander to store the auth JWT
 func (o *OIDCAgent) Wrap(base http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

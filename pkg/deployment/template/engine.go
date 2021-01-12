@@ -65,8 +65,6 @@ func (e *Engine) Run(f []byte, v []byte) (*Deployment, error) {
 		return nil, err
 	}
 
-	fmt.Println(out)
-
 	err = yaml.Unmarshal([]byte(out), &d)
 	if err != nil {
 		return nil, err

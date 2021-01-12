@@ -18,6 +18,11 @@ type Deployment struct {
 	Strategy *[]Step    `yaml:"strategy,omitempty"`
 }
 
+// Validate is how a deployment can verify structural correctness before execution
+func (d Deployment) Validate() error {
+	return nil
+}
+
 // An App is a yaml representation of a deployable asset
 type App struct {
 	Name string  `yaml:"name"`

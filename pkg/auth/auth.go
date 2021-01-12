@@ -9,6 +9,7 @@ import (
 type Agent interface {
 	Authenticate(context.Context) (context.Context, error)
 	Authorize(context.Context, Role) error
+	User(context.Context) User
 	Wrap(http.Handler) http.Handler
 }
 

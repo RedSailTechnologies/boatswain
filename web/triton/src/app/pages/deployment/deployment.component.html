@@ -7,18 +7,20 @@
             Branch: {{deployment.branch}}
             <br />
             File Path: {{deployment.filePath}}
+            <br />
         </mat-card-subtitle>
         <mat-card-content style="white-space:pre;">
             <mat-accordion>
                 <mat-expansion-panel hideToggle="true">
                     <mat-expansion-panel-header>
                         <mat-panel-title>YAML</mat-panel-title>
-                        <mat-panel-description>
-                            (click to view templated yaml)
+                        <mat-panel-description style="flex:0 0 auto;">
+                            click to view templated yaml
                         </mat-panel-description>
                       </mat-expansion-panel-header>
-                      <div *ngIf="yaml; else noYaml"></div>
-                      {{yaml}}
+                      <div *ngIf="yaml; else noYaml" [style]="templateError ? 'color:lightcoral;' : ''">
+                          {{yaml}}
+                      </div>
                       <ng-template #noYaml>
                         <mat-spinner color="primary" class="page-spinner"></mat-spinner>
                     </ng-template>
@@ -26,14 +28,17 @@
                 <mat-expansion-panel hideToggle="true">
                     <mat-expansion-panel-header>
                         <mat-panel-title>Runs</mat-panel-title>
-                        <mat-panel-description>
-                            (click to view runs for this deployment)
+                        <mat-panel-description style="flex:0 0 auto;">
+                            click to view runs for this deployment
                         </mat-panel-description>
                     </mat-expansion-panel-header>
                     TODO: table or something here with all runs
                 </mat-expansion-panel>
             </mat-accordion>
         </mat-card-content>
+        <mat-card-actions style="text-align:right;">
+            <button mat-raised-button color="accent" (click)="run()">Run</button>
+        </mat-card-actions>
     </mat-card>
 </div>
 <ng-template #noData>

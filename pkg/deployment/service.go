@@ -178,7 +178,6 @@ func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.
 		return nil, tw.ToTwirpError(err, "error loading Deployment")
 	}
 
-	// get the deployment template
 	f, err := s.repo.File(ctx, &repo.ReadFile{
 		RepoId:   d.RepoID(),
 		Branch:   d.Branch(),
@@ -199,6 +198,54 @@ func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.
 	return &pb.DeploymentTemplated{
 		Yaml: yaml,
 	}, nil
+}
+
+// Trigger a deployment
+func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.DeploymentTriggered, error) {
+	if err := s.auth.Authorize(ctx, auth.Editor); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
+	// template/validate the deployment
+	d, err := s.repository.Load(cmd.Uuid)
+	if err != nil {
+		logger.Error("error reading Deployment", "error", err)
+		return nil, tw.ToTwirpError(err, "error loading Deployment")
+	}
+
+	f, err := s.repo.File(ctx, &repo.ReadFile{
+		RepoId:   d.RepoID(),
+		Branch:   d.Branch(),
+		FilePath: d.FilePath(),
+	})
+	if err != nil {
+		logger.Error("could not get deployment file", "error", err)
+		return nil, twirp.NotFoundError("deployment file not found")
+	}
+
+	te := template.NewEngine(ctx, s.repo)
+	t, err := te.Run(f.File, cmd.Arguments)
+	if err != nil {
+		logger.Error("yaml file could not be templated", "error", err)
+		return nil, twirp.InternalErrorWith(err)
+	}
+	if err = t.Validate(); err != nil {
+		logger.Error("could not validate template", "error", err)
+		return nil, twirp.InternalErrorWith(err)
+	}
+
+	// validate the trigger
+	user := s.auth.User(ctx)
+	if err = ValidateTrigger(&user, cmd, *t.Triggers); err != nil {
+		logger.Error("invalid trigger", "error", err)
+		return nil, twirp.InternalErrorWith(err)
+	}
+
+	// create the run and start the engine in the background
+
+	// return the run id
+
+	return nil, nil
 }
 
 // Ready implements the ReadyService method so this service can be part of a health check routine

@@ -6,11 +6,13 @@
 - [cluster.proto](#cluster.proto)
     - [ClusterCreated](#redsail.bosn.ClusterCreated)
     - [ClusterDestroyed](#redsail.bosn.ClusterDestroyed)
+    - [ClusterFound](#redsail.bosn.ClusterFound)
     - [ClusterRead](#redsail.bosn.ClusterRead)
     - [ClusterUpdated](#redsail.bosn.ClusterUpdated)
     - [ClustersRead](#redsail.bosn.ClustersRead)
     - [CreateCluster](#redsail.bosn.CreateCluster)
     - [DestroyCluster](#redsail.bosn.DestroyCluster)
+    - [FindCluster](#redsail.bosn.FindCluster)
     - [ReadCluster](#redsail.bosn.ReadCluster)
     - [ReadClusters](#redsail.bosn.ReadClusters)
     - [UpdateCluster](#redsail.bosn.UpdateCluster)
@@ -42,6 +44,21 @@ Cluster is the service managing external clusters.
 
 ### ClusterDestroyed
 
+
+
+
+
+
+
+<a name="redsail.bosn.ClusterFound"></a>
+
+### ClusterFound
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| uuid | [string](#string) |  | unique id of the cluster found |
 
 
 
@@ -126,6 +143,21 @@ Cluster is the service managing external clusters.
 
 
 
+<a name="redsail.bosn.FindCluster"></a>
+
+### FindCluster
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | the name of the cluster to search for |
+
+
+
+
+
+
 <a name="redsail.bosn.ReadCluster"></a>
 
 ### ReadCluster
@@ -187,6 +219,7 @@ Cluster is the service managing external clusters.
 | Update | [UpdateCluster](#redsail.bosn.UpdateCluster) | [ClusterUpdated](#redsail.bosn.ClusterUpdated) | edits an already existing cluster |
 | Destroy | [DestroyCluster](#redsail.bosn.DestroyCluster) | [ClusterDestroyed](#redsail.bosn.ClusterDestroyed) | removes a cluster from the list of configurations |
 | Read | [ReadCluster](#redsail.bosn.ReadCluster) | [ClusterRead](#redsail.bosn.ClusterRead) | reads out a cluster |
+| Find | [FindCluster](#redsail.bosn.FindCluster) | [ClusterFound](#redsail.bosn.ClusterFound) | finds the cluster uuid by name |
 | All | [ReadClusters](#redsail.bosn.ReadClusters) | [ClustersRead](#redsail.bosn.ClustersRead) | gets all clusters currently configured and their status |
 
  

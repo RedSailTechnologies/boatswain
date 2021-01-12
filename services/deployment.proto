@@ -24,8 +24,9 @@ service Deployment {
     // get the templated version of this deployment
     rpc Template (TemplateDeployment) returns (DeploymentTemplated);
 
-    // rpc WebTrigger (...) returns (...)
-    // rpc ManualTrigger (...) returns (...)
+    // trigger a deployment
+    rpc Trigger (TriggerDeployment) returns (DeploymentTriggered);
+
     // rpc Runs (...) returns (...)
     // rpc Run (...) returns (...)
 }
@@ -86,4 +87,19 @@ message TemplateDeployment {
 message DeploymentTemplated {
     string uuid = 1; // unique id of the deployment
     string yaml = 2; // the templated yaml for this deployment
+}
+
+message TriggerDeployment {
+    enum TriggerType {
+        WEB = 0;
+        MANUAL = 1;
+    }
+    string uuid = 1; // unique id of the deployment
+    string name = 2; // name of the trigger within this deployment
+    TriggerType type = 3; // the type of trigger
+    bytes arguments = 4; // args for this run
+}
+
+message DeploymentTriggered {
+    string run_uuid = 1; // unique id of the resulting run
 }

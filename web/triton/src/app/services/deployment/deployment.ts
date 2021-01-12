@@ -273,6 +273,52 @@ const JSONToDeploymentTemplated = (m: DeploymentTemplated | DeploymentTemplatedJ
     };
 };
 
+export interface TriggerDeployment {
+    uuid: string;
+    name: string;
+    type: string;
+    arguments: string;
+    
+}
+
+interface TriggerDeploymentJSON {
+    uuid: string;
+    name: string;
+    type: string;
+    arguments: string;
+    
+}
+
+
+const TriggerDeploymentToJSON = (m: TriggerDeployment): TriggerDeploymentJSON => {
+    return {
+        uuid: m.uuid,
+        name: m.name,
+        type: m.type,
+        arguments: m.arguments,
+        
+    };
+};
+
+export interface DeploymentTriggered {
+    runUuid: string;
+    
+}
+
+interface DeploymentTriggeredJSON {
+    run_uuid: string;
+    
+}
+
+
+const JSONToDeploymentTriggered = (m: DeploymentTriggered | DeploymentTriggeredJSON): DeploymentTriggered => {
+    
+    return {
+        runUuid: (((m as DeploymentTriggered).runUuid) ? (m as DeploymentTriggered).runUuid : (m as DeploymentTriggeredJSON).run_uuid),
+        
+    };
+};
+
 export interface Deployment {
     create: (createDeployment: CreateDeployment) => Promise<DeploymentCreated>;
     
@@ -285,6 +331,8 @@ export interface Deployment {
     all: (readDeployments: ReadDeployments) => Promise<DeploymentsRead>;
     
     template: (templateDeployment: TemplateDeployment) => Promise<DeploymentTemplated>;
+    
+    trigger: (triggerDeployment: TriggerDeployment) => Promise<DeploymentTriggered>;
     
 }
 
@@ -386,6 +434,21 @@ export class DefaultDeployment implements Deployment {
             }
 
             return resp.json().then(JSONToDeploymentTemplated);
+        });
+    }
+    
+    trigger(triggerDeployment: TriggerDeployment): Promise<DeploymentTriggered> {
+        const url = this.hostname + this.pathPrefix + "Trigger";
+        let body: TriggerDeployment | TriggerDeploymentJSON = triggerDeployment;
+        if (!this.writeCamelCase) {
+            body = TriggerDeploymentToJSON(triggerDeployment);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToDeploymentTriggered);
         });
     }
     

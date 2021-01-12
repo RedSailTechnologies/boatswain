@@ -9,6 +9,9 @@ apps:
 triggers:
   - web:
       name: wordpress-trigger
+  - manual:
+      users:
+        - "Sam Tailor"
 strategy:
   - name: deploy-wordpress
     always:
