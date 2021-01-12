@@ -12,10 +12,10 @@ triggers:
       name: wordpress-trigger
 strategy:
   - name: deploy-wordpress
-    always:
-      - app:
-          name: wordpress
-          cluster: test
-          helm:
-            command: install
-            wait: true
+    condition: always
+    app:
+      name: wordpress
+      cluster: test
+      helm:
+        command: install
+        wait: true
