@@ -7,29 +7,34 @@ import (
 
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
-	"github.com/redsailtechnologies/boatswain/pkg/deployment/template"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
+	"github.com/redsailtechnologies/boatswain/rpc/cluster"
 	pb "github.com/redsailtechnologies/boatswain/rpc/deployment"
 	"github.com/redsailtechnologies/boatswain/rpc/repo"
 )
 
 var collection = "deployments"
+var runCollection = "runs"
 
 // Service is the implementation for twirp to use
 type Service struct {
-	auth       auth.Agent
-	repo       repo.Repo
-	repository *Repository
+	auth          auth.Agent
+	cluster       cluster.Cluster
+	repo          repo.Repo
+	repository    *Repository
+	runRepository *RunRepository
 }
 
 // NewService creates the service
-func NewService(a auth.Agent, r repo.Repo, s storage.Storage) *Service {
+func NewService(a auth.Agent, c cluster.Cluster, r repo.Repo, s storage.Storage) *Service {
 	return &Service{
-		auth:       a,
-		repo:       r,
-		repository: NewRepository(collection, s),
+		auth:          a,
+		cluster:       c,
+		repo:          r,
+		repository:    NewRepository(collection, s),
+		runRepository: NewRunRepository(runCollection, s),
 	}
 }
 
@@ -188,8 +193,8 @@ func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.
 		return nil, twirp.NotFoundError("deployment file not found")
 	}
 
-	e := template.NewEngine(ctx, s.repo)
-	yaml, err := e.Template(f.File)
+	te := NewTemplateEngine(ctx, s.repo)
+	yaml, err := te.Template(f.File)
 	if err != nil {
 		logger.Error("yaml file could not be templated", "error", err)
 		return nil, twirp.InternalErrorWith(err)
@@ -204,6 +209,18 @@ func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.
 func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.DeploymentTriggered, error) {
 	if err := s.auth.Authorize(ctx, auth.Editor); err != nil {
 		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
+	// get all clusters and repos as we know about them now
+	repos, err := s.repo.All(ctx, &repo.ReadRepos{})
+	if err != nil {
+		logger.Error("could not get repos", "error", err)
+		return nil, err
+	}
+	clusters, err := s.cluster.All(ctx, &cluster.ReadClusters{})
+	if err != nil {
+		logger.Error("could not get clusters", "error", err)
+		return nil, err
 	}
 
 	// template/validate the deployment
@@ -223,7 +240,7 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 		return nil, twirp.NotFoundError("deployment file not found")
 	}
 
-	te := template.NewEngine(ctx, s.repo)
+	te := NewTemplateEngine(ctx, s.repo)
 	t, err := te.Run(f.File, cmd.Arguments)
 	if err != nil {
 		logger.Error("yaml file could not be templated", "error", err)
@@ -236,19 +253,47 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 
 	// validate the trigger
 	user := s.auth.User(ctx)
-	if err = ValidateTrigger(&user, cmd, *t.Triggers); err != nil {
+	if err = ValidateTrigger(&user, cmd, *t); err != nil {
 		logger.Error("invalid trigger", "error", err)
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	// create the run and start the engine in the background
+	// create the run
+	run, err := CreateRun(ddd.NewUUID(), ddd.NewTimestamp(), t, &Trigger{
+		Name: cmd.Name,
+		Type: getTriggerType(cmd.Type),
+		User: user,
+	})
+	if err = s.runRepository.Save(run); err != nil {
+		logger.Error("could not save created run", "error", err)
+		return nil, twirp.InternalErrorWith(err)
+	}
+
+	// TODO - download all necessary files while we still have credentials
+
+	// start the engine in the background
+	re := NewRunEngine(run, s.runRepository, clusters.Clusters, repos.Repos)
+
+	go re.Run()
 
 	// return the run id
-
-	return nil, nil
+	return &pb.DeploymentTriggered{
+		RunUuid: run.UUID(),
+	}, nil
 }
 
 // Ready implements the ReadyService method so this service can be part of a health check routine
 func (s Service) Ready() error {
 	return s.repository.store.CheckReady()
+}
+
+func getTriggerType(t pb.TriggerDeployment_TriggerType) TriggerType {
+	switch t {
+	case pb.TriggerDeployment_WEB:
+		return WebTrigger
+	case pb.TriggerDeployment_MANUAL:
+		return ManualTrigger
+	default:
+		return DeploymentTrigger
+	}
 }

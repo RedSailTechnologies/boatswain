@@ -1,4 +1,4 @@
-package template
+package deployment
 
 import (
 	"bytes"
@@ -12,27 +12,22 @@ import (
 	"github.com/redsailtechnologies/boatswain/rpc/repo"
 )
 
-/*
-3. clean up code
-4. pass in file getting dependency
-*/
-
-// The Engine is the worker that performs all templating steps
-type Engine struct {
+// The TemplateEngine is the worker that performs all templating steps
+type TemplateEngine struct {
 	ctx  context.Context
 	repo repo.Repo
 }
 
-// NewEngine initializes the engine with required dependencies
-func NewEngine(c context.Context, r repo.Repo) *Engine {
-	return &Engine{
+// NewTemplateEngine initializes the engine with required dependencies
+func NewTemplateEngine(c context.Context, r repo.Repo) *TemplateEngine {
+	return &TemplateEngine{
 		ctx:  c,
 		repo: r,
 	}
 }
 
 // Run performs all templating steps with the given file contents
-func (e *Engine) Run(f []byte, v []byte) (*Deployment, error) {
+func (e *TemplateEngine) Run(f []byte, v []byte) (*Template, error) {
 	raw := make(map[string]interface{})
 	err := yaml.Unmarshal(f, &raw)
 	if err != nil {
@@ -60,7 +55,7 @@ func (e *Engine) Run(f []byte, v []byte) (*Deployment, error) {
 		return nil, err
 	}
 
-	d := Deployment{}
+	d := Template{}
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +69,7 @@ func (e *Engine) Run(f []byte, v []byte) (*Deployment, error) {
 }
 
 // Template performs all templating steps save the final values substitution and unmarshal
-func (e *Engine) Template(f []byte) (string, error) {
+func (e *TemplateEngine) Template(f []byte) (string, error) {
 	raw := make(map[string]interface{})
 	err := yaml.Unmarshal(f, &raw)
 	if err != nil {
@@ -94,11 +89,11 @@ func (e *Engine) Template(f []byte) (string, error) {
 	return string(b), nil
 }
 
-func (e *Engine) replaceTemplates(y map[string]interface{}) (map[string]interface{}, error) {
+func (e *TemplateEngine) replaceTemplates(y map[string]interface{}) (map[string]interface{}, error) {
 	for key := range y {
 		if value, ok := y[key]; ok {
 			if key == "template" {
-				t := Template{}
+				t := Substitution{}
 				b, err := yaml.Marshal(y)
 				err = yaml.Unmarshal(b, &t)
 				if err != nil {
@@ -143,7 +138,7 @@ func (e *Engine) replaceTemplates(y map[string]interface{}) (map[string]interfac
 	return y, nil
 }
 
-func (e *Engine) replaceTemplate(y map[string]interface{}, k string, t Template) (map[string]interface{}, error) {
+func (e *TemplateEngine) replaceTemplate(y map[string]interface{}, k string, t Substitution) (map[string]interface{}, error) {
 	r, err := e.repo.Find(e.ctx, &repo.FindRepo{Name: t.Repo})
 	if err != nil {
 		return nil, err

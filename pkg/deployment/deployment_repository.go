@@ -69,16 +69,16 @@ func (r *Repository) Load(uuid string) (*Deployment, error) {
 }
 
 // Save persists the new events for the deployment given
-func (r *Repository) Save(c *Deployment) error {
-	version := r.store.GetVersion(r.coll, c.UUID())
-	for i, ev := range c.Events()[version:] {
+func (r *Repository) Save(d *Deployment) error {
+	version := r.store.GetVersion(r.coll, d.UUID())
+	for i, ev := range d.Events()[version:] {
 		v := i + version + 1
-		d, err := json.Marshal(ev)
+		e, err := json.Marshal(ev)
 		if err != nil {
 			return err
 		}
 
-		err = r.store.StoreEvent(r.coll, c.UUID(), ev.EventType(), string(d), v)
+		err = r.store.StoreEvent(r.coll, d.UUID(), ev.EventType(), string(e), v)
 		if err != nil {
 			return err
 		}

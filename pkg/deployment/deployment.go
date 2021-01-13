@@ -87,26 +87,26 @@ func Create(uuid, name, repoID, branch, filePath string, timestamp int64) (*Depl
 }
 
 // Destroy handles destroy commands
-func (c *Deployment) Destroy(timestamp int64) error {
-	if c.destroyed {
+func (d *Deployment) Destroy(timestamp int64) error {
+	if d.destroyed {
 		return ddd.DestroyedError{Entity: entityName}
 	}
-	c.on(&Destroyed{
+	d.on(&Destroyed{
 		Timestamp: timestamp,
 	})
 	return nil
 }
 
 // Update handles update commands
-func (c *Deployment) Update(name, repoID, branch, filePath string, timestamp int64) error {
+func (d *Deployment) Update(name, repoID, branch, filePath string, timestamp int64) error {
 	if err := validateFields(name, repoID, branch, filePath); err != nil {
 		return err
 	}
-	if c.destroyed {
+	if d.destroyed {
 		return ddd.DestroyedError{Entity: entityName}
 	}
 
-	c.on(&Updated{
+	d.on(&Updated{
 		Timestamp: timestamp,
 		Name:      name,
 		RepoID:    repoID,
@@ -117,57 +117,57 @@ func (c *Deployment) Update(name, repoID, branch, filePath string, timestamp int
 }
 
 // UUID returns this deployment's identifier
-func (c *Deployment) UUID() string {
-	return c.uuid
+func (d *Deployment) UUID() string {
+	return d.uuid
 }
 
 // Name returns this deployment's name
-func (c *Deployment) Name() string {
-	return c.name
+func (d *Deployment) Name() string {
+	return d.name
 }
 
 // RepoID returns the uuid of the repo for this deployment's yaml file
-func (c *Deployment) RepoID() string {
-	return c.repoID
+func (d *Deployment) RepoID() string {
+	return d.repoID
 }
 
 // Branch returns the branch of the repo for this deployment's yaml file
-func (c *Deployment) Branch() string {
-	return c.branch
+func (d *Deployment) Branch() string {
+	return d.branch
 }
 
 // FilePath returns the file path of the repo for this deployment's yaml file
-func (c *Deployment) FilePath() string {
-	return c.filePath
+func (d *Deployment) FilePath() string {
+	return d.filePath
 }
 
 // Events returns this deployment's event history
-func (c *Deployment) Events() []ddd.Event {
-	return c.events
+func (d *Deployment) Events() []ddd.Event {
+	return d.events
 }
 
 // Version returns this deployment's version number (NOTE: aggregate version!)
-func (c *Deployment) Version() int {
-	return c.version
+func (d *Deployment) Version() int {
+	return d.version
 }
 
-func (c *Deployment) on(event ddd.Event) {
-	c.events = append(c.events, event)
-	c.version++
+func (d *Deployment) on(event ddd.Event) {
+	d.events = append(d.events, event)
+	d.version++
 	switch e := event.(type) {
 	case *Created:
-		c.uuid = e.UUID
-		c.name = e.Name
-		c.repoID = e.RepoID
-		c.branch = e.Branch
-		c.filePath = e.FilePath
+		d.uuid = e.UUID
+		d.name = e.Name
+		d.repoID = e.RepoID
+		d.branch = e.Branch
+		d.filePath = e.FilePath
 	case *Destroyed:
-		c.destroyed = true
+		d.destroyed = true
 	case *Updated:
-		c.name = e.Name
-		c.repoID = e.RepoID
-		c.branch = e.Branch
-		c.filePath = e.FilePath
+		d.name = e.Name
+		d.repoID = e.RepoID
+		d.branch = e.Branch
+		d.filePath = e.FilePath
 	}
 }
 

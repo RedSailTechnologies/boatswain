@@ -51,8 +51,7 @@ export class DeploymentComponent implements OnInit {
     var runTrigger = this.client.trigger(<TriggerDeployment>{
       uuid: this.deployment.uuid,
       // FIXME -switch to manual after done developing/debugging
-      type: "WEB",
-      name: "wordpress-trigger"
+      type: "MANUAL",
       // TODO - args
     });
     var spinnerRef: MatDialogRef<BusyComponent> = this.spinner.open(BusyComponent, {

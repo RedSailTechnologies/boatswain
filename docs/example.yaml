@@ -81,91 +81,86 @@ triggers:
 
 # strategy is the backbone of the execution flow that specifies how deployments and tests are run
 strategy:
-  - name: deploy-app
-    always:
-      # run an app deployment from above
-      - app: 
-          name: sample-app
-          cluster: dev
-          helm:
-            command: upgrade # install, upgrade, rollback, uninstall - defaults to install
-            wait: true # whether to deploy helm with the wait flag, defaults to false
-            values:
-              # specify the values individually
-              raw:
-                someValue: ${{ .Parameters.someValue }}
-                # ...
+  - name: deploy-app # the name for the step in this part of the strategy
+    condition: always # the condition to run this step under (always, any, succeeded, failed)
+    app: 
+      name: sample-app # the name of the app, from the above metadata section
+      cluster: dev # the name of the cluster, which must be on the list above
+      helm:
+        command: upgrade # install, upgrade, rollback, uninstall - defaults to install
+        wait: true # whether to deploy helm with the wait flag, defaults to false
+        values:
+          # specify the values individually
+          raw:
+            someValue: ${{ .Parameters.someValue }}
 
-      # also run this app deployment, note that within a strategy entry no guarantee is made about execution,
-      # so this chart could be installed before the chart above
-      - app: 
-          name: sample-routing
-          cluster: dev
-          helm:
-            wait: false
-            values:
-              # use part or all of a library chart as values
-              library:
-                chart: sample-routing-values
-                repo: myrepo
-                version: '10.0.2'
-                files:
-                  - sample-app.yaml
+  - name: deploy-routing
+    condition: succeeded
+    app: 
+      name: sample-routing
+      cluster: dev
+      helm:
+        wait: false
+        values:
+          library: # use part or all of a library chart as values
+            chart: sample-routing-values
+            repo: myrepo
+            version: '10.0.2'
+            files:
+              - sample-app.yaml
 
-  # this step will run after the previous step, note that the success and failure
-  # conditions depend on all portions of the previous step
   - name: run-tests
     hold: 10m # a wait, executed before any conditional-defaults to 0m
-    success:
-      - test: 
-          name: sample-app-tests
-          cluster: dev
-    failure:
-      - app: 
-          name: sample-app
-          cluster: dev
-          helm:
-            # whether or not to uninstall the app in question
-            # note that this takes precedence over rollback!
-            command: uninstall
-      - app: 
-          name: sample-routing
-          cluster: dev
-          helm:
-            command: rollback
-            version: '2'
+    condition: succeeded
+    test: 
+      name: sample-app-tests
+      cluster: dev
   
-  - name: approvals
+  - name: uninstall-app
+    condition: failed
+    app: 
+      name: sample-app
+      cluster: dev
+      helm:
+        # whether or not to uninstall the app in question
+        # note that this takes precedence over rollback!
+        command: uninstall
+  
+  - name: rollback-routing
+    condition: any
+    app: 
+      name: sample-routing
+      cluster: dev
+      helm:
+        command: rollback
+        version: '2'
+  
+  - name: approval
     hold: 2h
+    condition: any
     any:
       # approvals are how specific parts of a deployment can require manual intervention
       # note the hold happens before the approval is accepted but any parts of this step following
       # the approval are gated
-      - approval:
-          groups:
-            - group-name # groups that can approve/start this trigger
-          users: 
-            - some-body # same for groups but with users
-      - test: 
-          name: runs-after-approval-is-met
-          cluster: dev
+    approval:
+      groups:
+        - group-name # groups that can approve/start this trigger
+      users: 
+        - some-body # same for groups but with users
   
-  # run this step no matter what the previous condition was if the previous condition was run
   - name: trigger-following
-    any:
-      # trigger another deployment by using its name and the trigger name
-      - trigger:
-          name: another-app-deployment-trigger
-          deployment: another-app
-          arguments: 
-            a: b
+    condition: any
+    trigger: # trigger another deployment by using its name and the trigger name
+      name: another-app-deployment-trigger
+      deployment: another-app
+      arguments: 
+        a: b
 
-  # run this step always, regardless of whether the previous condition was run
   - name: cleanup
-    always:
-      - app: 
-          name: sample-app
-          cluster: staging
-          helm: 
-            wait: true
+    condition: always
+    app: 
+      name: sample-app
+      cluster: staging
+      helm: 
+        wait: true
  
