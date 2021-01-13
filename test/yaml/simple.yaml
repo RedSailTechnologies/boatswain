@@ -18,6 +18,7 @@ strategy:
     app:
       name: wordpress
       cluster: test
+      namespace: default
       helm:
         command: install
         wait: true
