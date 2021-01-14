@@ -1,15 +1,18 @@
 package deployment
 
-import "github.com/redsailtechnologies/boatswain/pkg/ddd"
+import (
+	"github.com/redsailtechnologies/boatswain/pkg/ddd"
+)
 
 var runEntityName = "Run"
 
 // RunCreated is the event for when a new run is started
 type RunCreated struct {
-	Timestamp int64
-	UUID      string
-	Template  *Template
-	Trigger   *Trigger
+	Timestamp      int64
+	UUID           string
+	DeploymentUUID string
+	Template       *Template
+	Trigger        *Trigger
 }
 
 // EventType marks this as an event
@@ -42,7 +45,7 @@ func (e StepStarted) EventType() string {
 type StepCompleted struct {
 	Timestamp int64
 	Status    Status
-	Logs      Logs
+	Log       Log
 }
 
 // EventType marks this as an event
@@ -66,15 +69,16 @@ type Run struct {
 	events  []ddd.Event
 	version int
 
-	uuid    string
-	trigger *Trigger
-	status  Status
+	uuid           string
+	deploymentUUID string
+	trigger        *Trigger
+	status         Status
 
 	*Template
 }
 
-// Logs represents the logs for a step
-type Logs []string
+// Log represents the log output for a step
+type Log string
 
 // Status represents the outcome of a step
 type Status int
@@ -106,17 +110,18 @@ func ReplayRun(events []ddd.Event) *Run {
 }
 
 // CreateRun handles create commands for runs
-func CreateRun(uuid string, timestamp int64, template *Template, trigger *Trigger) (*Run, error) {
+func CreateRun(uuid, depUUID string, timestamp int64, template *Template, trigger *Trigger) (*Run, error) {
 	if uuid == "" {
 		return nil, ddd.IDError{}
 	}
 
 	r := &Run{}
 	r.on(&RunCreated{
-		Timestamp: timestamp,
-		UUID:      uuid,
-		Template:  template,
-		Trigger:   trigger,
+		Timestamp:      timestamp,
+		UUID:           uuid,
+		DeploymentUUID: depUUID,
+		Template:       template,
+		Trigger:        trigger,
 	})
 	return r, nil
 }
@@ -160,7 +165,7 @@ func (r *Run) StartStep(stepName string, timestamp int64) error {
 }
 
 // CompleteStep completes the currently running step
-func (r *Run) CompleteStep(status Status, logs Logs, timestamp int64) error {
+func (r *Run) CompleteStep(status Status, log Log, timestamp int64) error {
 	if r.status == NotStarted && status != Skipped {
 		return ExecutionError{
 			Message: "run not started",
@@ -168,15 +173,10 @@ func (r *Run) CompleteStep(status Status, logs Logs, timestamp int64) error {
 	}
 	for _, step := range *r.Strategy {
 		if step.Status == InProgress {
-			return ExecutionError{
-				Message: "step is still in progress",
-				Step:    step.Name,
-			}
-		} else if step.Status == InProgress {
 			r.on(&StepCompleted{
 				Timestamp: timestamp,
 				Status:    status,
-				Logs:      logs,
+				Log:       log,
 			})
 			return nil
 		}
@@ -195,11 +195,14 @@ func (r *Run) Complete(status Status, timestamp int64) error {
 	return nil
 }
 
-// TODO - getters
-
 // UUID gets the run's uuid
 func (r *Run) UUID() string {
 	return r.uuid
+}
+
+// DeploymentUUID gets the run's deployment uuid
+func (r *Run) DeploymentUUID() string {
+	return r.deploymentUUID
 }
 
 // NextStep gets the next step yet to be executed
@@ -217,14 +220,29 @@ func (r *Run) NextStep() (*Step, error) {
 	return nil, nil
 }
 
+// RunVersion gets the version specified in the template for the run (NOTE: not the entity version)
+func (r *Run) RunVersion() string {
+	return r.Template.Version
+}
+
 // Status gets the runs current status
 func (r *Run) Status() Status {
 	return r.status
 }
 
+// Steps gets the steps for this run
+func (r *Run) Steps() []Step {
+	return *r.Strategy
+}
+
 // Events gets the run's event history
 func (r *Run) Events() []ddd.Event {
 	return r.events
+}
+
+// Version gets the run's entity version
+func (r *Run) Version() int {
+	return r.version
 }
 
 func (r *Run) on(event ddd.Event) {
@@ -233,26 +251,28 @@ func (r *Run) on(event ddd.Event) {
 	switch e := event.(type) {
 	case *RunCreated:
 		r.uuid = e.UUID
+		r.deploymentUUID = e.DeploymentUUID
 		r.trigger = e.Trigger
 		r.status = NotStarted
 		r.Template = e.Template
+	case *RunStarted:
+		r.status = InProgress
 	case *StepStarted:
-		if r.status == NotStarted {
-			r.status = InProgress
-		}
-		for _, step := range *r.Strategy {
+		for i, step := range *r.Strategy {
 			if step.Name == e.Name && step.Status == NotStarted {
-				step.Status = InProgress
+				(*r.Strategy)[i].Status = InProgress
 			}
 		}
 	case *StepCompleted:
-		for _, step := range *r.Strategy {
+		for i, step := range *r.Strategy {
 			if step.Status == InProgress {
-				step.Status = e.Status
-				step.Logs = e.Logs
+				(*r.Strategy)[i].Status = e.Status
+				(*r.Strategy)[i].Log = e.Log
 				return
 			}
 		}
+	case *RunCompleted:
+		r.status = e.Status
 	}
 }
 

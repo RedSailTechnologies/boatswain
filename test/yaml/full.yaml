@@ -1,0 +1,57 @@
+version: '1.0.0'
+clusters:
+  - test
+apps:
+  - name: wordpress
+    helm:
+      chart: wordpress
+      repo: bitnami
+      version: 10.3.1
+  - name: wpup
+    helm:
+      chart: wordpress
+      repo: bitnami
+      version: 10.4.0
+triggers:
+  - web:
+      name: wordpress-trigger
+  - manual:
+      users:
+        - "Sam Tailor"
+strategy:
+  - name: deploy-wordpress
+    condition: always
+    app:
+      name: wordpress
+      cluster: test
+      namespace: default
+      helm:
+        command: install
+        wait: true
+  - name: upgrade-wordpress
+    condition: succeeded
+    app:
+      name: wpup
+      cluster: test
+      namespace: default
+      helm:
+        command: upgrade
+        wait: true
+  - name: rollback-wordpress
+    condition: succeeded
+    app:
+      name: wpup
+      cluster: test
+      namespace: default
+      helm:
+        command: rollback
+        wait: true
+  - name: uninstall-wordpress
+    condition: succeeded
+    app:
+      name: wordpress
+      cluster: test
+      namespace: default
+      helm:
+        command: uninstall
+        wait: true

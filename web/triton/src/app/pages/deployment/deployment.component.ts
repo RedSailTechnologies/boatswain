@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Title } from '@angular/platform-browser';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BusyComponent } from 'src/app/dialogs/busy/busy.component';
-import { DefaultDeployment, Deployment, DeploymentRead, ReadDeployment, TemplateDeployment, TriggerDeployment } from 'src/app/services/deployment/deployment';
+import { DefaultDeployment, Deployment, DeploymentRead, ReadDeployment, ReadRuns, RunReadSummary, TemplateDeployment, TriggerDeployment } from 'src/app/services/deployment/deployment';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 
 @Component({
@@ -16,10 +16,11 @@ export class DeploymentComponent implements OnInit {
   public deployment: DeploymentRead;
   public yaml: string;
   public templateError: boolean;
+  public runs: RunReadSummary[];
 
   constructor(private route: ActivatedRoute,
+              private router: Router,
               private spinner: MatDialog,
-              private title: Title,
               auth: AuthService) {
     this.client = new DefaultDeployment(`${location.protocol}//${location.host}/api`, auth.fetch());
   }
@@ -43,6 +44,12 @@ export class DeploymentComponent implements OnInit {
           this.templateError = true;
           this.yaml = reason;
         });
+
+        this.client.runs(<ReadRuns>{
+          deploymentUuid: id
+        }).then(value => {
+          this.runs = value.runs;
+        })
       });
     })
   }
@@ -50,7 +57,6 @@ export class DeploymentComponent implements OnInit {
   run() {
     var runTrigger = this.client.trigger(<TriggerDeployment>{
       uuid: this.deployment.uuid,
-      // FIXME -switch to manual after done developing/debugging
       type: "MANUAL",
       // TODO - args
     });
@@ -61,5 +67,9 @@ export class DeploymentComponent implements OnInit {
     runTrigger.finally(() => {
       spinnerRef.close();
     });
+  }
+
+  redirect(run: RunReadSummary) {
+    this.router.navigate(['/run/' + run.uuid]);
   }
 }

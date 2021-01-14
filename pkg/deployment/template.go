@@ -14,16 +14,9 @@ type Template struct {
 
 	Clusters []string `yaml:"clusters"`
 
-	Apps *[]struct {
-		Name string `yaml:"name"`
-		Helm *struct {
-			Chart   string `yaml:"chart"`
-			Repo    string `yaml:"repo"`
-			Version string `yaml:"version"`
-		} `yaml:"helm,omitempty"`
-	} `yaml:"apps,omitempty"`
+	Apps *[]App `yaml:"apps,omitempty"`
 
-	Tests *[]struct {
+	Tests []struct {
 		Name string `yaml:"name"`
 		Helm *struct {
 			Name    string `yaml:"name"`
@@ -47,6 +40,16 @@ type Template struct {
 	Strategy *[]Step `yaml:"strategy,omitempty"`
 }
 
+// An App is a deployable application within a template
+type App struct {
+	Name string `yaml:"name"`
+	Helm *struct {
+		Chart   string `yaml:"chart"`
+		Repo    string `yaml:"repo"`
+		Version string `yaml:"version"`
+	} `yaml:"helm,omitempty"`
+}
+
 // A Step is an individual step within a Strategy
 type Step struct {
 	// metadata/execution information
@@ -56,14 +59,15 @@ type Step struct {
 
 	// internal fields
 	Status Status `yaml:"-"`
-	Logs   Logs   `yaml:"-"`
+	Log    Log    `yaml:"-"`
 	Start  int64  `yaml:"-"`
 
 	// step information
 	App *struct {
-		Name    string `yaml:"name"`
-		Cluster string `yaml:"cluster"`
-		Helm    *struct {
+		Name      string `yaml:"name"`
+		Cluster   string `yaml:"cluster"`
+		Namespace string `yaml:"namespace"`
+		Helm      *struct {
 			Command string `yaml:"command"`
 			Wait    bool   `yaml:"wait"`
 			Version int    `yaml:"version"`
@@ -74,14 +78,15 @@ type Step struct {
 					Version string   `yaml:"version"`
 					Files   []string `yaml:"files"`
 				} `yaml:"library,omitempty"`
-				Raw map[string]interface{} `yaml:"raw,omitempty"`
+				Raw *map[string]interface{} `yaml:"raw,omitempty"`
 			} `yaml:"values,omitempty"`
 		} `yaml:"helm,omitempty"`
 	} `yaml:"app,omitempty"`
 
 	Test *struct {
-		Name    string `yaml:"name"`
-		Cluster string `yaml:"cluster"`
+		Name      string `yaml:"name"`
+		Cluster   string `yaml:"cluster"`
+		Namespace string `yaml:"namespace"`
 	} `yaml:"test,omitempty"`
 
 	Approval *struct {

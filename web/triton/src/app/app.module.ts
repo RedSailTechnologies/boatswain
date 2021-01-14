@@ -19,6 +19,7 @@ import { MatSelectModule } from "@angular/material/select";
 import { MatSidenavModule } from "@angular/material/sidenav";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatSortModule } from "@angular/material/sort";
+import { MatStepperModule } from "@angular/material/stepper"
 import { MatTableModule } from "@angular/material/table";
 import { MatToolbarModule } from "@angular/material/toolbar";
 import { MatTooltipModule } from "@angular/material/tooltip";
@@ -46,6 +47,7 @@ import { ConfigService } from './utils/config/config.service';
 import { DeploymentsComponent } from './pages/deployments/deployments.component';
 import { DeploymentDialogComponent } from './dialogs/deployment-dialog/deployment-dialog.component';
 import { DeploymentComponent } from './pages/deployment/deployment.component';
+import { RunComponent } from './pages/run/run.component';
 
 export function initializeConfig(config: ConfigService) {
   return () => config.load();
@@ -69,7 +71,8 @@ export function initializeConfig(config: ConfigService) {
     LogoutComponent,
     DeploymentsComponent,
     DeploymentDialogComponent,
-    DeploymentComponent
+    DeploymentComponent,
+    RunComponent
   ],
   imports: [
     AppRoutingModule,
@@ -93,6 +96,7 @@ export function initializeConfig(config: ConfigService) {
     MatSidenavModule,
     MatSnackBarModule,
     MatSortModule,
+    MatStepperModule,
     MatTableModule,
     MatToolbarModule,
     MatTooltipModule,

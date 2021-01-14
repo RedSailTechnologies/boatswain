@@ -1,0 +1,13 @@
+<div class="page" *ngIf="run; else noData">
+    <mat-vertical-stepper>
+        <mat-step *ngFor="let step of run.steps">
+            <ng-template matStepLabel>{{step.name}}</ng-template>
+            <p style="white-space:pre;">
+                {{step.log}}
+            </p>
+        </mat-step>
+    </mat-vertical-stepper>
+</div>
+<ng-template #noData>
+    <mat-spinner color="primary" class="page-spinner"></mat-spinner>
+</ng-template>

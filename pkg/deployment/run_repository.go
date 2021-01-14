@@ -22,6 +22,8 @@ func NewRunRepository(coll string, store storage.Storage) *RunRepository {
 }
 
 // All gets all runs
+// FIXME we need to implement a filter at the repo level here so we can
+// get all runs by the deployment id, not every single one in the system
 func (r *RunRepository) All() ([]*Run, error) {
 	uuids, err := r.store.IDs(r.coll)
 	if err != nil {
@@ -87,10 +89,14 @@ func unmarshalRunEvents(events []*storage.StoredEvent) ([]ddd.Event, error) {
 		switch event.Type {
 		case runEntityName + "Created":
 			e = &RunCreated{}
+		case runEntityName + "Started":
+			e = &RunStarted{}
 		case runEntityName + "StepStarted":
 			e = &StepStarted{}
 		case runEntityName + "StepCompleted":
 			e = &StepCompleted{}
+		case runEntityName + "Completed":
+			e = &RunCompleted{}
 		default:
 			return nil, ddd.UnsupportedEventError{
 				EventType: event.Type,

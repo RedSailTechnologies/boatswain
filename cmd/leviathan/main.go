@@ -54,7 +54,7 @@ func main() {
 	repo := repo.NewService(authAgent, git.DefaultAgent{}, helm.DefaultAgent{}, store)
 	repTwirp := rep.NewRepoServer(repo, hooks, twirp.WithServerPathPrefix("/api"))
 
-	deploy := deployment.NewService(authAgent, repo, store)
+	deploy := deployment.NewService(authAgent, cluster, repo, store)
 	depTwirp := dl.NewDeploymentServer(deploy, hooks, twirp.WithServerPathPrefix("/api"))
 
 	// Client

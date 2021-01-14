@@ -319,6 +319,139 @@ const JSONToDeploymentTriggered = (m: DeploymentTriggered | DeploymentTriggeredJ
     };
 };
 
+export interface ReadRun {
+    deploymentUuid: string;
+    
+}
+
+interface ReadRunJSON {
+    deployment_uuid: string;
+    
+}
+
+
+const ReadRunToJSON = (m: ReadRun): ReadRunJSON => {
+    return {
+        deployment_uuid: m.deploymentUuid,
+        
+    };
+};
+
+export interface StepRead {
+    name: string;
+    status: string;
+    log: string;
+    
+}
+
+interface StepReadJSON {
+    name: string;
+    status: string;
+    log: string;
+    
+}
+
+
+const JSONToStepRead = (m: StepRead | StepReadJSON): StepRead => {
+    
+    return {
+        name: m.name,
+        status: m.status,
+        log: m.log,
+        
+    };
+};
+
+export interface RunRead {
+    uuid: string;
+    version: string;
+    status: string;
+    steps: StepRead[];
+    
+}
+
+interface RunReadJSON {
+    uuid: string;
+    version: string;
+    status: string;
+    steps: StepReadJSON[];
+    
+}
+
+
+const JSONToRunRead = (m: RunRead | RunReadJSON): RunRead => {
+    
+    return {
+        uuid: m.uuid,
+        version: m.version,
+        status: m.status,
+        steps: (m.steps as (StepRead | StepReadJSON)[]).map(JSONToStepRead),
+        
+    };
+};
+
+export interface ReadRuns {
+    deploymentUuid: string;
+    
+}
+
+interface ReadRunsJSON {
+    deployment_uuid: string;
+    
+}
+
+
+const ReadRunsToJSON = (m: ReadRuns): ReadRunsJSON => {
+    return {
+        deployment_uuid: m.deploymentUuid,
+        
+    };
+};
+
+export interface RunReadSummary {
+    uuid: string;
+    version: string;
+    status: string;
+    
+}
+
+interface RunReadSummaryJSON {
+    uuid: string;
+    version: string;
+    status: string;
+    
+}
+
+
+const JSONToRunReadSummary = (m: RunReadSummary | RunReadSummaryJSON): RunReadSummary => {
+    
+    return {
+        uuid: m.uuid,
+        version: m.version,
+        status: m.status,
+        
+    };
+};
+
+export interface RunsRead {
+    runs: RunReadSummary[];
+    
+}
+
+interface RunsReadJSON {
+    runs: RunReadSummaryJSON[];
+    
+}
+
+
+const JSONToRunsRead = (m: RunsRead | RunsReadJSON): RunsRead => {
+    
+    return {
+        runs: (m.runs as (RunReadSummary | RunReadSummaryJSON)[]).map(JSONToRunReadSummary),
+        
+    };
+};
+
 export interface Deployment {
     create: (createDeployment: CreateDeployment) => Promise<DeploymentCreated>;
     
@@ -333,6 +466,10 @@ export interface Deployment {
     template: (templateDeployment: TemplateDeployment) => Promise<DeploymentTemplated>;
     
     trigger: (triggerDeployment: TriggerDeployment) => Promise<DeploymentTriggered>;
+    
+    run: (readRun: ReadRun) => Promise<RunRead>;
+    
+    runs: (readRuns: ReadRuns) => Promise<RunsRead>;
     
 }
 
@@ -449,6 +586,36 @@ export class DefaultDeployment implements Deployment {
             }
 
             return resp.json().then(JSONToDeploymentTriggered);
+        });
+    }
+    
+    run(readRun: ReadRun): Promise<RunRead> {
+        const url = this.hostname + this.pathPrefix + "Run";
+        let body: ReadRun | ReadRunJSON = readRun;
+        if (!this.writeCamelCase) {
+            body = ReadRunToJSON(readRun);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToRunRead);
+        });
+    }
+    
+    runs(readRuns: ReadRuns): Promise<RunsRead> {
+        const url = this.hostname + this.pathPrefix + "Runs";
+        let body: ReadRuns | ReadRunsJSON = readRuns;
+        if (!this.writeCamelCase) {
+            body = ReadRunsToJSON(readRuns);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToRunsRead);
         });
     }
     

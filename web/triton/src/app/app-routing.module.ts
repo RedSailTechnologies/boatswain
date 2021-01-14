@@ -10,6 +10,7 @@ import { CheckService } from './utils/auth/check.service';
 import { LogoutComponent } from './pages/logout/logout.component';
 import { DeploymentsComponent } from './pages/deployments/deployments.component';
 import { DeploymentComponent } from './pages/deployment/deployment.component';
+import { RunComponent } from './pages/run/run.component';
 
 const routes: Routes = [
   {path: '', component: HomeComponent},
@@ -20,7 +21,8 @@ const routes: Routes = [
   {path: 'projects', component: ProjectsComponent, canActivate: [CheckService]},
   {path: 'applications', component: ApplicationsComponent, canActivate: [CheckService]},
   {path: 'deployments', component: DeploymentsComponent, canActivate: [CheckService]},
-  {path: 'deployment/:uuid', component: DeploymentComponent, canActivate: [CheckService]}
+  {path: 'deployment/:uuid', component: DeploymentComponent, canActivate: [CheckService]},
+  {path: 'run/:uuid', component: RunComponent, canActivate: [CheckService]}
 ];
 
 @NgModule({

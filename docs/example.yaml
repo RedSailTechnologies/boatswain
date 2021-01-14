@@ -86,6 +86,7 @@ strategy:
     app: 
       name: sample-app # the name of the app, from the above metadata section
       cluster: dev # the name of the cluster, which must be on the list above
+      namespace: app-ns # the namespace to use
       helm:
         command: upgrade # install, upgrade, rollback, uninstall - defaults to install
         wait: true # whether to deploy helm with the wait flag, defaults to false
@@ -99,6 +100,7 @@ strategy:
     app: 
       name: sample-routing
       cluster: dev
+      namespace: app-ns
       helm:
         wait: false
         values:
@@ -115,12 +117,14 @@ strategy:
     test: 
       name: sample-app-tests
       cluster: dev
+      namespace: app-ns # the namespace the app is in
   
   - name: uninstall-app
     condition: failed
     app: 
       name: sample-app
       cluster: dev
+      namespace: app-ns
       helm:
         # whether or not to uninstall the app in question
         # note that this takes precedence over rollback!
@@ -131,6 +135,7 @@ strategy:
     app: 
       name: sample-routing
       cluster: dev
+      namespace: app-ns
       helm:
         command: rollback
         version: '2'
@@ -161,6 +166,7 @@ strategy:
     app: 
       name: sample-app
       cluster: staging
+      namespace: app-ns
       helm: 
         wait: true
  

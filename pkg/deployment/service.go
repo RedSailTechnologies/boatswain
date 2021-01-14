@@ -7,6 +7,9 @@ import (
 
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
+	"github.com/redsailtechnologies/boatswain/pkg/git"
+	"github.com/redsailtechnologies/boatswain/pkg/helm"
+	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
@@ -211,7 +214,7 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	// get all clusters and repos as we know about them now
+	// get all clusters and repos for use later
 	repos, err := s.repo.All(ctx, &repo.ReadRepos{})
 	if err != nil {
 		logger.Error("could not get repos", "error", err)
@@ -259,7 +262,7 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 	}
 
 	// create the run
-	run, err := CreateRun(ddd.NewUUID(), ddd.NewTimestamp(), t, &Trigger{
+	run, err := CreateRun(ddd.NewUUID(), cmd.Uuid, ddd.NewTimestamp(), t, &Trigger{
 		Name: cmd.Name,
 		Type: getTriggerType(cmd.Type),
 		User: user,
@@ -269,10 +272,17 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	// TODO - download all necessary files while we still have credentials
-
 	// start the engine in the background
-	re := NewRunEngine(run, s.runRepository, clusters.Clusters, repos.Repos)
+	agents := runAgents{
+		git:  git.DefaultAgent{},
+		helm: helm.DefaultAgent{},
+		kube: kube.DefaultAgent{},
+	}
+	entities := runEntities{
+		clusters.Clusters,
+		repos.Repos,
+	}
+	re := NewRunEngine(run, s.runRepository, agents, entities)
 
 	go re.Run()
 
@@ -282,9 +292,84 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 	}, nil
 }
 
+// Run reads all the information about a particular run
+func (s Service) Run(ctx context.Context, req *pb.ReadRun) (*pb.RunRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
+	r, err := s.runRepository.Load(req.DeploymentUuid)
+	if err != nil {
+		logger.Error("error reading Run", "error", err)
+		return nil, tw.ToTwirpError(err, "error loading Run")
+	}
+
+	steps := make([]*pb.StepRead, 0)
+	for _, step := range *r.Strategy {
+		steps = append(steps, &pb.StepRead{
+			Name:   step.Name,
+			Status: convertStatus(step.Status),
+			Log:    string(step.Log),
+		})
+	}
+
+	return &pb.RunRead{
+		Uuid:    r.UUID(),
+		Version: r.RunVersion(),
+		Status:  convertStatus(r.Status()),
+		Steps:   steps,
+	}, nil
+}
+
+// Runs reads a summary of all runs for a particular deployment
+func (s Service) Runs(ctx context.Context, req *pb.ReadRuns) (*pb.RunsRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
+	runs, err := s.runRepository.All()
+	if err != nil {
+		logger.Error("error reading Run", "error", err)
+		return nil, tw.ToTwirpError(err, "error loading Run")
+	}
+
+	resp := &pb.RunsRead{}
+	resp.Runs = make([]*pb.RunReadSummary, 0)
+
+	for _, r := range runs {
+		// FIXME - see the RunRepository about optimization here
+		if r.DeploymentUUID() == req.DeploymentUuid {
+			resp.Runs = append(resp.Runs, &pb.RunReadSummary{
+				Uuid:    r.UUID(),
+				Version: r.RunVersion(),
+				Status:  convertStatus(r.Status()),
+			})
+		}
+	}
+	return resp, nil
+
+}
+
 // Ready implements the ReadyService method so this service can be part of a health check routine
 func (s Service) Ready() error {
 	return s.repository.store.CheckReady()
+}
+
+func convertStatus(s Status) pb.Status {
+	switch s {
+	case NotStarted:
+		return pb.Status_NotStarted
+	case InProgress:
+		return pb.Status_InProgress
+	case Failed:
+		return pb.Status_Failed
+	case Succeeded:
+		return pb.Status_Succeeded
+	case Skipped:
+		return pb.Status_Skipped
+	default:
+		return -1
+	}
 }
 
 func getTriggerType(t pb.TriggerDeployment_TriggerType) TriggerType {

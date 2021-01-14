@@ -5,7 +5,6 @@ go 1.15
 require (
 	github.com/evanphx/json-patch v4.2.0+incompatible // indirect
 	github.com/go-git/go-billy/v5 v5.0.0
-	github.com/go-git/go-git v4.7.0+incompatible
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/golang/protobuf v1.4.3
 	github.com/google/uuid v1.1.2
@@ -21,12 +20,12 @@ require (
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/square/go-jose.v2 v2.2.2
-	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	helm.sh/helm/v3 v3.3.4
 	k8s.io/api v0.18.8
 	k8s.io/apimachinery v0.18.8
+	k8s.io/cli-runtime v0.18.8
 	k8s.io/client-go v0.18.8
-	sigs.k8s.io/yaml v1.2.0
+	rsc.io/letsencrypt v0.0.3 // indirect
 )
