@@ -7,11 +7,6 @@ apps:
       chart: wordpress
       repo: bitnami
       version: 10.3.1
-  - name: wpup
-    helm:
-      chart: wordpress
-      repo: bitnami
-      version: 10.4.0
 triggers:
   - web:
       name: wordpress-trigger
@@ -31,7 +26,7 @@ strategy:
   - name: upgrade-wordpress
     condition: succeeded
     app:
-      name: wpup
+      name: wordpress
       cluster: test
       namespace: default
       helm:
@@ -40,7 +35,7 @@ strategy:
   - name: rollback-wordpress
     condition: succeeded
     app:
-      name: wpup
+      name: wordpress
       cluster: test
       namespace: default
       helm:
