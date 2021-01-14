@@ -2,49 +2,52 @@ version: '1.0.0'
 clusters:
   - test
 apps:
-  - name: wordpress
+  - name: grafana
     helm:
-      chart: wordpress
+      chart: grafana
       repo: bitnami
-      version: 10.3.1
+      version: 4.2.5
 triggers:
   - web:
-      name: wordpress-trigger
+      name: grafana-trigger
   - manual:
       users:
         - "Sam Tailor"
 strategy:
-  - name: deploy-wordpress
+  - name: deploy-grafana
     condition: always
     app:
-      name: wordpress
+      name: grafana
       cluster: test
       namespace: default
       helm:
         command: install
         wait: true
-  - name: upgrade-wordpress
+  - name: upgrade-grafana
     condition: succeeded
     app:
-      name: wordpress
+      name: grafana
       cluster: test
       namespace: default
       helm:
         command: upgrade
         wait: true
-  - name: rollback-wordpress
+        values:
+          raw:
+            version: 5.0.0
+  - name: rollback-grafana
     condition: succeeded
     app:
-      name: wordpress
+      name: grafana
       cluster: test
       namespace: default
       helm:
         command: rollback
         wait: true
-  - name: uninstall-wordpress
+  - name: uninstall-grafana
     condition: succeeded
     app:
-      name: wordpress
+      name: grafana
       cluster: test
       namespace: default
       helm:
