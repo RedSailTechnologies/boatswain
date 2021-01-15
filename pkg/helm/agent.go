@@ -3,7 +3,6 @@ package helm
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -43,7 +42,7 @@ type Args struct {
 	Chart     []byte
 	Values    map[string]interface{}
 	Wait      bool
-	Logger    io.Writer
+	Logger    func(string, ...interface{})
 }
 
 // CheckIndex checks the index.yaml file at the repo's endpoint
@@ -173,10 +172,10 @@ func (a DefaultAgent) Upgrade(args Args) (*release.Release, error) {
 
 	upgrade := action.NewUpgrade(cfg)
 	upgrade.Namespace = args.Namespace
-	return upgrade.Run(args.Namespace, chart, args.Values)
+	return upgrade.Run(args.Name, chart, args.Values)
 }
 
-func helmClient(endpoint, token, namespace string, logger io.Writer) (*action.Configuration, error) {
+func helmClient(endpoint, token, namespace string, logger func(t string, a ...interface{})) (*action.Configuration, error) {
 	flags := &genericclioptions.ConfigFlags{
 		APIServer:   &endpoint,
 		BearerToken: &token,
@@ -185,15 +184,8 @@ func helmClient(endpoint, token, namespace string, logger io.Writer) (*action.Co
 		Insecure: &[]bool{true}[0],
 	}
 	actionConfig := new(action.Configuration)
-	logs := func(t string, a ...interface{}) {
-		str := fmt.Sprintf(t, a...)
-		if str[len(str)-1] != '\n' {
-			str = str + "\n"
-		}
-		logger.Write([]byte(str))
-	}
 
-	if err := actionConfig.Init(flags, namespace, "secrets", logs); err != nil {
+	if err := actionConfig.Init(flags, namespace, "secrets", logger); err != nil {
 		return nil, err
 	}
 

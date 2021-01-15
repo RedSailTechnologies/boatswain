@@ -59,7 +59,7 @@ type Step struct {
 
 	// internal fields
 	Status Status `yaml:"-"`
-	Log    Log    `yaml:"-"`
+	Logs   []log  `yaml:"-"`
 	Start  int64  `yaml:"-"`
 
 	// step information

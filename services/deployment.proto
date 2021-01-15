@@ -111,10 +111,15 @@ message ReadRun {
     string deployment_uuid = 1; // unique id of the run
 }
 
+message StepLog {
+    LogLevel level = 1;
+    string message = 2;
+}
+
 message StepRead {
     string name = 1;
     Status status = 2;
-    string log = 3;
+    repeated StepLog logs = 3;
 }
 
 message RunRead {
@@ -138,10 +143,17 @@ message RunsRead {
     repeated RunReadSummary runs = 1; //the runs
 }
 
+enum LogLevel {
+    DEBUG = 0;
+    INFO = 1;
+    WARN = 2;
+    ERROR = 3;
+}
+
 enum Status {
-    NotStarted = 0;
-    InProgress = 1;
-    Failed = 2;
-    Succeeded = 3;
-    Skipped = 4;
+    NOT_STARTED = 0;
+    IN_PROGRESS = 1;
+    FAILED = 2;
+    SUCCEEDED = 3;
+    SKIPPED = 4;
 }

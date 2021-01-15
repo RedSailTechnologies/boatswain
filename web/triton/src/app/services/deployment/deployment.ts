@@ -337,17 +337,39 @@ const ReadRunToJSON = (m: ReadRun): ReadRunJSON => {
     };
 };
 
+export interface StepLog {
+    level: string;
+    message: string;
+    
+}
+
+interface StepLogJSON {
+    level: string;
+    message: string;
+    
+}
+
+
+const JSONToStepLog = (m: StepLog | StepLogJSON): StepLog => {
+    
+    return {
+        level: m.level,
+        message: m.message,
+        
+    };
+};
+
 export interface StepRead {
     name: string;
     status: string;
-    log: string;
+    logs: StepLog[];
     
 }
 
 interface StepReadJSON {
     name: string;
     status: string;
-    log: string;
+    logs: StepLogJSON[];
     
 }
 
@@ -357,7 +379,7 @@ const JSONToStepRead = (m: StepRead | StepReadJSON): StepRead => {
     return {
         name: m.name,
         status: m.status,
-        log: m.log,
+        logs: (m.logs as (StepLog | StepLogJSON)[]).map(JSONToStepLog),
         
     };
 };

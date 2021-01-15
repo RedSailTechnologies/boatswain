@@ -1,10 +1,25 @@
 package deployment
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 )
 
 var runEntityName = "Run"
+
+var startMessageTemplate = `Name:       %s
+Type:       %s
+Hold:       %s
+Start:      %s
+------------
+`
+
+var completeMessageTemplate = `------------
+Status:     %s
+Stop:       %s
+`
 
 // RunCreated is the event for when a new run is started
 type RunCreated struct {
@@ -45,7 +60,7 @@ func (e StepStarted) EventType() string {
 type StepCompleted struct {
 	Timestamp int64
 	Status    Status
-	Log       Log
+	Logs      []log
 }
 
 // EventType marks this as an event
@@ -77,27 +92,46 @@ type Run struct {
 	*Template
 }
 
-// Log represents the log output for a step
-type Log string
+// FIXME Adamp - we need consistency among these types
+type log struct {
+	level   logLevel
+	message string
+}
+
+type logLevel int
+
+const (
+	// Debug log level
+	Debug logLevel = 0
+
+	// Info log level
+	Info logLevel = 1
+
+	// Warn log level
+	Warn logLevel = 2
+
+	// Error log level
+	Error logLevel = 3
+)
 
 // Status represents the outcome of a step
-type Status int
+type Status string
 
 const (
 	// NotStarted signifies a step not yet executed
-	NotStarted Status = 0
+	NotStarted Status = "NotStarted"
 
 	// InProgress signifies a step that has been started
-	InProgress Status = 1
+	InProgress Status = "In Progress"
 
 	// Failed signifies a step that failed
-	Failed Status = 2
+	Failed Status = "Failed"
 
 	// Succeeded signifies a step that was successful
-	Succeeded Status = 3
+	Succeeded Status = "Succeeded"
 
 	// Skipped signifies a step that was not run
-	Skipped Status = 4
+	Skipped Status = "Skipped"
 )
 
 // ReplayRun recreates the run from a series of events
@@ -165,18 +199,18 @@ func (r *Run) StartStep(stepName string, timestamp int64) error {
 }
 
 // CompleteStep completes the currently running step
-func (r *Run) CompleteStep(status Status, log Log, timestamp int64) error {
+func (r *Run) CompleteStep(status Status, logs []log, timestamp int64) error {
 	if r.status == NotStarted && status != Skipped {
 		return ExecutionError{
 			Message: "run not started",
 		}
 	}
 	for _, step := range *r.Strategy {
-		if step.Status == InProgress {
+		if step.Status == InProgress || (step.Status == NotStarted && status == Skipped) {
 			r.on(&StepCompleted{
 				Timestamp: timestamp,
 				Status:    status,
-				Log:       log,
+				Logs:      logs,
 			})
 			return nil
 		}
@@ -255,20 +289,38 @@ func (r *Run) on(event ddd.Event) {
 		r.trigger = e.Trigger
 		r.status = NotStarted
 		r.Template = e.Template
+		for i := range *r.Strategy {
+			(*r.Strategy)[i].Status = NotStarted
+		}
 	case *RunStarted:
 		r.status = InProgress
 	case *StepStarted:
-		for i, step := range *r.Strategy {
-			if step.Name == e.Name && step.Status == NotStarted {
+		for i, s := range *r.Strategy {
+			if s.Name == e.Name && s.Status == NotStarted {
 				(*r.Strategy)[i].Status = InProgress
+				start := time.Unix(e.Timestamp, 0)
+				(*r.Strategy)[i].Logs = append(s.Logs, log{
+					level: Info,
+					message: fmt.Sprintf(startMessageTemplate,
+						s.Name, s.getType(), s.Hold, start.String()),
+				})
 			}
 		}
 	case *StepCompleted:
 		for i, step := range *r.Strategy {
-			if step.Status == InProgress {
+			if step.Status == InProgress || (step.Status == NotStarted && e.Status == Skipped) {
 				(*r.Strategy)[i].Status = e.Status
-				(*r.Strategy)[i].Log = e.Log
-				return
+				stop := time.Unix(e.Timestamp, 0)
+				level := Info
+				if e.Status == Failed {
+					level = Error
+				}
+				(*r.Strategy)[i].Logs = append((*r.Strategy)[i].Logs, e.Logs...)
+				(*r.Strategy)[i].Logs = append((*r.Strategy)[i].Logs, log{
+					level: level,
+					message: fmt.Sprintf(completeMessageTemplate,
+						e.Status, stop.String()),
+				})
 			}
 		}
 	case *RunCompleted:

@@ -27,7 +27,7 @@ export class RunComponent implements OnInit {
       }).then(value => {
         this.run = value;
         // FIXME set the page title and browser title somehow
-      })
+      });
     })
   }
 }

@@ -1,11 +1,11 @@
 <div class="page" *ngIf="run; else noData">
-    <mat-vertical-stepper>
-        <mat-step *ngFor="let step of run.steps">
-            <ng-template matStepLabel>{{step.name}}</ng-template>
-            <p style="white-space:pre;">
-                {{step.log}}
-            </p>
-        </mat-step>
+    <mat-vertical-stepper #stepper> 
+        <div *ngFor="let step of run.steps">
+            <mat-step>
+                <ng-template matStepLabel>{{step.name}}</ng-template>
+                <p *ngFor="let log of step.logs" [style]="log.level == 'ERROR' ? 'color:lightcoral;white-space:pre;' : 'white-space:pre;'">{{log.message}}</p>
+            </mat-step>
+        </div>
     </mat-vertical-stepper>
 </div>
 <ng-template #noData>

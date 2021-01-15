@@ -21,11 +21,13 @@
     - [RunRead](#redsail.bosn.RunRead)
     - [RunReadSummary](#redsail.bosn.RunReadSummary)
     - [RunsRead](#redsail.bosn.RunsRead)
+    - [StepLog](#redsail.bosn.StepLog)
     - [StepRead](#redsail.bosn.StepRead)
     - [TemplateDeployment](#redsail.bosn.TemplateDeployment)
     - [TriggerDeployment](#redsail.bosn.TriggerDeployment)
     - [UpdateDeployment](#redsail.bosn.UpdateDeployment)
   
+    - [LogLevel](#redsail.bosn.LogLevel)
     - [Status](#redsail.bosn.Status)
     - [TriggerDeployment.TriggerType](#redsail.bosn.TriggerDeployment.TriggerType)
   
@@ -292,6 +294,22 @@ Deployment is the service for creation and management of application installs/up
 
 
 
+<a name="redsail.bosn.StepLog"></a>
+
+### StepLog
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| level | [LogLevel](#redsail.bosn.LogLevel) |  |  |
+| message | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="redsail.bosn.StepRead"></a>
 
 ### StepRead
@@ -302,7 +320,7 @@ Deployment is the service for creation and management of application installs/up
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  |  |
 | status | [Status](#redsail.bosn.Status) |  |  |
-| log | [string](#string) |  |  |
+| logs | [StepLog](#redsail.bosn.StepLog) | repeated |  |
 
 
 
@@ -363,6 +381,20 @@ Deployment is the service for creation and management of application installs/up
  
 
 
+<a name="redsail.bosn.LogLevel"></a>
+
+### LogLevel
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| DEBUG | 0 |  |
+| INFO | 1 |  |
+| WARN | 2 |  |
+| ERROR | 3 |  |
+
+
+
 <a name="redsail.bosn.Status"></a>
 
 ### Status
@@ -370,11 +402,11 @@ Deployment is the service for creation and management of application installs/up
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| NotStarted | 0 |  |
-| InProgress | 1 |  |
-| Failed | 2 |  |
-| Succeeded | 3 |  |
-| Skipped | 4 |  |
+| NOT_STARTED | 0 |  |
+| IN_PROGRESS | 1 |  |
+| FAILED | 2 |  |
+| SUCCEEDED | 3 |  |
+| SKIPPED | 4 |  |
 
 
 

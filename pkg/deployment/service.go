@@ -309,7 +309,7 @@ func (s Service) Run(ctx context.Context, req *pb.ReadRun) (*pb.RunRead, error) 
 		steps = append(steps, &pb.StepRead{
 			Name:   step.Name,
 			Status: convertStatus(step.Status),
-			Log:    string(step.Log),
+			Logs:   convertLogs(step.Logs),
 		})
 	}
 
@@ -320,6 +320,8 @@ func (s Service) Run(ctx context.Context, req *pb.ReadRun) (*pb.RunRead, error) 
 		Steps:   steps,
 	}, nil
 }
+
+// TODO - lets get some times in the above and below
 
 // Runs reads a summary of all runs for a particular deployment
 func (s Service) Runs(ctx context.Context, req *pb.ReadRuns) (*pb.RunsRead, error) {
@@ -355,18 +357,44 @@ func (s Service) Ready() error {
 	return s.repository.store.CheckReady()
 }
 
+func convertLogs(logs []log) []*pb.StepLog {
+	out := make([]*pb.StepLog, 0)
+	for _, log := range logs {
+		out = append(out, &pb.StepLog{
+			Level:   convertLevel(log.level),
+			Message: log.message,
+		})
+	}
+	return out
+}
+
+func convertLevel(l logLevel) pb.LogLevel {
+	switch l {
+	case Debug:
+		return pb.LogLevel_DEBUG
+	case Info:
+		return pb.LogLevel_INFO
+	case Warn:
+		return pb.LogLevel_WARN
+	case Error:
+		return pb.LogLevel_ERROR
+	default:
+		return -1
+	}
+}
+
 func convertStatus(s Status) pb.Status {
 	switch s {
 	case NotStarted:
-		return pb.Status_NotStarted
+		return pb.Status_NOT_STARTED
 	case InProgress:
-		return pb.Status_InProgress
+		return pb.Status_IN_PROGRESS
 	case Failed:
-		return pb.Status_Failed
+		return pb.Status_FAILED
 	case Succeeded:
-		return pb.Status_Succeeded
+		return pb.Status_SUCCEEDED
 	case Skipped:
-		return pb.Status_Skipped
+		return pb.Status_SKIPPED
 	default:
 		return -1
 	}
