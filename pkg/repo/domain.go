@@ -144,7 +144,9 @@ func (r *Repo) Type() RepoType {
 
 // Events gets all events from this repo
 func (r *Repo) Events() []ddd.Event {
-	return r.events
+	cp := make([]ddd.Event, len(r.events))
+	copy(cp, r.events)
+	return cp
 }
 
 // Version gets all the

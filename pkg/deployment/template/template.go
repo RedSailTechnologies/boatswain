@@ -1,4 +1,4 @@
-package deployment
+package template
 
 // A Substitution is the yaml syntax used to substitute yaml from another file
 type Substitution struct {
@@ -56,11 +56,6 @@ type Step struct {
 	Name      string `yaml:"name"`
 	Hold      string `yaml:"hold"`
 	Condition string `yaml:"condition"`
-
-	// internal fields
-	Status Status `yaml:"-"`
-	Logs   []log  `yaml:"-"`
-	Start  int64  `yaml:"-"`
 
 	// step information
 	App *struct {

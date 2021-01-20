@@ -143,7 +143,9 @@ func (c *Cluster) Cert() string {
 
 // Events returns this cluster's event history
 func (c *Cluster) Events() []ddd.Event {
-	return c.events
+	cp := make([]ddd.Event, len(c.events))
+	copy(cp, c.events)
+	return cp
 }
 
 // Version returns this cluster's version number (NOTE: aggregate version!)

@@ -112,21 +112,27 @@ message ReadRun {
 }
 
 message StepLog {
-    LogLevel level = 1;
-    string message = 2;
+    int64 timestamp = 1;
+    LogLevel level = 2;
+    string message = 3;
 }
 
 message StepRead {
     string name = 1;
     Status status = 2;
-    repeated StepLog logs = 3;
+    int64 start_time = 3;
+    int64 stop_time = 4;
+    repeated StepLog logs = 5;
 }
 
 message RunRead {
     string uuid = 1;
     string version = 2;
     Status status = 3;
-    repeated StepRead steps = 4;
+    int64 start_time = 4;
+    int64 stop_time = 5;
+    
+    repeated StepRead steps = 6;
 }
 
 message ReadRuns {
@@ -137,6 +143,8 @@ message RunReadSummary {
     string uuid = 1;
     string version = 2;
     Status status = 3;
+    int64 start_time = 4;
+    int64 stop_time = 5;
 }
 
 message RunsRead {

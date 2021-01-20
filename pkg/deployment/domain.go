@@ -143,7 +143,9 @@ func (d *Deployment) FilePath() string {
 
 // Events returns this deployment's event history
 func (d *Deployment) Events() []ddd.Event {
-	return d.events
+	cp := make([]ddd.Event, len(d.events))
+	copy(cp, d.events)
+	return cp
 }
 
 // Version returns this deployment's version number (NOTE: aggregate version!)

@@ -3,10 +3,14 @@ package deployment
 import (
 	"context"
 
+	"github.com/redsailtechnologies/boatswain/pkg/deployment/template"
+	"github.com/redsailtechnologies/boatswain/pkg/deployment/trigger"
+
 	"github.com/twitchtv/twirp"
 
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
+	"github.com/redsailtechnologies/boatswain/pkg/deployment/run"
 	"github.com/redsailtechnologies/boatswain/pkg/git"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
@@ -27,7 +31,7 @@ type Service struct {
 	cluster       cluster.Cluster
 	repo          repo.Repo
 	repository    *Repository
-	runRepository *RunRepository
+	runRepository *run.Repository
 }
 
 // NewService creates the service
@@ -37,7 +41,7 @@ func NewService(a auth.Agent, c cluster.Cluster, r repo.Repo, s storage.Storage)
 		cluster:       c,
 		repo:          r,
 		repository:    NewRepository(collection, s),
-		runRepository: NewRunRepository(runCollection, s),
+		runRepository: run.NewRepository(runCollection, s),
 	}
 }
 
@@ -196,7 +200,7 @@ func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.
 		return nil, twirp.NotFoundError("deployment file not found")
 	}
 
-	te := NewTemplateEngine(ctx, s.repo)
+	te := template.NewEngine(ctx, s.repo)
 	yaml, err := te.Template(f.File)
 	if err != nil {
 		logger.Error("yaml file could not be templated", "error", err)
@@ -243,7 +247,7 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 		return nil, twirp.NotFoundError("deployment file not found")
 	}
 
-	te := NewTemplateEngine(ctx, s.repo)
+	te := template.NewEngine(ctx, s.repo)
 	t, err := te.Run(f.File, cmd.Arguments)
 	if err != nil {
 		logger.Error("yaml file could not be templated", "error", err)
@@ -256,39 +260,36 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 
 	// validate the trigger
 	user := s.auth.User(ctx)
-	if err = ValidateTrigger(&user, cmd, *t); err != nil {
+	if err = trigger.Validate(&user, cmd, *t); err != nil {
 		logger.Error("invalid trigger", "error", err)
 		return nil, twirp.InternalErrorWith(err)
 	}
 
 	// create the run
-	run, err := CreateRun(ddd.NewUUID(), cmd.Uuid, ddd.NewTimestamp(), t, &Trigger{
+	r, err := run.Create(ddd.NewUUID(), cmd.Uuid, t, &trigger.Trigger{
 		Name: cmd.Name,
 		Type: getTriggerType(cmd.Type),
 		User: user,
 	})
-	if err = s.runRepository.Save(run); err != nil {
+	if err = s.runRepository.Save(r); err != nil {
 		logger.Error("could not save created run", "error", err)
 		return nil, twirp.InternalErrorWith(err)
 	}
 
 	// start the engine in the background
-	agents := runAgents{
-		git:  git.DefaultAgent{},
-		helm: helm.DefaultAgent{},
-		kube: kube.DefaultAgent{},
-	}
-	entities := runEntities{
+	re := run.NewEngine(r,
+		s.runRepository,
+		git.DefaultAgent{},
+		helm.DefaultAgent{},
+		kube.DefaultAgent{},
 		clusters.Clusters,
-		repos.Repos,
-	}
-	re := NewRunEngine(run, s.runRepository, agents, entities)
+		repos.Repos)
 
 	go re.Run()
 
 	// return the run id
 	return &pb.DeploymentTriggered{
-		RunUuid: run.UUID(),
+		RunUuid: r.UUID(),
 	}, nil
 }
 
@@ -305,23 +306,25 @@ func (s Service) Run(ctx context.Context, req *pb.ReadRun) (*pb.RunRead, error) 
 	}
 
 	steps := make([]*pb.StepRead, 0)
-	for _, step := range *r.Strategy {
+	for _, step := range r.Steps() {
 		steps = append(steps, &pb.StepRead{
-			Name:   step.Name,
-			Status: convertStatus(step.Status),
-			Logs:   convertLogs(step.Logs),
+			Name:      step.Name,
+			Status:    convertStatus(step.Status),
+			StartTime: step.Start,
+			StopTime:  step.Stop,
+			Logs:      convertLogs(step.Logs),
 		})
 	}
 
 	return &pb.RunRead{
-		Uuid:    r.UUID(),
-		Version: r.RunVersion(),
-		Status:  convertStatus(r.Status()),
-		Steps:   steps,
+		Uuid:      r.UUID(),
+		Version:   r.RunVersion(),
+		Status:    convertStatus(r.Status()),
+		StartTime: r.StartTime(),
+		StopTime:  r.StopTime(),
+		Steps:     steps,
 	}, nil
 }
-
-// TODO - lets get some times in the above and below
 
 // Runs reads a summary of all runs for a particular deployment
 func (s Service) Runs(ctx context.Context, req *pb.ReadRuns) (*pb.RunsRead, error) {
@@ -342,9 +345,11 @@ func (s Service) Runs(ctx context.Context, req *pb.ReadRuns) (*pb.RunsRead, erro
 		// FIXME - see the RunRepository about optimization here
 		if r.DeploymentUUID() == req.DeploymentUuid {
 			resp.Runs = append(resp.Runs, &pb.RunReadSummary{
-				Uuid:    r.UUID(),
-				Version: r.RunVersion(),
-				Status:  convertStatus(r.Status()),
+				Uuid:      r.UUID(),
+				Version:   r.RunVersion(),
+				Status:    convertStatus(r.Status()),
+				StartTime: r.StartTime(),
+				StopTime:  r.StopTime(),
 			})
 		}
 	}
@@ -357,56 +362,57 @@ func (s Service) Ready() error {
 	return s.repository.store.CheckReady()
 }
 
-func convertLogs(logs []log) []*pb.StepLog {
+func convertLogs(logs []run.Log) []*pb.StepLog {
 	out := make([]*pb.StepLog, 0)
 	for _, log := range logs {
 		out = append(out, &pb.StepLog{
-			Level:   convertLevel(log.level),
-			Message: log.message,
+			Timestamp: log.Timestamp,
+			Level:     convertLevel(log.Level),
+			Message:   log.Message,
 		})
 	}
 	return out
 }
 
-func convertLevel(l logLevel) pb.LogLevel {
+func convertLevel(l run.LogLevel) pb.LogLevel {
 	switch l {
-	case Debug:
+	case run.Debug:
 		return pb.LogLevel_DEBUG
-	case Info:
+	case run.Info:
 		return pb.LogLevel_INFO
-	case Warn:
+	case run.Warn:
 		return pb.LogLevel_WARN
-	case Error:
+	case run.Error:
 		return pb.LogLevel_ERROR
 	default:
 		return -1
 	}
 }
 
-func convertStatus(s Status) pb.Status {
+func convertStatus(s run.Status) pb.Status {
 	switch s {
-	case NotStarted:
+	case run.NotStarted:
 		return pb.Status_NOT_STARTED
-	case InProgress:
+	case run.InProgress:
 		return pb.Status_IN_PROGRESS
-	case Failed:
+	case run.Failed:
 		return pb.Status_FAILED
-	case Succeeded:
+	case run.Succeeded:
 		return pb.Status_SUCCEEDED
-	case Skipped:
+	case run.Skipped:
 		return pb.Status_SKIPPED
 	default:
 		return -1
 	}
 }
 
-func getTriggerType(t pb.TriggerDeployment_TriggerType) TriggerType {
+func getTriggerType(t pb.TriggerDeployment_TriggerType) trigger.Type {
 	switch t {
 	case pb.TriggerDeployment_WEB:
-		return WebTrigger
+		return trigger.WebTrigger
 	case pb.TriggerDeployment_MANUAL:
-		return ManualTrigger
+		return trigger.ManualTrigger
 	default:
-		return DeploymentTrigger
+		return trigger.DeploymentTrigger
 	}
 }

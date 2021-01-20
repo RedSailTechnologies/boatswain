@@ -255,6 +255,8 @@ Deployment is the service for creation and management of application installs/up
 | uuid | [string](#string) |  |  |
 | version | [string](#string) |  |  |
 | status | [Status](#redsail.bosn.Status) |  |  |
+| start_time | [int64](#int64) |  |  |
+| stop_time | [int64](#int64) |  |  |
 | steps | [StepRead](#redsail.bosn.StepRead) | repeated |  |
 
 
@@ -273,6 +275,8 @@ Deployment is the service for creation and management of application installs/up
 | uuid | [string](#string) |  |  |
 | version | [string](#string) |  |  |
 | status | [Status](#redsail.bosn.Status) |  |  |
+| start_time | [int64](#int64) |  |  |
+| stop_time | [int64](#int64) |  |  |
 
 
 
@@ -302,6 +306,7 @@ Deployment is the service for creation and management of application installs/up
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| timestamp | [int64](#int64) |  |  |
 | level | [LogLevel](#redsail.bosn.LogLevel) |  |  |
 | message | [string](#string) |  |  |
 
@@ -320,6 +325,8 @@ Deployment is the service for creation and management of application installs/up
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  |  |
 | status | [Status](#redsail.bosn.Status) |  |  |
+| start_time | [int64](#int64) |  |  |
+| stop_time | [int64](#int64) |  |  |
 | logs | [StepLog](#redsail.bosn.StepLog) | repeated |  |
 
 

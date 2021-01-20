@@ -40,11 +40,19 @@
                             </ng-container>
                             <ng-container matColumnDef="status">
                                 <th mat-header-cell *matHeaderCellDef>Status</th>
-                                <td mat-cell *matCellDef="let run"> {{ run.status }} </td>
+                                <td mat-cell *matCellDef="let run">{{ run.status }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="start">
+                                <th mat-header-cell *matHeaderCellDef>Start</th>
+                                <td mat-cell *matCellDef="let run"> {{ run.startFormatted }} </td>
+                            </ng-container>
+                            <ng-container matColumnDef="stop">
+                                <th mat-header-cell *matHeaderCellDef>Stop</th>
+                                <td mat-cell *matCellDef="let run"> {{ run.stopFormatted }} </td>
                             </ng-container>
                     
-                            <tr mat-header-row *matHeaderRowDef="['name', 'status']"></tr>
-                            <tr mat-row *matRowDef="let row; columns: ['name', 'status'];" (dblclick)="redirect(row)"></tr>
+                            <tr mat-header-row *matHeaderRowDef="['name', 'status', 'start', 'stop']"></tr>
+                            <tr mat-row *matRowDef="let row; columns: ['name', 'status', 'start', 'stop'];" (dblclick)="redirect(row)"></tr>
                         </table>
                     </div>
                     <ng-template #noRuns>

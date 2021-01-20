@@ -1,4 +1,4 @@
-package deployment
+package run
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
+	"github.com/redsailtechnologies/boatswain/pkg/deployment/template"
 	"github.com/redsailtechnologies/boatswain/pkg/git"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
@@ -18,39 +19,36 @@ import (
 
 var retryCount int = 3
 
-type runAgents struct {
+// The Engine is the worker that performs all run steps and tracking
+type Engine struct {
+	run  *Run
+	repo *Repository
+
 	git  git.Agent
 	helm helm.Agent
 	kube kube.Agent
-}
 
-type runEntities struct {
 	clusters []*cluster.ClusterRead
 	repos    []*repo.RepoRead
 }
 
-// The RunEngine is the worker that performs all run steps and tracking
-type RunEngine struct {
-	run      *Run
-	rr       *RunRepository
-	agents   runAgents
-	entities runEntities
-}
-
-// NewRunEngine initializes the engine with required dependencies
-func NewRunEngine(r *Run, rr *RunRepository, a runAgents, e runEntities) *RunEngine {
+// NewEngine initializes the engine with required dependencies
+func NewEngine(r *Run, repo *Repository, g git.Agent, h helm.Agent, k kube.Agent, cl []*cluster.ClusterRead, re []*repo.RepoRead) *Engine {
 	// TODO AdamP - we could filter out only what we need for repos and clusters
-	engine := &RunEngine{
+	engine := &Engine{
 		run:      r,
-		rr:       rr,
-		agents:   a,
-		entities: e,
+		repo:     repo,
+		git:      g,
+		helm:     h,
+		kube:     k,
+		clusters: cl,
+		repos:    re,
 	}
 	return engine
 }
 
 // Run starts the engine, and is designed to be run in the background
-func (e *RunEngine) Run() {
+func (e *Engine) Run() {
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Error("recovering from panic", "error", err)
@@ -71,36 +69,26 @@ func (e *RunEngine) Run() {
 	var lastStatus Status = Succeeded
 	var overallStatus = Succeeded
 	for true {
-		step, err := e.run.NextStep()
-		if err != nil {
-			logger.Warn("error getting the next step", "error", err)
-			e.finalize(Failed)
-			return
-		}
+		step := e.run.CurrentTemplate()
 
 		// step is nil if there are no more steps to be executed
-		if step == nil && err == nil {
+		if step == nil {
 			e.finalize(overallStatus)
 			return
 		}
 
-		if step.shouldExecute(lastStatus) {
+		if shouldExecute(step, lastStatus) {
+			e.run.StartStep(step.Name, ddd.NewTimestamp())
+			e.persist()
+
 			if step.Hold != "" {
 				e.executeHold(step.Hold)
 			}
 
-			e.run.StartStep(step.Name, ddd.NewTimestamp())
+			status := e.executeStep(step)
+
+			e.run.CompleteStep(status, ddd.NewTimestamp())
 			e.persist()
-
-			status, logs := e.executeStep(step)
-
-			e.run.CompleteStep(status, logs, ddd.NewTimestamp())
-			err = e.rr.Save(e.run)
-			if err != nil {
-				logger.Error("could not persist run", "error", err)
-				e.finalize(Failed)
-				return
-			}
 
 			if status == Failed {
 				overallStatus = Failed
@@ -108,83 +96,52 @@ func (e *RunEngine) Run() {
 
 			lastStatus = status
 		} else {
-			skipLog := []log{
-				log{
-					level:   Info,
-					message: "step skipped",
-				},
-			}
-			e.run.CompleteStep(Skipped, skipLog, ddd.NewTimestamp())
+			e.run.SkipStep(step.Name, "conditions not met", ddd.NewTimestamp())
 			e.persist()
 		}
 	}
 }
 
-func (e *RunEngine) executeStep(step *Step) (Status, []log) {
-	logs := make([]log, 0)
+func (e *Engine) executeStep(step *template.Step) Status {
 	if step.App != nil {
-		return e.executeActionStep(step, logs)
+		return e.executeActionStep(step)
 	} else if step.Test != nil {
-		return Skipped, []log{
-			log{
-				level:   Info,
-				message: "not implemented",
-			},
-		}
+		e.run.AppendLog("step type not implemented", Error, ddd.NewTimestamp())
+		return Skipped
 	} else if step.Approval != nil {
-		return Skipped, []log{
-			log{
-				level:   Info,
-				message: "not implemented",
-			},
-		}
+		e.run.AppendLog("step type not implemented", Error, ddd.NewTimestamp())
+		return Skipped
 	} else if step.Trigger != nil {
-		return Skipped, []log{
-			log{
-				level:   Info,
-				message: "not implemented",
-			},
-		}
+		e.run.AppendLog("step type not implemented", Error, ddd.NewTimestamp())
+		return Skipped
 	}
-	return Failed, []log{
-		log{
-			level:   Info,
-			message: "step does not have anything to execute",
-		},
-	}
+	e.run.AppendLog("step has nothing to execute", Error, ddd.NewTimestamp())
+	return Failed
 }
 
-func (e *RunEngine) executeActionStep(step *Step, l []log) (Status, []log) {
+func (e *Engine) executeActionStep(step *template.Step) Status {
 	if step.App.Helm != nil {
-		app, err := getApp(step.App.Name, *e.run.Apps)
+		app, err := getApp(step.App.Name, e.run.Apps())
 		if err != nil {
-			return Failed, append(l, log{
-				level:   Error,
-				message: err.Error(),
-			})
+			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+			return Failed
 		} else if app.Helm == nil {
-			return Failed, append(l, log{
-				level:   Error,
-				message: "defined app is not a helm app",
-			})
+			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+			return Failed
 		}
 
-		endpoint, token, err := getClusterInfo(step.App.Cluster, e.entities.clusters)
+		endpoint, token, err := getClusterInfo(step.App.Cluster, e.clusters)
 		if err != nil {
-			return Failed, append(l, log{
-				level:   Error,
-				message: err.Error(),
-			})
+			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+			return Failed
 		}
 
 		var chart []byte
 		if step.App.Helm.Command == "install" || step.App.Helm.Command == "upgrade" {
 			chart, err = e.downloadChart(app.Helm.Chart, app.Helm.Version, app.Helm.Repo)
 			if err != nil {
-				return Failed, append(l, log{
-					level:   Error,
-					message: err.Error(),
-				})
+				e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+				return Failed
 			}
 		}
 
@@ -218,83 +175,76 @@ func (e *RunEngine) executeActionStep(step *Step, l []log) (Status, []log) {
 		switch step.App.Helm.Command {
 		case "install":
 			var r *release.Release
-			r, err = e.agents.helm.Install(args)
+			r, err = e.helm.Install(args)
 			if r != nil {
 				output = r.Info.Notes
 			}
 		case "rollback":
-			err = e.agents.helm.Rollback(step.App.Helm.Version, args)
+			err = e.helm.Rollback(step.App.Helm.Version, args)
 		case "uninstall":
 			var r *release.UninstallReleaseResponse
-			r, err = e.agents.helm.Uninstall(args)
+			r, err = e.helm.Uninstall(args)
 			output = r.Info
 		case "upgrade":
 			var r *release.Release
-			r, err = e.agents.helm.Upgrade(args)
+			r, err = e.helm.Upgrade(args)
 			if r != nil {
 				output = r.Info.Notes
 			}
 		default:
-			return Failed, append(l, log{
-				level:   Error,
-				message: "helm command not found",
-			})
+			e.run.AppendLog("helm command not found", Error, ddd.NewTimestamp())
+			return Failed
 		}
 
 		if err != nil {
-			return Failed, append(l, log{
-				level:   Error,
-				message: err.Error(),
-			})
+			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+			return Failed
 		}
 
-		l = append(l, log{
-			level:   Info,
-			message: logs.String(),
-		})
-		l = append(l, log{
-			level:   Info,
-			message: output,
-		})
-
-		return Succeeded, l
+		e.run.AppendLog(logs.String(), Info, ddd.NewTimestamp())
+		e.run.AppendLog(output, Info, ddd.NewTimestamp())
+		return Succeeded
 	}
-	return Failed, append(l, log{
-		level:   Error,
-		message: "only helm apps are currently supported",
-	})
+
+	e.run.AppendLog("only helm apps are currently supported", Error, ddd.NewTimestamp())
+	return Failed
 }
 
-func (e *RunEngine) finalize(status Status) {
+func (e *Engine) finalize(status Status) {
 	logger.Info("completing run", "uuid", e.run.UUID(), "status", status)
 	for i := 0; i < retryCount; i++ {
-		e.run.Complete(status, ddd.NewTimestamp())
-		if err := e.rr.Save(e.run); err == nil {
+		if err := e.run.Complete(status, ddd.NewTimestamp()); err != nil {
+			logger.Error("error completing run", "error", err)
+			continue
+		}
+		if err := e.repo.Save(e.run); err == nil {
 			return
+		} else {
+			logger.Error("error saving run", "error", err)
 		}
 	}
 }
 
-func (e *RunEngine) downloadChart(c, v, r string) ([]byte, error) {
+func (e *Engine) downloadChart(c, v, r string) ([]byte, error) {
 	if c == "" || v == "" || r == "" {
 		return nil, errors.New("cannot download chart without chart, version, and name")
 	}
-	repo, err := getRepoInfo(r, e.entities.repos)
+	repo, err := getRepoInfo(r, e.repos)
 	if err != nil {
 		return nil, err
 	}
-	return e.agents.helm.GetChart(c, v, repo)
+	return e.helm.GetChart(c, v, repo)
 }
 
-func (e *RunEngine) persist() {
-	err := e.rr.Save(e.run)
+func (e *Engine) persist() {
+	err := e.repo.Save(e.run)
 	if err != nil {
 		logger.Error("could not persist run", "error", err)
 		e.finalize(Failed)
 	}
 }
 
-func (e *RunEngine) executeHold(h string) error {
+func (e *Engine) executeHold(h string) error {
 	d, err := time.ParseDuration(h)
 	if err != nil {
 		return err
@@ -303,27 +253,13 @@ func (e *RunEngine) executeHold(h string) error {
 	return nil
 }
 
-func (s Step) getType() string {
-	if s.App != nil {
-		return "App"
-	} else if s.Test != nil {
-		return "Test"
-	} else if s.Approval != nil {
-		return "Approval"
-	} else if s.Trigger != nil {
-		return "Trigger"
-	} else {
-		return ""
-	}
-}
-
-func (s *Step) shouldExecute(last Status) bool {
+func shouldExecute(s *template.Step, last Status) bool {
 	return s.Condition == "always" || s.Condition == "any" ||
 		(s.Condition == "succeeded" && last == Succeeded) ||
 		(s.Condition == "failed" && last == Failed)
 }
 
-func getApp(name string, apps []App) (*App, error) {
+func getApp(name string, apps []template.App) (*template.App, error) {
 	for _, app := range apps {
 		if app.Name == name {
 			return &app, nil

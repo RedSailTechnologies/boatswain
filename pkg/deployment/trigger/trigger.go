@@ -1,43 +1,36 @@
-package deployment
+package trigger
 
 import (
+	"errors"
+
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
+	"github.com/redsailtechnologies/boatswain/pkg/deployment/template"
 	pb "github.com/redsailtechnologies/boatswain/rpc/deployment"
 )
 
 // Trigger is the way a deployment is started
 type Trigger struct {
 	Name string
-	Type TriggerType
+	Type Type
 	User auth.User
 }
 
-// TriggerType represents the way a trigger is set off
-type TriggerType int
+// Type represents the way a trigger is set off
+type Type int
 
 const (
 	// WebTrigger is a http call based trigger
-	WebTrigger TriggerType = 0
+	WebTrigger Type = 0
 
 	// ManualTrigger is a user calling a trigger
-	ManualTrigger TriggerType = 1
+	ManualTrigger Type = 1
 
 	// DeploymentTrigger is one deployment triggering another
-	DeploymentTrigger TriggerType = 2
+	DeploymentTrigger Type = 2
 )
 
-// TriggerError is returned when an error is found with a trigger
-type TriggerError struct {
-	Message string
-}
-
-func (e TriggerError) Error() string {
-	return e.Message
-}
-
-// ValidateTrigger takes a trigger call and validates it against a list of templated triggers
-// TODO - can we just move this into template validation?
-func ValidateTrigger(u *auth.User, t *pb.TriggerDeployment, d Template) error {
+// Validate takes a trigger call and validates it against a list of templated triggers
+func Validate(u *auth.User, t *pb.TriggerDeployment, d template.Template) error {
 	for _, trigger := range *d.Triggers {
 		if t.Type == pb.TriggerDeployment_MANUAL {
 			// FIXME - we need to verify groups somehow or just add them to the app?
@@ -58,5 +51,5 @@ func ValidateTrigger(u *auth.User, t *pb.TriggerDeployment, d Template) error {
 			}
 		}
 	}
-	return TriggerError{Message: "invalid trigger"} // FIXME - refactor for better reporting
+	return errors.New("invalid trigger") // FIXME - refactor for better reporting
 }

@@ -3,7 +3,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BusyComponent } from 'src/app/dialogs/busy/busy.component';
-import { DefaultDeployment, Deployment, DeploymentRead, ReadDeployment, ReadRuns, RunReadSummary, TemplateDeployment, TriggerDeployment } from 'src/app/services/deployment/deployment';
+import { DefaultDeployment, Deployment, DeploymentRead, DeploymentTriggered, ReadDeployment, ReadRuns, RunReadSummary, TemplateDeployment, TriggerDeployment } from 'src/app/services/deployment/deployment';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 
 @Component({
@@ -49,6 +49,14 @@ export class DeploymentComponent implements OnInit {
           deploymentUuid: id
         }).then(value => {
           this.runs = value.runs;
+          this.runs.forEach(x => {
+            if (x.startTime != 0) {
+              x['startFormatted'] = new Date(x.startTime * 1000).toLocaleString();
+            }
+            if (x.stopTime != 0) {
+              x['stopFormatted'] = new Date(x.stopTime * 1000).toLocaleString();
+            }
+          });
         })
       });
     })
@@ -64,6 +72,9 @@ export class DeploymentComponent implements OnInit {
       panelClass: 'transparent',
       disableClose: true
     });
+    runTrigger.then((val: DeploymentTriggered) => {
+      this.router.navigate(['/run/' + val.runUuid]);
+    })
     runTrigger.finally(() => {
       spinnerRef.close();
     });

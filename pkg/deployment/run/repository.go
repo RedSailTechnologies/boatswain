@@ -1,4 +1,4 @@
-package deployment
+package run
 
 import (
 	"encoding/json"
@@ -7,15 +7,15 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 )
 
-// RunRepository is the repository for dealing with run storage
-type RunRepository struct {
+// Repository is the repository for dealing with run storage
+type Repository struct {
 	coll  string
 	store storage.Storage
 }
 
-// NewRunRepository creates a repository with the given storage
-func NewRunRepository(coll string, store storage.Storage) *RunRepository {
-	return &RunRepository{
+// NewRepository creates a repository with the given storage
+func NewRepository(coll string, store storage.Storage) *Repository {
+	return &Repository{
 		coll:  coll,
 		store: store,
 	}
@@ -24,7 +24,7 @@ func NewRunRepository(coll string, store storage.Storage) *RunRepository {
 // All gets all runs
 // FIXME we need to implement a filter at the repo level here so we can
 // get all runs by the deployment id, not every single one in the system
-func (r *RunRepository) All() ([]*Run, error) {
+func (r *Repository) All() ([]*Run, error) {
 	uuids, err := r.store.IDs(r.coll)
 	if err != nil {
 		return nil, err
@@ -40,14 +40,14 @@ func (r *RunRepository) All() ([]*Run, error) {
 		if err != nil {
 			return nil, err
 		}
-		run := ReplayRun(events)
+		run := Replay(events)
 		runs = append(runs, run)
 	}
 	return runs, nil
 }
 
 // Load reads out the run for the uuid given
-func (r *RunRepository) Load(uuid string) (*Run, error) {
+func (r *Repository) Load(uuid string) (*Run, error) {
 	events, err := r.store.GetEvents(r.coll, uuid)
 	if err != nil {
 		return nil, err
@@ -61,11 +61,11 @@ func (r *RunRepository) Load(uuid string) (*Run, error) {
 		return nil, ddd.NotFoundError{Entity: entityName}
 	}
 
-	return ReplayRun(unmarshaled), nil
+	return Replay(unmarshaled), nil
 }
 
 // Save persists the new events for the run given
-func (r *RunRepository) Save(run *Run) error {
+func (r *Repository) Save(run *Run) error {
 	version := r.store.GetVersion(r.coll, run.UUID())
 	for i, ev := range run.Events()[version:] {
 		v := i + version + 1
@@ -87,16 +87,20 @@ func unmarshalRunEvents(events []*storage.StoredEvent) ([]ddd.Event, error) {
 	var e interface{}
 	for _, event := range events {
 		switch event.Type {
-		case runEntityName + "Created":
-			e = &RunCreated{}
-		case runEntityName + "Started":
-			e = &RunStarted{}
-		case runEntityName + "StepStarted":
+		case entityName + "Created":
+			e = &Created{}
+		case entityName + "Started":
+			e = &Started{}
+		case entityName + "StepStarted":
 			e = &StepStarted{}
-		case runEntityName + "StepCompleted":
+		case entityName + "AppendLog":
+			e = &AppendLog{}
+		case entityName + "StepCompleted":
 			e = &StepCompleted{}
-		case runEntityName + "Completed":
-			e = &RunCompleted{}
+		case entityName + "StepSkipped":
+			e = &StepSkipped{}
+		case entityName + "Completed":
+			e = &Completed{}
 		default:
 			return nil, ddd.UnsupportedEventError{
 				EventType: event.Type,
