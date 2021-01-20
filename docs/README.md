@@ -14,7 +14,6 @@ A kubernetes-native CD tool with first-class support for Helm v3.
   * Run locally/as a single binary.
   * Run in Kubernetes as a collection of microservices with a single entrypoint.
 * Canary strategy as first class object.
-  * First class istio support
   * Debug canaries
   * Pre-merge canaries
   * Upgrades done with canaries
