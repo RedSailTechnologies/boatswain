@@ -130,15 +130,21 @@ func (s Service) Read(ctx context.Context, req *pb.ReadDeployment) (*pb.Deployme
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
+	reqctx, err := s.auth.NewContext(ctx)
+	if err != nil {
+		logger.Error("could not get new context for client", "error", err)
+		return nil, twirp.InternalErrorWith(err)
+	}
+
 	d, err := s.repository.Load(req.Uuid)
 	if err != nil {
 		logger.Error("error reading Deployment", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Deployment")
 	}
 
-	r, err := s.repo.Read(ctx, &repo.ReadRepo{Uuid: d.RepoID()})
+	r, err := s.repo.Read(reqctx, &repo.ReadRepo{Uuid: d.RepoID()})
 	if err != nil {
-		logger.Error("could not find repo in deployment")
+		logger.Error("could not find repo in deployment", "error", err)
 		r = &repo.RepoRead{}
 	}
 
@@ -190,7 +196,13 @@ func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.
 		return nil, tw.ToTwirpError(err, "error loading Deployment")
 	}
 
-	f, err := s.repo.File(ctx, &repo.ReadFile{
+	reqctx, err := s.auth.NewContext(ctx)
+	if err != nil {
+		logger.Error("could not get new context for client", "error", err)
+		return nil, twirp.InternalErrorWith(err)
+	}
+
+	f, err := s.repo.File(reqctx, &repo.ReadFile{
 		RepoId:   d.RepoID(),
 		Branch:   d.Branch(),
 		FilePath: d.FilePath(),
@@ -200,7 +212,7 @@ func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.
 		return nil, twirp.NotFoundError("deployment file not found")
 	}
 
-	te := template.NewEngine(ctx, s.repo)
+	te := template.NewEngine(reqctx, s.repo)
 	yaml, err := te.Template(f.File)
 	if err != nil {
 		logger.Error("yaml file could not be templated", "error", err)
@@ -218,15 +230,21 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	// get all clusters and repos for use later
-	repos, err := s.repo.All(ctx, &repo.ReadRepos{})
+	reqctx, err := s.auth.NewContext(ctx)
 	if err != nil {
-		logger.Error("could not get repos", "error", err)
-		return nil, err
+		logger.Error("could not get new context for client", "error", err)
+		return nil, twirp.InternalErrorWith(err)
 	}
-	clusters, err := s.cluster.All(ctx, &cluster.ReadClusters{})
+
+	// get all clusters and repos for use later
+	clusters, err := s.cluster.All(reqctx, &cluster.ReadClusters{})
 	if err != nil {
 		logger.Error("could not get clusters", "error", err)
+		return nil, err
+	}
+	repos, err := s.repo.All(reqctx, &repo.ReadRepos{})
+	if err != nil {
+		logger.Error("could not get repos", "error", err)
 		return nil, err
 	}
 
@@ -237,7 +255,7 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 		return nil, tw.ToTwirpError(err, "error loading Deployment")
 	}
 
-	f, err := s.repo.File(ctx, &repo.ReadFile{
+	f, err := s.repo.File(reqctx, &repo.ReadFile{
 		RepoId:   d.RepoID(),
 		Branch:   d.Branch(),
 		FilePath: d.FilePath(),
@@ -247,7 +265,7 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 		return nil, twirp.NotFoundError("deployment file not found")
 	}
 
-	te := template.NewEngine(ctx, s.repo)
+	te := template.NewEngine(reqctx, s.repo)
 	t, err := te.Run(f.File, cmd.Arguments)
 	if err != nil {
 		logger.Error("yaml file could not be templated", "error", err)

@@ -38,6 +38,11 @@ func (ma *mockAuth) Authorize(ctx context.Context, role auth.Role) error {
 	return nil
 }
 
+func (ma *mockAuth) NewContext(ctx context.Context) (context.Context, error) {
+	ma.Called(ctx)
+	return context.Background(), nil
+}
+
 func (ma *mockAuth) User(ctx context.Context) auth.User {
 	ma.Called(ctx)
 	return auth.User{}

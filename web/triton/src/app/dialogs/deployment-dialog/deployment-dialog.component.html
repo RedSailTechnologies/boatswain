@@ -18,7 +18,7 @@
         <br />
         <mat-form-field>
             <mat-select required placeholder="Repo" formControlName="repoId">
-                <mat-option *ngFor="let repo of repos" [value]="repo.uuid">
+                <mat-option *ngFor="let repo of repos" [(value)]="repo.uuid">
                     {{repo.name}}
                 </mat-option>
             </mat-select>

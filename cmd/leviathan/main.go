@@ -27,8 +27,9 @@ import (
 )
 
 func main() {
-	var httpPort, mongoConn string
+	var httpPort, localAddr, mongoConn string
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
+	flag.StringVar(&localAddr, "local-addr", cfg.EnvOrDefaultString("LOCAL_ADDR", "http://127.0.0.1"), "local address")
 	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
 	authCfg := auth.Flags()
 	flag.Parse()
@@ -54,7 +55,10 @@ func main() {
 	repo := repo.NewService(authAgent, git.DefaultAgent{}, helm.DefaultAgent{}, store)
 	repTwirp := rep.NewRepoServer(repo, hooks, twirp.WithServerPathPrefix("/api"))
 
-	deploy := deployment.NewService(authAgent, cluster, repo, store)
+	cclient := cl.NewClusterProtobufClient(localAddr+":"+httpPort, &http.Client{}, twirp.WithClientPathPrefix("/api"))
+	rclient := rep.NewRepoProtobufClient(localAddr+":"+httpPort, &http.Client{}, twirp.WithClientPathPrefix("/api"))
+
+	deploy := deployment.NewService(authAgent, cclient, rclient, store)
 	depTwirp := dl.NewDeploymentServer(deploy, hooks, twirp.WithServerPathPrefix("/api"))
 
 	// Client

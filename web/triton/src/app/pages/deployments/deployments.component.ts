@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router'; 
+import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-dialog.component';
 import { DeploymentDialogComponent } from 'src/app/dialogs/deployment-dialog/deployment-dialog.component';
 import { DefaultDeployment, Deployment, DeploymentReadSummary } from 'src/app/services/deployment/deployment';
 import { AuthService } from 'src/app/utils/auth/auth.service';
@@ -67,7 +68,7 @@ export class DeploymentsComponent implements OnInit {
 
   delete(deployment: DeploymentReadSummary): void {
     this.dialog
-      .open(DeploymentDialogComponent, {
+      .open(ConfirmDialogComponent, {
         panelClass: 'message-box',
         data: {
           reason: `Delete ${deployment.name}`,

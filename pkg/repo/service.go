@@ -66,7 +66,7 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdate
 
 	r, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
-		logger.Error("error loading cluster", "error", err)
+		logger.Error("error loading repo", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 

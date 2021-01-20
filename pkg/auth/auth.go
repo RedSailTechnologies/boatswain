@@ -9,6 +9,7 @@ import (
 type Agent interface {
 	Authenticate(context.Context) (context.Context, error)
 	Authorize(context.Context, Role) error
+	NewContext(ctx context.Context) (context.Context, error)
 	User(context.Context) User
 	Wrap(http.Handler) http.Handler
 }
@@ -26,13 +27,6 @@ const (
 	// Reader role, readonly
 	Reader Role = 2
 )
-
-// AuthenticationError represents some error in the login process
-type AuthenticationError struct{}
-
-func (e AuthenticationError) Error() string {
-	return "authentication error"
-}
 
 // NotAuthorizedError represents an erorr in the authorization process
 type NotAuthorizedError struct{}
