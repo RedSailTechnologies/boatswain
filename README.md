@@ -11,11 +11,11 @@
 * 0.4
   * Service health checks
   * Dev/debug canaries
-  * mongodb security (for helm)
 * 0.5
   * Cthulu first cut
     * azdo plugin
     * triggers
     * PR canaries
 * 0.6
-  * Change logs/history
+  * Mongodb security (for helm)
+  * TBD
