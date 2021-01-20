@@ -1,10 +1,21 @@
 # CHANGELOG
 
-## 0.3.0
-* TODO Feature/init authentication (#18)
+## v0.3.2
+* 8a9c3bd Hotfix/Fix helm calls for ready (#31)
+* 71503db Feature/Service Health Checks (#30)
+* 25708b5 Hotfix/update the hooks for the application service (#29)
+* 461b3e8 Feature/gh pages (#22)
+
+## v0.3.1
+* 98e9a0e update the hooks for the application service
+* 50189bf Hotfix/Update feature template (#20)
+* 4eaae81 Hotfix/Update issue templates (#19)
+
+## v0.3.0
+* 0574d7d Feature/init authentication (#18)
 * f41d073 Update all version numbers and make minor Makefile tweaks (#17)
 
-## 0.2.0
+## v0.2.0
 * 6fcfa57 Feature/mongo helm updates (#16)
 * 0ec3aff Feature/initialize persistence (#15)
 * 92b1a90 Hotfix/projects page load
@@ -23,7 +34,7 @@
 * c54fec9 Merge branch main of github.com:RedSailTechnologies/boatswain into main
 * cd81823 add initial development workflow
 
-## 0.1.0
+## v0.1.0
 * a1e343e Finish initial architecture.
 * d848aa1 Finish the update functionality!
 * 2791f53 Finish repo page and start upgrade dialog.
