@@ -1,24 +1,14 @@
 
-# the default envoy routing configuration
-# this shouldn't need to be chnaged under normal configurations
-routing:
-  client: 
-  services:
-    kraken:
-      - Application
-      - Cluster
-    gyarados:
-      - Deployment
-    poseidon:
-      - Repo
-  connectTimeout: 0.25s
+config:
+  mongoConn: mongodb://$(BOSN_MONGODB_SERVICE_HOST):$(BOSN_MONGODB_SERVICE_PORT)
 
 replicaCount: 1
 
 image:
-  repository: envoyproxy/envoy
-  pullPolicy: Always
-  tag: v1.16-latest
+  repository: docker.io/redsailtechnologies/bosn-gyarados
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: ""

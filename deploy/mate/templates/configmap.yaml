@@ -26,6 +26,12 @@ data:
                   domains:
                   - "*"
                   routes:
+                  {{- range $service := .Values.routing.services.gyarados }}
+                  - match:
+                      prefix: "/api/redsail.bosn.{{ $service }}"
+                    route:
+                      cluster: gyarados
+                  {{- end }}
                   {{- range $service := .Values.routing.services.kraken }}
                   - match:
                       prefix: "/api/redsail.bosn.{{ $service }}"
@@ -45,6 +51,16 @@ data:
               http_filters:
               - name: envoy.filters.http.router
       clusters:
+      - name: gyarados
+        type: STRICT_DNS
+        connect_timeout: {{ .Values.routing.connectTimeout }}
+        dns_lookup_family: V4_ONLY
+        lb_policy: LEAST_REQUEST
+        http_protocol_options: {}
+        hosts:
+          - socket_address:
+              address: gyarados
+              port_value: 80
       - name: kraken
         type: STRICT_DNS
         connect_timeout: {{ .Values.routing.connectTimeout }}
@@ -53,7 +69,7 @@ data:
         http_protocol_options: {}
         hosts:
           - socket_address:
-              address: {{ printf "%s-%s" .Release.Name "kraken" | trunc 63 | trimSuffix "-" }}
+              address: kraken
               port_value: 80
       - name: poseidon
         type: STRICT_DNS
@@ -63,7 +79,7 @@ data:
         http_protocol_options: {}
         hosts:
           - socket_address:
-              address: {{ printf "%s-%s" .Release.Name "poseidon" | trunc 63 | trimSuffix "-" }}
+              address: poseidon
               port_value: 80
       - name: triton
         type: STRICT_DNS
@@ -73,5 +89,5 @@ data:
         http_protocol_options: {}
         hosts:
           - socket_address:
-              address: {{ printf "%s-%s" .Release.Name "triton" | trunc 63 | trimSuffix "-" }}
+              address: triton
               port_value: 80

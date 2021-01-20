@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "kraken.name" . }}
+  name: {{ include "gyarados.name" . }}
   labels:
-    {{- include "kraken.labels" . | nindent 4 }}
+    {{- include "gyarados.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,4 +12,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "kraken.selectorLabels" . | nindent 4 }}
+    {{- include "gyarados.selectorLabels" . | nindent 4 }}

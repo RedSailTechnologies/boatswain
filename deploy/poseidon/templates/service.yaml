@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "poseidon.fullname" . }}
+  name: {{ include "poseidon.name" . }}
   labels:
     {{- include "poseidon.labels" . | nindent 4 }}
 spec:

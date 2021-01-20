@@ -116,6 +116,7 @@ push:
 	@for service in $(SERVICE_LIST); do \
 	  docker push $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
 	done
+	docker push $(DOCKER_REPO)triton:$(DOCKER_TAG) $(DOCKER_OPTS)
 
 template:
 ifeq ($(DEBUG),true)

@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gyarados.fullname" . }}
+  labels:
+    {{- include "gyarados.labels" . | nindent 4 }}
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  selector:
+    matchLabels:
+      {{- include "gyarados.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "gyarados.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "gyarados.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: MONGO_CONNECTION_STRING
+              value: {{ .Values.config.mongoConn }}
+            - name: OIDC_URL
+              value: {{ printf "%s/%s" .Values.global.oidc.url ".well-known/openid-configuration" }}
+            - name: USER_SCOPE
+              value: {{ .Values.global.oidc.apiScope }}
+            - name: USER_ADMIN_ROLE
+              value: {{ .Values.global.oidc.roles.admin }}
+            - name: USER_EDITOR_ROLE
+              value: {{ .Values.global.oidc.roles.editor }}
+            - name: USER_READER_ROLE
+              value: {{ .Values.global.oidc.roles.reader }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - 'wget -O- --post-data=''{}'' --header=''Content-Type:application/json'' http://localhost:8080/health/redsail.bosn.Health/Live'
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - 'wget -O- --post-data=''{}'' --header=''Content-Type:application/json'' http://localhost:8080/health/redsail.bosn.Health/Ready'
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
