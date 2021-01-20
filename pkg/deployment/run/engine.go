@@ -217,10 +217,10 @@ func (e *Engine) finalize(status Status) {
 			logger.Error("error completing run", "error", err)
 			continue
 		}
-		if err := e.repo.Save(e.run); err == nil {
-			return
-		} else {
+		if err := e.repo.Save(e.run); err != nil {
 			logger.Error("error saving run", "error", err)
+		} else {
+			return
 		}
 	}
 }

@@ -43,7 +43,7 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreate
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, RepoType(cmd.Type), ddd.NewTimestamp())
+	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, Type(cmd.Type), ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "could not create Repo")
@@ -70,7 +70,7 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdate
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
-	err = r.Update(cmd.Name, cmd.Endpoint, RepoType(cmd.Type), ddd.NewTimestamp())
+	err = r.Update(cmd.Name, cmd.Endpoint, Type(cmd.Type), ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error updating Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "Repo could not be updated")

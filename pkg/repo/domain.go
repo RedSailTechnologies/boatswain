@@ -4,54 +4,6 @@ import "github.com/redsailtechnologies/boatswain/pkg/ddd"
 
 var entityName = "Repo"
 
-// RepoType represents the kind of repo
-type RepoType int64
-
-const (
-	// HELM repo
-	HELM RepoType = 0
-
-	// GIT repo
-	GIT RepoType = 1
-)
-
-// Created is the event for when a new repo is created
-type Created struct {
-	Timestamp int64
-	UUID      string
-	Name      string
-	Endpoint  string
-	Type      RepoType
-}
-
-// EventType marks this as an event
-func (e Created) EventType() string {
-	return entityName + "Created"
-}
-
-// Destroyed is the event for when a repo is destroyed
-type Destroyed struct {
-	Timestamp int64
-}
-
-// EventType marks this as an event
-func (e Destroyed) EventType() string {
-	return entityName + "Destroyed"
-}
-
-// Updated is the event for when a repo is updated
-type Updated struct {
-	Timestamp int64
-	Name      string
-	Endpoint  string
-	Type      RepoType
-}
-
-// EventType marks this as an event
-func (e Updated) EventType() string {
-	return entityName + "Updated"
-}
-
 // Repo represents a repository, for now helm only
 type Repo struct {
 	events    []ddd.Event
@@ -61,7 +13,7 @@ type Repo struct {
 	uuid     string
 	name     string
 	endpoint string
-	RepoType RepoType
+	repoType Type
 }
 
 // Replay recreates the repo from a series of events
@@ -74,7 +26,7 @@ func Replay(events []ddd.Event) *Repo {
 }
 
 // Create handles create commands
-func Create(uuid, name, endpoint string, t RepoType, timestamp int64) (*Repo, error) {
+func Create(uuid, name, endpoint string, t Type, timestamp int64) (*Repo, error) {
 	if uuid == "" {
 		return nil, ddd.IDError{}
 	}
@@ -105,7 +57,7 @@ func (r *Repo) Destroy(timestamp int64) error {
 }
 
 // Update handles update commands
-func (r *Repo) Update(name, endpoint string, t RepoType, timestamp int64) error {
+func (r *Repo) Update(name, endpoint string, t Type, timestamp int64) error {
 	err := validateFields(name, endpoint)
 	if err != nil {
 		return err
@@ -138,8 +90,8 @@ func (r *Repo) Endpoint() string {
 }
 
 // Type gets the repo type (helm, git, etc.)
-func (r *Repo) Type() RepoType {
-	return r.RepoType
+func (r *Repo) Type() Type {
+	return r.repoType
 }
 
 // Events gets all events from this repo
@@ -162,13 +114,13 @@ func (r *Repo) on(event ddd.Event) {
 		r.uuid = e.UUID
 		r.name = e.Name
 		r.endpoint = e.Endpoint
-		r.RepoType = e.Type
+		r.repoType = e.Type
 	case *Destroyed:
 		r.destroyed = true
 	case *Updated:
 		r.name = e.Name
 		r.endpoint = e.Endpoint
-		r.RepoType = e.Type
+		r.repoType = e.Type
 	}
 }
 

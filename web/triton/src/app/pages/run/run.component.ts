@@ -42,14 +42,15 @@ export class RunComponent implements OnInit {
       deploymentUuid: this.id
     }).then(value => {
       this.run = value;
-      this.start = new Date(this.run.startTime * 1000).toLocaleString();
-      this.stop = new Date(this.run.stopTime * 1000).toLocaleString();
+      this.start = this.formatDate(this.run.startTime);
+      this.stop = this.formatDate(this.run.stopTime);
+
       if (this.run.status == "IN_PROGRESS") {
         setTimeout(() => this.refresh(), 3 * 1000);
       }
 
       if (this.stepper) {
-        this.stepper.next()
+        this.moveLast()
       }
       // FIXME set the page title and browser title somehow
     });
@@ -60,6 +61,14 @@ export class RunComponent implements OnInit {
       return "";
     }
     return new Date(date * 1000).toLocaleString();
+  }
+
+  moveLast(): void {
+    try {
+      this.stepper.next()
+    } catch {
+      setTimeout(() => this.moveLast(), 100)
+    }
   }
 
   statusColor(status: string): string {

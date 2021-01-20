@@ -5,8 +5,10 @@
             Status: <a [style]="run.status == 'FAILED' ? 'color:lightcoral;' : ''">{{run.status}}</a>
             <br />
             Start: {{start}}
-            <br />
-            Stop: {{stop}}
+            <span *ngIf="run.status != 'IN_PROGRESS'">
+                <br />
+                Stop: {{stop}}
+            </span>
         </mat-card-subtitle>
         <mat-card-content>
             <mat-vertical-stepper [selectedIndex]="run.status == 'IN_PROGRESS' ? run.steps.length : run.steps.length - 1" #stepper> 
