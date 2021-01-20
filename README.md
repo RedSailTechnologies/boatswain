@@ -16,6 +16,9 @@
     * azdo plugin
     * triggers
     * PR canaries
-* 0.6
+* 0.6+
   * Mongodb security (for helm)
+  * External links from a run
+  * Enhance application filtering
+  * Update storage layer to have filtering
   * TBD
