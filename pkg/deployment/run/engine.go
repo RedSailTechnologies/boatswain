@@ -6,45 +6,50 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/redsailtechnologies/boatswain/pkg/cluster"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/deployment/template"
 	"github.com/redsailtechnologies/boatswain/pkg/git"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
-	"github.com/redsailtechnologies/boatswain/rpc/cluster"
-	"github.com/redsailtechnologies/boatswain/rpc/repo"
-	"helm.sh/helm/v3/pkg/release"
+	"github.com/redsailtechnologies/boatswain/pkg/repo"
+	"github.com/redsailtechnologies/boatswain/pkg/storage"
+	"helm.sh/helm/v3/pkg/release" // TODO - refactor to agent?
 )
 
 var retryCount int = 3
 
 // The Engine is the worker that performs all run steps and tracking
 type Engine struct {
-	run  *Run
-	repo *Repository
+	run      *Run
+	write    *writeRepository
+	clusters *cluster.ReadRepository
+	repos    *repo.ReadRepository
 
 	git  git.Agent
 	helm helm.Agent
 	kube kube.Agent
-
-	clusters []*cluster.ClusterRead
-	repos    []*repo.RepoRead
 }
 
 // NewEngine initializes the engine with required dependencies
-func NewEngine(r *Run, repo *Repository, g git.Agent, h helm.Agent, k kube.Agent, cl []*cluster.ClusterRead, re []*repo.RepoRead) *Engine {
+func NewEngine(r *Run, s storage.Storage, g git.Agent, h helm.Agent, k kube.Agent) (*Engine, error) {
 	// TODO AdamP - we could filter out only what we need for repos and clusters
+	w := newWriteRepository(s)
+	if err := w.save(r); err != nil {
+		logger.Error("could not save created run", "error", err)
+		return nil, err
+	}
 	engine := &Engine{
 		run:      r,
-		repo:     repo,
+		write:    w,
+		clusters: cluster.NewReadRepository(s),
+		repos:    repo.NewReadRepository(s),
 		git:      g,
 		helm:     h,
 		kube:     k,
-		clusters: cl,
-		repos:    re,
 	}
-	return engine
+	return engine, nil
 }
 
 // Run starts the engine, and is designed to be run in the background
@@ -130,7 +135,12 @@ func (e *Engine) executeActionStep(step *template.Step) Status {
 			return Failed
 		}
 
-		endpoint, token, err := getClusterInfo(step.App.Cluster, e.clusters)
+		clusters, err := e.clusters.All()
+		if err != nil {
+			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+			return Failed
+		}
+		endpoint, token, err := getClusterInfo(step.App.Cluster, clusters)
 		if err != nil {
 			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
 			return Failed
@@ -217,7 +227,7 @@ func (e *Engine) finalize(status Status) {
 			logger.Error("error completing run", "error", err)
 			continue
 		}
-		if err := e.repo.Save(e.run); err != nil {
+		if err := e.write.save(e.run); err != nil {
 			logger.Error("error saving run", "error", err)
 		} else {
 			return
@@ -229,7 +239,12 @@ func (e *Engine) downloadChart(c, v, r string) ([]byte, error) {
 	if c == "" || v == "" || r == "" {
 		return nil, errors.New("cannot download chart without chart, version, and name")
 	}
-	repo, err := getRepoInfo(r, e.repos)
+	allRepos, err := e.repos.All()
+	if err != nil {
+		return nil, err
+	}
+
+	repo, err := getRepoInfo(r, allRepos)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +252,7 @@ func (e *Engine) downloadChart(c, v, r string) ([]byte, error) {
 }
 
 func (e *Engine) persist() {
-	err := e.repo.Save(e.run)
+	err := e.write.save(e.run)
 	if err != nil {
 		logger.Error("could not persist run", "error", err)
 		e.finalize(Failed)
@@ -268,19 +283,19 @@ func getApp(name string, apps []template.App) (*template.App, error) {
 	return nil, errors.New("app definition not found")
 }
 
-func getClusterInfo(c string, l []*cluster.ClusterRead) (string, string, error) {
+func getClusterInfo(c string, l []*cluster.Cluster) (string, string, error) {
 	for _, cluster := range l {
-		if cluster.Name == c {
-			return cluster.Endpoint, cluster.Token, nil
+		if cluster.Name() == c {
+			return cluster.Endpoint(), cluster.Token(), nil
 		}
 	}
 	return "", "", errors.New("cluster not found")
 }
 
-func getRepoInfo(r string, l []*repo.RepoRead) (string, error) {
+func getRepoInfo(r string, l []*repo.Repo) (string, error) {
 	for _, repo := range l {
-		if repo.Name == r {
-			return repo.Endpoint, nil
+		if repo.Name() == r {
+			return repo.Endpoint(), nil
 		}
 	}
 	return "", errors.New("repo not found")

@@ -9,17 +9,17 @@ import (
 	"github.com/twitchtv/twirp"
 
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
+	"github.com/redsailtechnologies/boatswain/pkg/cluster"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/deployment/run"
 	"github.com/redsailtechnologies/boatswain/pkg/git"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
+	"github.com/redsailtechnologies/boatswain/pkg/repo"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
-	"github.com/redsailtechnologies/boatswain/rpc/cluster"
 	pb "github.com/redsailtechnologies/boatswain/rpc/deployment"
-	"github.com/redsailtechnologies/boatswain/rpc/repo"
 )
 
 var collection = "deployments"
@@ -27,21 +27,29 @@ var runCollection = "runs"
 
 // Service is the implementation for twirp to use
 type Service struct {
-	auth          auth.Agent
-	cluster       cluster.Cluster
-	repo          repo.Repo
-	repository    *Repository
-	runRepository *run.Repository
+	auth    auth.Agent
+	git     git.Agent
+	cluster *cluster.ReadRepository
+	repo    *repo.ReadRepository
+	read    *ReadRepository
+	write   *writeRepository
+	runRead *run.ReadRepository
+	store   storage.Storage
+	ready   func() error
 }
 
 // NewService creates the service
-func NewService(a auth.Agent, c cluster.Cluster, r repo.Repo, s storage.Storage) *Service {
+func NewService(a auth.Agent, g git.Agent, s storage.Storage) *Service {
 	return &Service{
-		auth:          a,
-		cluster:       c,
-		repo:          r,
-		repository:    NewRepository(collection, s),
-		runRepository: run.NewRepository(runCollection, s),
+		auth:    a,
+		git:     g,
+		cluster: cluster.NewReadRepository(s),
+		repo:    repo.NewReadRepository(s),
+		read:    NewReadRepository(s),
+		write:   newWriteRepository(s),
+		runRead: run.NewReadRepository(s),
+		store:   s,
+		ready:   s.CheckReady,
 	}
 }
 
@@ -57,7 +65,7 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateDeployment) (*pb.Depl
 		return nil, tw.ToTwirpError(err, "could not create Deployment")
 	}
 
-	err = s.repository.Save(d)
+	err = s.write.save(d)
 	if err != nil {
 		logger.Error("error saving Deployment", "error", err)
 		return nil, twirp.InternalError("error saving created Deployment")
@@ -72,7 +80,7 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateDeployment) (*pb.Depl
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	d, err := s.repository.Load(cmd.Uuid)
+	d, err := s.read.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading Deployment", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Deployment")
@@ -84,7 +92,7 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateDeployment) (*pb.Depl
 		return nil, tw.ToTwirpError(err, "Deployment could not be updated")
 	}
 
-	err = s.repository.Save(d)
+	err = s.write.save(d)
 	if err != nil {
 		logger.Error("error saving Deployment", "error", err)
 		return nil, twirp.InternalError("error saving updated deployment")
@@ -99,12 +107,12 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyDeployment) (*pb.De
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	d, err := s.repository.Load(cmd.Uuid)
+	d, err := s.read.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading Deployment", "error", err)
 
 		// NOTE we could consider returning the error here
-		if err == (ddd.DestroyedError{Entity: "Deployment"}) {
+		if err == (ddd.DestroyedError{Entity: entityName}) {
 			return &pb.DeploymentDestroyed{}, nil
 		}
 		return nil, tw.ToTwirpError(err, "error loading Deployment")
@@ -115,7 +123,7 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyDeployment) (*pb.De
 		return nil, tw.ToTwirpError(err, "Deployment could not be destroyed")
 	}
 
-	err = s.repository.Save(d)
+	err = s.write.save(d)
 	if err != nil {
 		logger.Error("error saving Deployment", "error", err)
 		return nil, twirp.InternalError("error saving destroyed Deployment")
@@ -130,29 +138,23 @@ func (s Service) Read(ctx context.Context, req *pb.ReadDeployment) (*pb.Deployme
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	reqctx, err := s.auth.NewContext(ctx)
-	if err != nil {
-		logger.Error("could not get new context for client", "error", err)
-		return nil, twirp.InternalErrorWith(err)
-	}
-
-	d, err := s.repository.Load(req.Uuid)
+	d, err := s.read.Load(req.Uuid)
 	if err != nil {
 		logger.Error("error reading Deployment", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Deployment")
 	}
 
-	r, err := s.repo.Read(reqctx, &repo.ReadRepo{Uuid: d.RepoID()})
+	r, err := s.repo.Load(d.RepoID())
 	if err != nil {
 		logger.Error("could not find repo in deployment", "error", err)
-		r = &repo.RepoRead{}
+		return nil, twirp.InternalErrorWith(err)
 	}
 
 	return &pb.DeploymentRead{
 		Uuid:     d.UUID(),
 		Name:     d.Name(),
 		RepoId:   d.RepoID(),
-		RepoName: r.Name,
+		RepoName: r.Name(),
 		Branch:   d.Branch(),
 		FilePath: d.FilePath(),
 	}, nil
@@ -168,7 +170,7 @@ func (s Service) All(ctx context.Context, req *pb.ReadDeployments) (*pb.Deployme
 		Deployments: make([]*pb.DeploymentReadSummary, 0),
 	}
 
-	deployments, err := s.repository.All()
+	deployments, err := s.read.All()
 	if err != nil {
 		logger.Error("error getting Deployments", "error", err)
 		return nil, twirp.InternalError("error loading Deployments")
@@ -190,30 +192,26 @@ func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	d, err := s.repository.Load(req.Uuid)
+	d, err := s.read.Load(req.Uuid)
 	if err != nil {
 		logger.Error("error reading Deployment", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Deployment")
 	}
 
-	reqctx, err := s.auth.NewContext(ctx)
+	r, err := s.repo.Load(d.RepoID())
 	if err != nil {
-		logger.Error("could not get new context for client", "error", err)
-		return nil, twirp.InternalErrorWith(err)
+		logger.Error("error reading Repo for Deployment", "error", err)
+		return nil, tw.ToTwirpError(err, "error loading Repo for Deployment")
 	}
 
-	f, err := s.repo.File(reqctx, &repo.ReadFile{
-		RepoId:   d.RepoID(),
-		Branch:   d.Branch(),
-		FilePath: d.FilePath(),
-	})
-	if err != nil {
-		logger.Error("could not get deployment file", "error", err)
+	f := s.git.GetFile(r.Endpoint(), d.Branch(), d.FilePath(), "", "")
+	if f == nil {
+		logger.Error("could not get deployment file")
 		return nil, twirp.NotFoundError("deployment file not found")
 	}
 
-	te := template.NewEngine(reqctx, s.repo)
-	yaml, err := te.Template(f.File)
+	te := template.NewEngine(&git.DefaultAgent{}, s.repo)
+	yaml, err := te.Template(f)
 	if err != nil {
 		logger.Error("yaml file could not be templated", "error", err)
 		return nil, twirp.InternalErrorWith(err)
@@ -230,43 +228,27 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	reqctx, err := s.auth.NewContext(ctx)
-	if err != nil {
-		logger.Error("could not get new context for client", "error", err)
-		return nil, twirp.InternalErrorWith(err)
-	}
-
-	// get all clusters and repos for use later
-	clusters, err := s.cluster.All(reqctx, &cluster.ReadClusters{})
-	if err != nil {
-		logger.Error("could not get clusters", "error", err)
-		return nil, err
-	}
-	repos, err := s.repo.All(reqctx, &repo.ReadRepos{})
-	if err != nil {
-		logger.Error("could not get repos", "error", err)
-		return nil, err
-	}
-
 	// template/validate the deployment
-	d, err := s.repository.Load(cmd.Uuid)
+	d, err := s.read.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error reading Deployment", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Deployment")
 	}
 
-	f, err := s.repo.File(reqctx, &repo.ReadFile{
-		RepoId:   d.RepoID(),
-		Branch:   d.Branch(),
-		FilePath: d.FilePath(),
-	})
+	repo, err := s.repo.Load(d.RepoID())
 	if err != nil {
-		logger.Error("could not get deployment file", "error", err)
+		logger.Error("error reading Repo for Deployment", "error", err)
+		return nil, tw.ToTwirpError(err, "error loading Repo for Deployment")
+	}
+
+	f := s.git.GetFile(repo.Endpoint(), d.Branch(), d.FilePath(), "", "")
+	if f == nil {
+		logger.Error("could not get deployment file")
 		return nil, twirp.NotFoundError("deployment file not found")
 	}
 
-	te := template.NewEngine(reqctx, s.repo)
-	t, err := te.Run(f.File, cmd.Arguments)
+	te := template.NewEngine(&git.DefaultAgent{}, s.repo)
+	t, err := te.Run(f, cmd.Arguments)
 	if err != nil {
 		logger.Error("yaml file could not be templated", "error", err)
 		return nil, twirp.InternalErrorWith(err)
@@ -289,21 +271,14 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 		Type: getTriggerType(cmd.Type),
 		User: user,
 	})
-	if err = s.runRepository.Save(r); err != nil {
-		logger.Error("could not save created run", "error", err)
+
+	// start the engine in the background
+	eng, err := run.NewEngine(r, s.store, git.DefaultAgent{}, helm.DefaultAgent{}, kube.DefaultAgent{})
+	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	// start the engine in the background
-	re := run.NewEngine(r,
-		s.runRepository,
-		git.DefaultAgent{},
-		helm.DefaultAgent{},
-		kube.DefaultAgent{},
-		clusters.Clusters,
-		repos.Repos)
-
-	go re.Run()
+	go eng.Run()
 
 	// return the run id
 	return &pb.DeploymentTriggered{
@@ -317,7 +292,7 @@ func (s Service) Run(ctx context.Context, req *pb.ReadRun) (*pb.RunRead, error) 
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	r, err := s.runRepository.Load(req.DeploymentUuid)
+	r, err := s.runRead.Load(req.DeploymentUuid)
 	if err != nil {
 		logger.Error("error reading Run", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Run")
@@ -350,9 +325,9 @@ func (s Service) Runs(ctx context.Context, req *pb.ReadRuns) (*pb.RunsRead, erro
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	runs, err := s.runRepository.All()
+	runs, err := s.runRead.All()
 	if err != nil {
-		logger.Error("error reading Run", "error", err)
+		logger.Error("error reading Runs", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Run")
 	}
 
@@ -377,7 +352,7 @@ func (s Service) Runs(ctx context.Context, req *pb.ReadRuns) (*pb.RunsRead, erro
 
 // Ready implements the ReadyService method so this service can be part of a health check routine
 func (s Service) Ready() error {
-	return s.repository.store.CheckReady()
+	return s.ready()
 }
 
 func convertLogs(logs []run.Log) []*pb.StepLog {

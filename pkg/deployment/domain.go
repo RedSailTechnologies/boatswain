@@ -4,45 +4,6 @@ import "github.com/redsailtechnologies/boatswain/pkg/ddd"
 
 var entityName = "Deployment"
 
-// Created is the event for when a new deployment is created
-type Created struct {
-	Timestamp int64
-	UUID      string
-	Name      string
-	RepoID    string
-	Branch    string
-	FilePath  string
-}
-
-// EventType marks this as an event
-func (e Created) EventType() string {
-	return entityName + "Created"
-}
-
-// Destroyed is the event for when a deployment is destroyed
-type Destroyed struct {
-	Timestamp int64
-}
-
-// EventType marks this as an event
-func (e Destroyed) EventType() string {
-	return entityName + "Destroyed"
-}
-
-// Updated is the event for when a deployment is updated
-type Updated struct {
-	Timestamp int64
-	Name      string
-	RepoID    string
-	Branch    string
-	FilePath  string
-}
-
-// EventType marks this as an event
-func (e Updated) EventType() string {
-	return entityName + "Updated"
-}
-
 // Deployment represents the basic information about a deployment
 type Deployment struct {
 	events    []ddd.Event
@@ -57,7 +18,7 @@ type Deployment struct {
 }
 
 // Replay recreates the deployment from a series of events
-func Replay(events []ddd.Event) *Deployment {
+func Replay(events []ddd.Event) ddd.Aggregate {
 	d := &Deployment{}
 	for _, event := range events {
 		d.on(event)
@@ -119,6 +80,11 @@ func (d *Deployment) Update(name, repoID, branch, filePath string, timestamp int
 // UUID returns this deployment's identifier
 func (d *Deployment) UUID() string {
 	return d.uuid
+}
+
+// Destroyed determines if this deployment has been destroyed
+func (d *Deployment) Destroyed() bool {
+	return d.destroyed
 }
 
 // Name returns this deployment's name
