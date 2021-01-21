@@ -10,14 +10,6 @@ import (
 
 var entityName = "Run"
 
-var startMessageTemplate = `Step Started
-Name:       %s
-Type:       %s
-Hold:       %s`
-
-var completeMessageTemplate = `Step Completed
-Status:     %s`
-
 // Run represents a single execution of a deployment
 type Run struct {
 	events  []ddd.Event
@@ -36,7 +28,7 @@ type Run struct {
 }
 
 // Replay recreates the run from a series of events
-func Replay(events []ddd.Event) *Run {
+func Replay(events []ddd.Event) ddd.Aggregate {
 	r := &Run{}
 	for _, event := range events {
 		r.on(event)
@@ -142,6 +134,11 @@ func (r *Run) UUID() string {
 	return r.uuid
 }
 
+// Destroyed determines if this deployment has been destroyed
+func (r *Run) Destroyed() bool {
+	return false // runs can't be destroyed, but we still implement the interface
+}
+
 // DeploymentUUID gets the run's deployment uuid
 func (r *Run) DeploymentUUID() string {
 	return r.deployID
@@ -200,6 +197,14 @@ func (r *Run) Events() []ddd.Event {
 func (r *Run) Version() int {
 	return r.version
 }
+
+var startMessageTemplate = `Step Started
+Name:       %s
+Type:       %s
+Hold:       %s`
+
+var completeMessageTemplate = `Step Completed
+Status:     %s`
 
 func (r *Run) on(event ddd.Event) {
 	r.events = append(r.events, event)

@@ -1,4 +1,4 @@
-package repo
+package deployment
 
 import "github.com/redsailtechnologies/boatswain/pkg/ddd"
 
@@ -8,13 +8,14 @@ var eventTypes = map[string]ddd.Event{
 	Updated{}.EventType():   new(Updated),
 }
 
-// Created is the event for when a new repo is created
+// Created is the event for when a new deployment is created
 type Created struct {
 	Timestamp int64
 	UUID      string
 	Name      string
-	Endpoint  string
-	Type      Type
+	RepoID    string
+	Branch    string
+	FilePath  string
 }
 
 // EventType marks this as an event
@@ -22,7 +23,7 @@ func (e Created) EventType() string {
 	return entityName + "Created"
 }
 
-// Destroyed is the event for when a repo is destroyed
+// Destroyed is the event for when a deployment is destroyed
 type Destroyed struct {
 	Timestamp int64
 }
@@ -32,12 +33,13 @@ func (e Destroyed) EventType() string {
 	return entityName + "Destroyed"
 }
 
-// Updated is the event for when a repo is updated
+// Updated is the event for when a deployment is updated
 type Updated struct {
 	Timestamp int64
 	Name      string
-	Endpoint  string
-	Type      Type
+	RepoID    string
+	Branch    string
+	FilePath  string
 }
 
 // EventType marks this as an event

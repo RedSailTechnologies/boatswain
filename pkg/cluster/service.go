@@ -21,17 +21,21 @@ var collection = "clusters"
 
 // Service is the implementation for twirp to use
 type Service struct {
-	auth auth.Agent
-	k8s  kube.Agent
-	repo *Repository
+	auth  auth.Agent
+	k8s   kube.Agent
+	read  *ReadRepository
+	write *writeRepository
+	ready func() error
 }
 
 // NewService creates the service
 func NewService(a auth.Agent, k kube.Agent, s storage.Storage) *Service {
 	return &Service{
-		auth: a,
-		k8s:  k,
-		repo: NewRepository(collection, s),
+		auth:  a,
+		k8s:   k,
+		read:  NewReadRepository(s),
+		write: newWriteRepository(s),
+		ready: s.CheckReady,
 	}
 }
 
@@ -47,7 +51,7 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateCluster) (*pb.Cluster
 		return nil, tw.ToTwirpError(err, "could not create Cluster")
 	}
 
-	err = s.repo.Save(c)
+	err = s.write.save(c)
 	if err != nil {
 		logger.Error("error saving Cluster", "error", err)
 		return nil, twirp.InternalError("error saving created Cluster")
@@ -62,7 +66,7 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.Cluster
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	c, err := s.repo.Load(cmd.Uuid)
+	c, err := s.read.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading Cluster", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Cluster")
@@ -74,7 +78,7 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.Cluster
 		return nil, tw.ToTwirpError(err, "Cluster could not be updated")
 	}
 
-	err = s.repo.Save(c)
+	err = s.write.save(c)
 	if err != nil {
 		logger.Error("error saving Cluster", "error", err)
 		return nil, twirp.InternalError("error saving updated cluster")
@@ -89,12 +93,12 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyCluster) (*pb.Clust
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	c, err := s.repo.Load(cmd.Uuid)
+	c, err := s.read.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading Cluster", "error", err)
 
 		// NOTE we could consider returning the error here
-		if err == (ddd.DestroyedError{Entity: "Cluster"}) {
+		if err == (ddd.DestroyedError{Entity: entityName}) {
 			return &pb.ClusterDestroyed{}, nil
 		}
 		return nil, tw.ToTwirpError(err, "error loading Cluster")
@@ -105,7 +109,7 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyCluster) (*pb.Clust
 		return nil, tw.ToTwirpError(err, "Cluster could not be destroyed")
 	}
 
-	err = s.repo.Save(c)
+	err = s.write.save(c)
 	if err != nil {
 		logger.Error("error saving Cluster", "error", err)
 		return nil, twirp.InternalError("error saving destroyed Cluster")
@@ -120,7 +124,7 @@ func (s Service) Read(ctx context.Context, req *pb.ReadCluster) (*pb.ClusterRead
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	c, err := s.repo.Load(req.Uuid)
+	c, err := s.read.Load(req.Uuid)
 	if err != nil {
 		logger.Error("error reading Cluster", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Cluster")
@@ -148,7 +152,7 @@ func (s Service) Find(ctx context.Context, req *pb.FindCluster) (*pb.ClusterFoun
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	clusters, err := s.repo.All()
+	clusters, err := s.read.All()
 	if err != nil {
 		logger.Error("error getting Clusters", "error", err)
 		return nil, twirp.InternalError("error loading Clusters")
@@ -175,7 +179,7 @@ func (s Service) All(ctx context.Context, req *pb.ReadClusters) (*pb.ClustersRea
 		Clusters: make([]*pb.ClusterRead, 0),
 	}
 
-	clusters, err := s.repo.All()
+	clusters, err := s.read.All()
 	if err != nil {
 		logger.Error("error getting Clusters", "error", err)
 		return nil, twirp.InternalError("error loading Clusters")
@@ -202,7 +206,7 @@ func (s Service) All(ctx context.Context, req *pb.ReadClusters) (*pb.ClustersRea
 
 // Ready implements the ReadyService method so this service can be part of a health check routine
 func (s Service) Ready() error {
-	return s.repo.store.CheckReady()
+	return s.ready()
 }
 
 func (c *Cluster) toClientset() (*kubernetes.Clientset, error) {

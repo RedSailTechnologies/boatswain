@@ -4,45 +4,6 @@ import "github.com/redsailtechnologies/boatswain/pkg/ddd"
 
 var entityName = "Cluster"
 
-// Created is the event for when a new cluster is created
-type Created struct {
-	Timestamp int64
-	UUID      string
-	Name      string
-	Endpoint  string
-	Token     string
-	Cert      string
-}
-
-// EventType marks this as an event
-func (e Created) EventType() string {
-	return entityName + "Created"
-}
-
-// Destroyed is the event for when a cluster is destroyed
-type Destroyed struct {
-	Timestamp int64
-}
-
-// EventType marks this as an event
-func (e Destroyed) EventType() string {
-	return entityName + "Destroyed"
-}
-
-// Updated is the event for when a cluster is updated
-type Updated struct {
-	Timestamp int64
-	Name      string
-	Endpoint  string
-	Token     string
-	Cert      string
-}
-
-// EventType marks this as an event
-func (e Updated) EventType() string {
-	return entityName + "Updated"
-}
-
 // Cluster represents a kubernetes cluster we are monitoring/deploying to
 type Cluster struct {
 	events    []ddd.Event
@@ -57,7 +18,7 @@ type Cluster struct {
 }
 
 // Replay recreates the cluster from a series of events
-func Replay(events []ddd.Event) *Cluster {
+func Replay(events []ddd.Event) ddd.Aggregate {
 	c := &Cluster{}
 	for _, event := range events {
 		c.on(event)
@@ -119,6 +80,11 @@ func (c *Cluster) Update(name, endpoint, token, cert string, timestamp int64) er
 // UUID returns this cluster's identifier
 func (c *Cluster) UUID() string {
 	return c.uuid
+}
+
+// Destroyed determines if this deployment has been destroyed
+func (c *Cluster) Destroyed() bool {
+	return c.destroyed
 }
 
 // Name returns this cluster's name

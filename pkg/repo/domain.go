@@ -17,7 +17,7 @@ type Repo struct {
 }
 
 // Replay recreates the repo from a series of events
-func Replay(events []ddd.Event) *Repo {
+func Replay(events []ddd.Event) ddd.Aggregate {
 	r := &Repo{}
 	for _, event := range events {
 		r.on(event)
@@ -77,6 +77,11 @@ func (r *Repo) Update(name, endpoint string, t Type, timestamp int64) error {
 // UUID gets the repo's unique id
 func (r *Repo) UUID() string {
 	return r.uuid
+}
+
+// Destroyed determines if this repo has been destroyed
+func (r *Repo) Destroyed() bool {
+	return r.destroyed
 }
 
 // Name gets the repo's name

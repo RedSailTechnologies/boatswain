@@ -1,9 +1,20 @@
 package run
 
 import (
+	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/deployment/template"
 	"github.com/redsailtechnologies/boatswain/pkg/deployment/trigger"
 )
+
+var eventTypes = map[string]ddd.Event{
+	Created{}.EventType():       new(Created),
+	Started{}.EventType():       new(Started),
+	StepStarted{}.EventType():   new(StepStarted),
+	AppendLog{}.EventType():     new(AppendLog),
+	StepCompleted{}.EventType(): new(StepCompleted),
+	StepSkipped{}.EventType():   new(StepSkipped),
+	Completed{}.EventType():     new(Completed),
+}
 
 // Created is the event for when a new run is started
 type Created struct {

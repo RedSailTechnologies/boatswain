@@ -2,26 +2,27 @@ package template
 
 import (
 	"bytes"
-	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	tpl "text/template"
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/redsailtechnologies/boatswain/rpc/repo"
+	"github.com/redsailtechnologies/boatswain/pkg/git"
+	"github.com/redsailtechnologies/boatswain/pkg/repo"
 )
 
 // The Engine is the worker that performs all templating steps
 type Engine struct {
-	ctx  context.Context
-	repo repo.Repo
+	git  git.Agent
+	repo *repo.ReadRepository
 }
 
 // NewEngine initializes the engine with required dependencies
-func NewEngine(c context.Context, r repo.Repo) *Engine {
+func NewEngine(g git.Agent, r *repo.ReadRepository) *Engine {
 	return &Engine{
-		ctx:  c,
+		git:  g,
 		repo: r,
 	}
 }
@@ -139,28 +140,28 @@ func (e *Engine) replaceTemplates(y map[string]interface{}) (map[string]interfac
 }
 
 func (e *Engine) replaceTemplate(y map[string]interface{}, k string, t Substitution) (map[string]interface{}, error) {
-	r, err := e.repo.Find(e.ctx, &repo.FindRepo{Name: t.Repo})
+	repos, err := e.repo.All()
 	if err != nil {
 		return nil, err
 	}
-
-	file, err := e.repo.File(e.ctx, &repo.ReadFile{
-		RepoId:   r.Uuid,
-		Branch:   t.Branch,
-		FilePath: t.Name,
-	})
-	if err != nil {
+	r := findRepo(t.Repo, repos)
+	if r == nil {
 		return nil, err
+	}
+
+	file := e.git.GetFile(r.Endpoint(), t.Branch, t.Name, "", "")
+	if file == nil {
+		return nil, errors.New("file not found")
 	}
 
 	var withVals string
 	if t.Arguments != nil {
-		withVals, err = replaceValues(string(file.File), ".Inputs", *t.Arguments)
+		withVals, err = replaceValues(string(file), ".Inputs", *t.Arguments)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		withVals = string(file.File)
+		withVals = string(file)
 	}
 
 	o := make(map[string]interface{})
@@ -175,6 +176,15 @@ func (e *Engine) replaceTemplate(y map[string]interface{}, k string, t Substitut
 	}
 
 	return o, nil
+}
+
+func findRepo(repo string, repos []*repo.Repo) *repo.Repo {
+	for _, r := range repos {
+		if r.Name() == repo {
+			return r
+		}
+	}
+	return nil
 }
 
 func replaceValues(in, prefix string, vals map[string]interface{}) (string, error) {
