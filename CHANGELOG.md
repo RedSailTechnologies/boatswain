@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.4.1
+* 901728e Hotfix/fix the db name so its common (#42)
+* 98967f9 feature/changes for 0.4 (#41)
+
 ## v0.4.0
 * 9b350c7 hotfix/gyaradox command and add gyarados to develop action (#40)
 * a3b3bed update the inter svc comms, split repos into read/write and fix tests (#39)
