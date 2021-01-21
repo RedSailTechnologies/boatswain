@@ -27,14 +27,15 @@ import (
 )
 
 func main() {
-	var httpPort, mongoConn string
+	var httpPort, mongoConn, mongoDB string
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
 	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
+	flag.StringVar(&mongoDB, "mongo-db", cfg.EnvOrDefaultString("MONGO_DB_NAME", "boatswain"), "mongodb database name")
 	authCfg := auth.Flags()
 	flag.Parse()
 
 	// Storage
-	store, err := storage.NewMongo(mongoConn, "leviathan")
+	store, err := storage.NewMongo(mongoConn, mongoDB)
 	if err != nil {
 		logger.Fatal("mongo init failed")
 	}
