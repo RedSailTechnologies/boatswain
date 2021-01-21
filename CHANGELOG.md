@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.4.0
+* 9b350c7 hotfix/gyaradox command and add gyarados to develop action (#40)
+* a3b3bed update the inter svc comms, split repos into read/write and fix tests (#39)
+* 43107ec Feature/Delivery Execution (#33)
+* 
 ## v0.3.2
 * 8a9c3bd Hotfix/Fix helm calls for ready (#31)
 * 71503db Feature/Service Health Checks (#30)
