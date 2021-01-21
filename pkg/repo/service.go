@@ -21,19 +21,23 @@ var collection = "repos"
 
 // Service is the implementation for twirp to use
 type Service struct {
-	auth auth.Agent
-	git  git.Agent
-	helm helm.Agent
-	repo *Repository
+	auth  auth.Agent
+	git   git.Agent
+	helm  helm.Agent
+	read  *ReadRepository
+	write *writeRepository
+	ready func() error
 }
 
 // NewService creates the service
 func NewService(a auth.Agent, g git.Agent, h helm.Agent, s storage.Storage) *Service {
 	return &Service{
-		auth: a,
-		git:  g,
-		helm: h,
-		repo: NewRepository(collection, s),
+		auth:  a,
+		git:   g,
+		helm:  h,
+		read:  NewReadRepository(s),
+		write: newWriteRepository(s),
+		ready: s.CheckReady,
 	}
 }
 
@@ -49,7 +53,7 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreate
 		return nil, tw.ToTwirpError(err, "could not create Repo")
 	}
 
-	err = s.repo.Save(r)
+	err = s.write.save(r)
 	if err != nil {
 		logger.Error("error saving Repo", "error", err)
 		return nil, twirp.InternalError("error saving created repo")
@@ -64,7 +68,7 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdate
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	r, err := s.repo.Load(cmd.Uuid)
+	r, err := s.read.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading repo", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Repo")
@@ -76,7 +80,7 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdate
 		return nil, tw.ToTwirpError(err, "Repo could not be updated")
 	}
 
-	err = s.repo.Save(r)
+	err = s.write.save(r)
 	if err != nil {
 		logger.Error("error saving Repo", "error", err)
 		return nil, twirp.InternalError("error saving updated repo")
@@ -91,12 +95,12 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyRepo) (*pb.RepoDest
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	r, err := s.repo.Load(cmd.Uuid)
+	r, err := s.read.Load(cmd.Uuid)
 	if err != nil {
 		logger.Error("error loading Repo", "error", err)
 
 		// NOTE we could consider returning the error here
-		if err == (ddd.DestroyedError{Entity: "Repo"}) {
+		if err == (ddd.DestroyedError{Entity: entityName}) {
 			return &pb.RepoDestroyed{}, nil
 		}
 		return nil, tw.ToTwirpError(err, "error loading Repo")
@@ -107,7 +111,7 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyRepo) (*pb.RepoDest
 		return nil, tw.ToTwirpError(err, "Repo could not be destroyed")
 	}
 
-	err = s.repo.Save(r)
+	err = s.write.save(r)
 	if err != nil {
 		logger.Error("error saving Repo", "error", err)
 		return nil, twirp.InternalError("error saving destroyed Repo")
@@ -122,7 +126,7 @@ func (s Service) Read(ctx context.Context, req *pb.ReadRepo) (*pb.RepoRead, erro
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	r, err := s.repo.Load(req.Uuid)
+	r, err := s.read.Load(req.Uuid)
 	if err != nil {
 		logger.Error("error loading Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Repo")
@@ -153,7 +157,7 @@ func (s Service) Find(ctx context.Context, req *pb.FindRepo) (*pb.RepoFound, err
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	repos, err := s.repo.All()
+	repos, err := s.read.All()
 	if err != nil {
 		logger.Error("error getting Repos", "error", err)
 		return nil, twirp.InternalError("error loading Repos")
@@ -180,7 +184,7 @@ func (s Service) All(ctx context.Context, req *pb.ReadRepos) (*pb.ReposRead, err
 		Repos: make([]*pb.RepoRead, 0),
 	}
 
-	repos, err := s.repo.All()
+	repos, err := s.read.All()
 	if err != nil {
 		logger.Error("error getting Repos", "error", err)
 		return nil, twirp.InternalError("error loading Repos")
@@ -214,7 +218,7 @@ func (s Service) Chart(ctx context.Context, req *pb.ReadChart) (*pb.ChartRead, e
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	r, err := s.repo.Load(req.RepoId)
+	r, err := s.read.Load(req.RepoId)
 	if err != nil {
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
@@ -240,7 +244,7 @@ func (s Service) File(ctx context.Context, req *pb.ReadFile) (*pb.FileRead, erro
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	r, err := s.repo.Load(req.RepoId)
+	r, err := s.read.Load(req.RepoId)
 	if err != nil {
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
@@ -267,7 +271,7 @@ func (s Service) File(ctx context.Context, req *pb.ReadFile) (*pb.FileRead, erro
 
 // Ready implements the ReadyService method so this service can be part of a health check routine
 func (s Service) Ready() error {
-	return s.repo.store.CheckReady()
+	return s.ready()
 }
 
 func (s Service) gitRepoReady(r *Repo) bool {

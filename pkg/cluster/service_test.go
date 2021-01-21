@@ -53,6 +53,50 @@ func (ma *mockAuth) Wrap(h http.Handler) http.Handler {
 	return h
 }
 
+type mockStorage struct {
+	mock.Mock
+}
+
+func (ms *mockStorage) CheckReady() error {
+	args := ms.Called(collection)
+	err := args.Get(0)
+	if err != nil {
+		return err.(error)
+	}
+	return nil
+}
+
+func (ms *mockStorage) IDs(collection string) ([]string, error) {
+	args := ms.Called(collection)
+	err := args.Get(1)
+	if err != nil {
+		return nil, err.(error)
+	}
+	return args.Get(0).([]string), nil
+}
+
+func (ms *mockStorage) GetEvents(collection, uuid string) ([]*storage.StoredEvent, error) {
+	args := ms.Called(collection, uuid)
+	err := args.Get(1)
+	if err != nil {
+		return nil, err.(error)
+	}
+	return args.Get(0).([]*storage.StoredEvent), nil
+}
+
+func (ms *mockStorage) GetVersion(collection, uuid string) int {
+	args := ms.Called(collection, uuid)
+	return args.Int(0)
+}
+
+func (ms *mockStorage) StoreEvent(collection, uuid, eventType, eventData string, version int) error {
+	args := ms.Called(collection, uuid, eventType, eventData, version)
+	if args.Get(0) == nil {
+		return nil
+	}
+	return args.Get(0).(error)
+}
+
 func TestNewService(t *testing.T) {
 	assert.NotNil(t, NewService(&mockAuth{}, kube.DefaultAgent{}, &mockStorage{}))
 }
@@ -408,7 +452,7 @@ func TestDestroyAlreadyDestroyed(t *testing.T) {
 		Uuid: "a",
 	})
 
-	assert.Equal(t, &pb.ClusterDestroyed{}, res)
+	assert.IsType(t, &pb.ClusterDestroyed{}, res)
 	assert.Nil(t, err)
 }
 

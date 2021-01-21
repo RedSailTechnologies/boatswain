@@ -115,7 +115,6 @@ func (o *OIDCAgent) Authenticate(ctx context.Context) (context.Context, error) {
 		return ctx, twirp.NewError(twirp.Unauthenticated, "error validating user scope")
 	}
 
-	user.token = token
 	return context.WithValue(ctx, o.userKey, user), nil
 }
 
@@ -148,21 +147,6 @@ func (o *OIDCAgent) Authorize(ctx context.Context, role Role) error {
 	method, _ := twirp.MethodName(ctx)
 	logger.Error(fmt.Sprintf("user not authorized for %s.%s", service, method), "user", user)
 	return NotAuthorizedError{}
-}
-
-// NewContext gets a context with this user's auth info
-func (o *OIDCAgent) NewContext(ctx context.Context) (context.Context, error) {
-	u := o.userFromContext(ctx)
-	if u.token == "" {
-		return nil, errors.New("user token could not be found")
-	}
-
-	c := context.Background()
-
-	header := make(http.Header)
-	header.Set("Authorization", fmt.Sprintf("Bearer %s", u.token))
-
-	return twirp.WithHTTPRequestHeaders(c, header)
 }
 
 // User gets the user from the context

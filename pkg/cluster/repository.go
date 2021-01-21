@@ -1,113 +1,58 @@
 package cluster
 
 import (
-	"encoding/json"
+	"strings"
 
-	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 )
 
-// Repository is the repository for dealing with cluster storage
-type Repository struct {
-	coll  string
-	store storage.Storage
+// ReadRepository is the repository for dealing with cluster reads
+type ReadRepository struct {
+	r *storage.ReadRepository
 }
 
-// NewRepository creates a repository with the given storage
-func NewRepository(coll string, store storage.Storage) *Repository {
-	return &Repository{
-		coll:  coll,
-		store: store,
+// NewReadRepository creates a repository with the given storage
+func NewReadRepository(s storage.Storage) *ReadRepository {
+	return &ReadRepository{
+		r: storage.NewReadRepository(strings.ToLower(entityName), eventTypes, Replay, s),
 	}
 }
 
-// All gets all clusters, excluding deleted items
-func (r *Repository) All() ([]*Cluster, error) {
-	uuids, err := r.store.IDs(r.coll)
+// All gets all clusters
+func (rr *ReadRepository) All() ([]*Cluster, error) {
+	results, err := rr.r.All()
 	if err != nil {
 		return nil, err
 	}
 
-	clusters := make([]*Cluster, 0)
-	for _, uuid := range uuids {
-		storedEvents, err := r.store.GetEvents(r.coll, uuid)
-		if err != nil {
-			return nil, err
-		}
-		events, err := unmarshalEvents(storedEvents)
-		if err != nil {
-			return nil, err
-		}
-		cluster := Replay(events)
-		if !cluster.destroyed {
-			clusters = append(clusters, cluster)
-		}
+	var clusters []*Cluster
+	for _, d := range results {
+		clusters = append(clusters, d.(*Cluster))
 	}
 	return clusters, nil
 }
 
-// Load reads out the cluster for the uuid given
-func (r *Repository) Load(uuid string) (*Cluster, error) {
-	events, err := r.store.GetEvents(r.coll, uuid)
+// Load gets one cluster
+func (rr *ReadRepository) Load(uuid string) (*Cluster, error) {
+	result, err := rr.r.Load(uuid)
 	if err != nil {
 		return nil, err
 	}
 
-	unmarshaled, err := unmarshalEvents(events)
-	if err != nil {
-		return nil, err
-	}
-	if len(unmarshaled) == 0 {
-		return nil, ddd.NotFoundError{Entity: entityName}
-	}
-
-	cluster := Replay(unmarshaled)
-	if cluster.destroyed {
-		return nil, ddd.DestroyedError{Entity: entityName}
-	}
-	return cluster, nil
+	return result.(*Cluster), nil
 }
 
-// Save persists the new events for the cluster given
-func (r *Repository) Save(c *Cluster) error {
-	version := r.store.GetVersion(r.coll, c.UUID())
-	for i, ev := range c.Events()[version:] {
-		v := i + version + 1
-		d, err := json.Marshal(ev)
-		if err != nil {
-			return err
-		}
-
-		err = r.store.StoreEvent(r.coll, c.UUID(), ev.EventType(), string(d), v)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+type writeRepository struct {
+	r *storage.WriteRepository
 }
 
-func unmarshalEvents(events []*storage.StoredEvent) ([]ddd.Event, error) {
-	unmarshaled := make([]ddd.Event, 0)
-	var e interface{}
-	for _, event := range events {
-		switch event.Type {
-		case entityName + "Created":
-			e = &Created{}
-		case entityName + "Destroyed":
-			e = &Destroyed{}
-		case entityName + "Updated":
-			e = &Updated{}
-		default:
-			return nil, ddd.UnsupportedEventError{
-				EventType: event.Type,
-				Type:      entityName,
-			}
-		}
-		err := json.Unmarshal([]byte(event.Data), &e)
-		if err != nil {
-			return nil, err
-		}
-		unmarshaled = append(unmarshaled, e.(ddd.Event))
+func newWriteRepository(s storage.Storage) *writeRepository {
+	return &writeRepository{
+		r: storage.NewWriteRepository(strings.ToLower(entityName), s),
 	}
-	return unmarshaled, nil
+}
+
+// Save persists new events for the cluster
+func (wr *writeRepository) save(d *Cluster) error {
+	return wr.r.Save(d)
 }

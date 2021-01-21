@@ -83,7 +83,7 @@ func TestReplay(t *testing.T) {
 		},
 	}
 
-	sut := Replay(events)
+	sut := Replay(events).(*Repo)
 
 	assert.Equal(t, uuid, sut.UUID())
 	assert.Equal(t, name, sut.Name())
