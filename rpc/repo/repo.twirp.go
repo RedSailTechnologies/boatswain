@@ -52,11 +52,17 @@ type Repo interface {
 	// reads out a repo
 	Read(context.Context, *ReadRepo) (*RepoRead, error)
 
+	// finds the repo uuid by name
+	Find(context.Context, *FindRepo) (*RepoFound, error)
+
 	// gets all repos currently configured and their status
 	All(context.Context, *ReadRepos) (*ReposRead, error)
 
-	// gets all the charts for this repository
-	Charts(context.Context, *ReadRepo) (*ChartsRead, error)
+	// gets a chart from this helm repository
+	Chart(context.Context, *ReadChart) (*ChartRead, error)
+
+	// gets the contents of a file from this git repository
+	File(context.Context, *ReadFile) (*FileRead, error)
 }
 
 // ====================
@@ -65,7 +71,7 @@ type Repo interface {
 
 type repoProtobufClient struct {
 	client      HTTPClient
-	urls        [6]string
+	urls        [8]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -85,13 +91,15 @@ func NewRepoProtobufClient(baseURL string, client HTTPClient, opts ...twirp.Clie
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Repo")
-	urls := [6]string{
+	urls := [8]string{
 		serviceURL + "Create",
 		serviceURL + "Update",
 		serviceURL + "Destroy",
 		serviceURL + "Read",
+		serviceURL + "Find",
 		serviceURL + "All",
-		serviceURL + "Charts",
+		serviceURL + "Chart",
+		serviceURL + "File",
 	}
 
 	return &repoProtobufClient{
@@ -286,6 +294,52 @@ func (c *repoProtobufClient) callRead(ctx context.Context, in *ReadRepo) (*RepoR
 	return out, nil
 }
 
+func (c *repoProtobufClient) Find(ctx context.Context, in *FindRepo) (*RepoFound, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Repo")
+	ctx = ctxsetters.WithMethodName(ctx, "Find")
+	caller := c.callFind
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *FindRepo) (*RepoFound, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*FindRepo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*FindRepo) when calling interceptor")
+					}
+					return c.callFind(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*RepoFound)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*RepoFound) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *repoProtobufClient) callFind(ctx context.Context, in *FindRepo) (*RepoFound, error) {
+	out := new(RepoFound)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 func (c *repoProtobufClient) All(ctx context.Context, in *ReadRepos) (*ReposRead, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
 	ctx = ctxsetters.WithServiceName(ctx, "Repo")
@@ -317,7 +371,7 @@ func (c *repoProtobufClient) All(ctx context.Context, in *ReadRepos) (*ReposRead
 
 func (c *repoProtobufClient) callAll(ctx context.Context, in *ReadRepos) (*ReposRead, error) {
 	out := new(ReposRead)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -332,26 +386,26 @@ func (c *repoProtobufClient) callAll(ctx context.Context, in *ReadRepos) (*Repos
 	return out, nil
 }
 
-func (c *repoProtobufClient) Charts(ctx context.Context, in *ReadRepo) (*ChartsRead, error) {
+func (c *repoProtobufClient) Chart(ctx context.Context, in *ReadChart) (*ChartRead, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
 	ctx = ctxsetters.WithServiceName(ctx, "Repo")
-	ctx = ctxsetters.WithMethodName(ctx, "Charts")
-	caller := c.callCharts
+	ctx = ctxsetters.WithMethodName(ctx, "Chart")
+	caller := c.callChart
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *ReadRepo) (*ChartsRead, error) {
+		caller = func(ctx context.Context, req *ReadChart) (*ChartRead, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*ReadRepo)
+					typedReq, ok := req.(*ReadChart)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*ReadRepo) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*ReadChart) when calling interceptor")
 					}
-					return c.callCharts(ctx, typedReq)
+					return c.callChart(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*ChartsRead)
+				typedResp, ok := resp.(*ChartRead)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*ChartsRead) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*ChartRead) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -361,9 +415,55 @@ func (c *repoProtobufClient) Charts(ctx context.Context, in *ReadRepo) (*ChartsR
 	return caller(ctx, in)
 }
 
-func (c *repoProtobufClient) callCharts(ctx context.Context, in *ReadRepo) (*ChartsRead, error) {
-	out := new(ChartsRead)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
+func (c *repoProtobufClient) callChart(ctx context.Context, in *ReadChart) (*ChartRead, error) {
+	out := new(ChartRead)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[6], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *repoProtobufClient) File(ctx context.Context, in *ReadFile) (*FileRead, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Repo")
+	ctx = ctxsetters.WithMethodName(ctx, "File")
+	caller := c.callFile
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *ReadFile) (*FileRead, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ReadFile)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ReadFile) when calling interceptor")
+					}
+					return c.callFile(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*FileRead)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*FileRead) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *repoProtobufClient) callFile(ctx context.Context, in *ReadFile) (*FileRead, error) {
+	out := new(FileRead)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[7], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -384,7 +484,7 @@ func (c *repoProtobufClient) callCharts(ctx context.Context, in *ReadRepo) (*Cha
 
 type repoJSONClient struct {
 	client      HTTPClient
-	urls        [6]string
+	urls        [8]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -404,13 +504,15 @@ func NewRepoJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOp
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Repo")
-	urls := [6]string{
+	urls := [8]string{
 		serviceURL + "Create",
 		serviceURL + "Update",
 		serviceURL + "Destroy",
 		serviceURL + "Read",
+		serviceURL + "Find",
 		serviceURL + "All",
-		serviceURL + "Charts",
+		serviceURL + "Chart",
+		serviceURL + "File",
 	}
 
 	return &repoJSONClient{
@@ -605,6 +707,52 @@ func (c *repoJSONClient) callRead(ctx context.Context, in *ReadRepo) (*RepoRead,
 	return out, nil
 }
 
+func (c *repoJSONClient) Find(ctx context.Context, in *FindRepo) (*RepoFound, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Repo")
+	ctx = ctxsetters.WithMethodName(ctx, "Find")
+	caller := c.callFind
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *FindRepo) (*RepoFound, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*FindRepo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*FindRepo) when calling interceptor")
+					}
+					return c.callFind(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*RepoFound)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*RepoFound) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *repoJSONClient) callFind(ctx context.Context, in *FindRepo) (*RepoFound, error) {
+	out := new(RepoFound)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 func (c *repoJSONClient) All(ctx context.Context, in *ReadRepos) (*ReposRead, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
 	ctx = ctxsetters.WithServiceName(ctx, "Repo")
@@ -636,7 +784,7 @@ func (c *repoJSONClient) All(ctx context.Context, in *ReadRepos) (*ReposRead, er
 
 func (c *repoJSONClient) callAll(ctx context.Context, in *ReadRepos) (*ReposRead, error) {
 	out := new(ReposRead)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -651,26 +799,26 @@ func (c *repoJSONClient) callAll(ctx context.Context, in *ReadRepos) (*ReposRead
 	return out, nil
 }
 
-func (c *repoJSONClient) Charts(ctx context.Context, in *ReadRepo) (*ChartsRead, error) {
+func (c *repoJSONClient) Chart(ctx context.Context, in *ReadChart) (*ChartRead, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
 	ctx = ctxsetters.WithServiceName(ctx, "Repo")
-	ctx = ctxsetters.WithMethodName(ctx, "Charts")
-	caller := c.callCharts
+	ctx = ctxsetters.WithMethodName(ctx, "Chart")
+	caller := c.callChart
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *ReadRepo) (*ChartsRead, error) {
+		caller = func(ctx context.Context, req *ReadChart) (*ChartRead, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*ReadRepo)
+					typedReq, ok := req.(*ReadChart)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*ReadRepo) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*ReadChart) when calling interceptor")
 					}
-					return c.callCharts(ctx, typedReq)
+					return c.callChart(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*ChartsRead)
+				typedResp, ok := resp.(*ChartRead)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*ChartsRead) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*ChartRead) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -680,9 +828,55 @@ func (c *repoJSONClient) Charts(ctx context.Context, in *ReadRepo) (*ChartsRead,
 	return caller(ctx, in)
 }
 
-func (c *repoJSONClient) callCharts(ctx context.Context, in *ReadRepo) (*ChartsRead, error) {
-	out := new(ChartsRead)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
+func (c *repoJSONClient) callChart(ctx context.Context, in *ReadChart) (*ChartRead, error) {
+	out := new(ChartRead)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[6], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *repoJSONClient) File(ctx context.Context, in *ReadFile) (*FileRead, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Repo")
+	ctx = ctxsetters.WithMethodName(ctx, "File")
+	caller := c.callFile
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *ReadFile) (*FileRead, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ReadFile)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ReadFile) when calling interceptor")
+					}
+					return c.callFile(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*FileRead)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*FileRead) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *repoJSONClient) callFile(ctx context.Context, in *ReadFile) (*FileRead, error) {
+	out := new(FileRead)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[7], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -793,11 +987,17 @@ func (s *repoServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	case "Read":
 		s.serveRead(ctx, resp, req)
 		return
+	case "Find":
+		s.serveFind(ctx, resp, req)
+		return
 	case "All":
 		s.serveAll(ctx, resp, req)
 		return
-	case "Charts":
-		s.serveCharts(ctx, resp, req)
+	case "Chart":
+		s.serveChart(ctx, resp, req)
+		return
+	case "File":
+		s.serveFile(ctx, resp, req)
 		return
 	default:
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
@@ -1506,6 +1706,181 @@ func (s *repoServer) serveReadProtobuf(ctx context.Context, resp http.ResponseWr
 	callResponseSent(ctx, s.hooks)
 }
 
+func (s *repoServer) serveFind(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveFindJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveFindProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *repoServer) serveFindJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Find")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(FindRepo)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Repo.Find
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *FindRepo) (*RepoFound, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*FindRepo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*FindRepo) when calling interceptor")
+					}
+					return s.Repo.Find(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*RepoFound)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*RepoFound) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *RepoFound
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *RepoFound and nil error while calling Find. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *repoServer) serveFindProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Find")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(FindRepo)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Repo.Find
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *FindRepo) (*RepoFound, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*FindRepo)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*FindRepo) when calling interceptor")
+					}
+					return s.Repo.Find(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*RepoFound)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*RepoFound) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *RepoFound
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *RepoFound and nil error while calling Find. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
 func (s *repoServer) serveAll(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
@@ -1681,7 +2056,7 @@ func (s *repoServer) serveAllProtobuf(ctx context.Context, resp http.ResponseWri
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *repoServer) serveCharts(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *repoServer) serveChart(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -1689,9 +2064,9 @@ func (s *repoServer) serveCharts(ctx context.Context, resp http.ResponseWriter, 
 	}
 	switch strings.TrimSpace(strings.ToLower(header[:i])) {
 	case "application/json":
-		s.serveChartsJSON(ctx, resp, req)
+		s.serveChartJSON(ctx, resp, req)
 	case "application/protobuf":
-		s.serveChartsProtobuf(ctx, resp, req)
+		s.serveChartProtobuf(ctx, resp, req)
 	default:
 		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
 		twerr := badRouteError(msg, req.Method, req.URL.Path)
@@ -1699,38 +2074,38 @@ func (s *repoServer) serveCharts(ctx context.Context, resp http.ResponseWriter, 
 	}
 }
 
-func (s *repoServer) serveChartsJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *repoServer) serveChartJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "Charts")
+	ctx = ctxsetters.WithMethodName(ctx, "Chart")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
 		return
 	}
 
-	reqContent := new(ReadRepo)
+	reqContent := new(ReadChart)
 	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
 	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
 		return
 	}
 
-	handler := s.Repo.Charts
+	handler := s.Repo.Chart
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *ReadRepo) (*ChartsRead, error) {
+		handler = func(ctx context.Context, req *ReadChart) (*ChartRead, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*ReadRepo)
+					typedReq, ok := req.(*ReadChart)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*ReadRepo) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*ReadChart) when calling interceptor")
 					}
-					return s.Repo.Charts(ctx, typedReq)
+					return s.Repo.Chart(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*ChartsRead)
+				typedResp, ok := resp.(*ChartRead)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*ChartsRead) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*ChartRead) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1739,7 +2114,7 @@ func (s *repoServer) serveChartsJSON(ctx context.Context, resp http.ResponseWrit
 	}
 
 	// Call service method
-	var respContent *ChartsRead
+	var respContent *ChartRead
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1750,7 +2125,7 @@ func (s *repoServer) serveChartsJSON(ctx context.Context, resp http.ResponseWrit
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *ChartsRead and nil error while calling Charts. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *ChartRead and nil error while calling Chart. nil responses are not supported"))
 		return
 	}
 
@@ -1777,9 +2152,9 @@ func (s *repoServer) serveChartsJSON(ctx context.Context, resp http.ResponseWrit
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *repoServer) serveChartsProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *repoServer) serveChartProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "Charts")
+	ctx = ctxsetters.WithMethodName(ctx, "Chart")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -1791,28 +2166,28 @@ func (s *repoServer) serveChartsProtobuf(ctx context.Context, resp http.Response
 		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
 		return
 	}
-	reqContent := new(ReadRepo)
+	reqContent := new(ReadChart)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
 	}
 
-	handler := s.Repo.Charts
+	handler := s.Repo.Chart
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *ReadRepo) (*ChartsRead, error) {
+		handler = func(ctx context.Context, req *ReadChart) (*ChartRead, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*ReadRepo)
+					typedReq, ok := req.(*ReadChart)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*ReadRepo) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*ReadChart) when calling interceptor")
 					}
-					return s.Repo.Charts(ctx, typedReq)
+					return s.Repo.Chart(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*ChartsRead)
+				typedResp, ok := resp.(*ChartRead)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*ChartsRead) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*ChartRead) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1821,7 +2196,7 @@ func (s *repoServer) serveChartsProtobuf(ctx context.Context, resp http.Response
 	}
 
 	// Call service method
-	var respContent *ChartsRead
+	var respContent *ChartRead
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1832,7 +2207,182 @@ func (s *repoServer) serveChartsProtobuf(ctx context.Context, resp http.Response
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *ChartsRead and nil error while calling Charts. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *ChartRead and nil error while calling Chart. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *repoServer) serveFile(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveFileJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveFileProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *repoServer) serveFileJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "File")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(ReadFile)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Repo.File
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *ReadFile) (*FileRead, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ReadFile)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ReadFile) when calling interceptor")
+					}
+					return s.Repo.File(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*FileRead)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*FileRead) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *FileRead
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *FileRead and nil error while calling File. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *repoServer) serveFileProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "File")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(ReadFile)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Repo.File
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *ReadFile) (*FileRead, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ReadFile)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ReadFile) when calling interceptor")
+					}
+					return s.Repo.File(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*FileRead)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*FileRead) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *FileRead
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *FileRead and nil error while calling File. nil responses are not supported"))
 		return
 	}
 
@@ -2418,36 +2968,41 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 493 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcb, 0x8e, 0xd3, 0x30,
-	0x14, 0x55, 0xda, 0x4e, 0x68, 0x6f, 0xa6, 0x02, 0x59, 0x88, 0x66, 0x82, 0x04, 0xc5, 0x6c, 0xba,
-	0x40, 0x89, 0x34, 0x88, 0xe1, 0x39, 0x8b, 0x61, 0xf8, 0x00, 0x14, 0x89, 0x59, 0xb0, 0x41, 0x6e,
-	0x6c, 0x4d, 0x23, 0x65, 0x62, 0xcb, 0x76, 0x41, 0xf3, 0x2d, 0xfc, 0x26, 0x1f, 0x80, 0xfc, 0x48,
-	0x48, 0x9b, 0x64, 0xc7, 0xa6, 0xb2, 0x7d, 0xcf, 0x39, 0xd7, 0x3e, 0xf7, 0x34, 0x00, 0x92, 0x09,
-	0x9e, 0x0a, 0xc9, 0x35, 0x47, 0xa7, 0x92, 0x51, 0x45, 0xca, 0x2a, 0xdd, 0x72, 0x55, 0xe3, 0x4f,
-	0x00, 0xd7, 0x92, 0x11, 0xcd, 0x72, 0x26, 0x38, 0x42, 0x30, 0xab, 0xc9, 0x1d, 0x8b, 0x83, 0x75,
-	0xb0, 0x59, 0xe4, 0x76, 0x8d, 0x12, 0x98, 0xb3, 0x9a, 0x0a, 0x5e, 0xd6, 0x3a, 0x9e, 0xd8, 0xf3,
-	0x76, 0x8f, 0x97, 0x10, 0x19, 0x9e, 0x53, 0xa0, 0xf8, 0x2b, 0xc0, 0x37, 0x41, 0x3b, 0x62, 0xfb,
-	0x7d, 0x49, 0x1b, 0x31, 0xb3, 0x6e, 0x1b, 0x4c, 0x46, 0x1a, 0x4c, 0x87, 0x1b, 0x38, 0x55, 0x8a,
-	0x5f, 0x40, 0xf4, 0x85, 0x29, 0x2d, 0xf9, 0xfd, 0x58, 0x07, 0xfc, 0x10, 0x96, 0xa6, 0xe6, 0x61,
-	0x8c, 0xe2, 0x67, 0x30, 0xcf, 0x19, 0xa1, 0xa3, 0x04, 0x6a, 0xea, 0x82, 0x1b, 0xcc, 0xff, 0xb8,
-	0x32, 0x7a, 0x0c, 0x27, 0x92, 0x11, 0x7a, 0x1f, 0x87, 0xeb, 0x60, 0x33, 0xcf, 0xdd, 0x06, 0x47,
-	0xb0, 0x68, 0x6e, 0xa1, 0xf0, 0x7b, 0xb3, 0x11, 0x5c, 0xd9, 0x9e, 0xaf, 0x0c, 0x5e, 0x70, 0x15,
-	0x07, 0xeb, 0xe9, 0x26, 0x3a, 0x7f, 0x92, 0x76, 0xe7, 0x93, 0x36, 0x57, 0xcb, 0x1d, 0x08, 0xdf,
-	0xc0, 0xe2, 0x7a, 0x47, 0xa4, 0x6e, 0xae, 0xdb, 0x1b, 0xd7, 0x1b, 0x98, 0xff, 0x64, 0x52, 0x95,
-	0xbc, 0x56, 0xf1, 0xc4, 0x2a, 0x9e, 0x1d, 0x2a, 0xde, 0xb8, 0xaa, 0x15, 0x6d, 0xa1, 0xf8, 0x77,
-	0x00, 0x51, 0xa7, 0x32, 0x28, 0xfd, 0x12, 0x96, 0x85, 0xe9, 0xfd, 0xc3, 0xb3, 0xbc, 0x25, 0xa7,
-	0xf6, 0xd0, 0x93, 0xd1, 0x73, 0x88, 0x88, 0x10, 0x2d, 0xc4, 0xb9, 0x03, 0x44, 0x88, 0x06, 0xb0,
-	0x86, 0x88, 0x32, 0x55, 0xc8, 0x52, 0x68, 0x03, 0x98, 0x59, 0x40, 0xf7, 0x08, 0x3d, 0x82, 0xe9,
-	0x5e, 0x56, 0xf1, 0x89, 0xad, 0x98, 0x25, 0xbe, 0x04, 0xb0, 0xaf, 0x76, 0x8e, 0x65, 0x10, 0xda,
-	0x96, 0x8d, 0x65, 0xab, 0xc3, 0x07, 0xb6, 0xfe, 0xe4, 0x1e, 0x76, 0xfe, 0x67, 0x02, 0x33, 0x3b,
-	0xff, 0x4b, 0x08, 0x5d, 0x56, 0x51, 0x7c, 0xc4, 0x69, 0xff, 0x03, 0xc9, 0x59, 0x7f, 0x00, 0x3e,
-	0xdf, 0x86, 0xee, 0x92, 0x78, 0x4c, 0xff, 0x97, 0xfa, 0x21, 0xba, 0x4f, 0x2f, 0xba, 0x82, 0x07,
-	0x3e, 0x96, 0xe8, 0x08, 0xd5, 0x09, 0x75, 0xf2, 0xb4, 0x2f, 0xd0, 0x86, 0x19, 0x5d, 0x98, 0x87,
-	0x10, 0x8a, 0x7a, 0x29, 0x71, 0xd1, 0x4a, 0x46, 0xd2, 0x83, 0xde, 0xc2, 0xf4, 0xaa, 0xaa, 0xd0,
-	0x6a, 0x98, 0xa6, 0x92, 0x55, 0x9f, 0xe7, 0xbc, 0xfe, 0x00, 0xa1, 0x73, 0x7e, 0xb4, 0x65, 0x3c,
-	0xe0, 0xbe, 0xe5, 0x7e, 0x7e, 0xf7, 0xfd, 0xe2, 0xb6, 0xd4, 0xbb, 0xfd, 0x36, 0x2d, 0xf8, 0x5d,
-	0xe6, 0x51, 0x9a, 0x15, 0xbb, 0x9a, 0x57, 0xfc, 0xb6, 0x64, 0x2a, 0xdb, 0x72, 0xa2, 0xd5, 0x2f,
-	0x52, 0xd6, 0x99, 0x14, 0x45, 0x66, 0x12, 0xfe, 0xd1, 0xfc, 0x6c, 0x43, 0xfb, 0xa9, 0x7a, 0xfd,
-	0x37, 0x00, 0x00, 0xff, 0xff, 0x65, 0x28, 0x06, 0xb3, 0xb8, 0x04, 0x00, 0x00,
+	// 576 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x54, 0x5f, 0x6b, 0x13, 0x41,
+	0x10, 0xf7, 0x7a, 0x97, 0x7f, 0x93, 0x56, 0xcb, 0x52, 0x9a, 0xf3, 0x8a, 0x9a, 0xee, 0x53, 0x28,
+	0x92, 0x40, 0x85, 0xd4, 0x22, 0x3e, 0xd4, 0x6a, 0xb4, 0xa0, 0x20, 0x47, 0x05, 0xf1, 0xa5, 0x6c,
+	0xb2, 0x6b, 0xef, 0xe0, 0x7a, 0xbb, 0xdc, 0x6d, 0x94, 0x80, 0x1f, 0xc2, 0x0f, 0xe9, 0x07, 0x91,
+	0xd9, 0xbd, 0xfc, 0x31, 0x77, 0x07, 0x3e, 0xf5, 0x25, 0xdc, 0xcc, 0xce, 0x6f, 0xe6, 0x37, 0x33,
+	0xbf, 0x09, 0x40, 0x26, 0x94, 0x1c, 0xaa, 0x4c, 0x6a, 0x49, 0x76, 0x33, 0xc1, 0x73, 0x16, 0x27,
+	0xc3, 0xa9, 0xcc, 0x53, 0x1a, 0x01, 0x5c, 0x66, 0x82, 0x69, 0x11, 0x0a, 0x25, 0x09, 0x01, 0x2f,
+	0x65, 0x77, 0xc2, 0x77, 0xfa, 0xce, 0xa0, 0x13, 0x9a, 0x6f, 0x12, 0x40, 0x5b, 0xa4, 0x5c, 0xc9,
+	0x38, 0xd5, 0xfe, 0x8e, 0xf1, 0xaf, 0x6c, 0x72, 0x02, 0x9e, 0x5e, 0x28, 0xe1, 0xbb, 0x7d, 0x67,
+	0xf0, 0xf0, 0xf4, 0x70, 0xb8, 0x99, 0x7a, 0x88, 0x19, 0xaf, 0x17, 0x4a, 0x84, 0x26, 0x86, 0xee,
+	0x41, 0x17, 0x3d, 0xb6, 0x1a, 0xa7, 0xbf, 0x00, 0xbe, 0x28, 0xbe, 0x51, 0x78, 0x3e, 0x8f, 0xf9,
+	0xb2, 0x30, 0x7e, 0xaf, 0xc8, 0xec, 0xd4, 0x90, 0x71, 0x6b, 0xc8, 0x78, 0xff, 0x4f, 0xc6, 0x32,
+	0xe0, 0xf4, 0x18, 0xba, 0x6f, 0x45, 0xae, 0x33, 0xb9, 0xa8, 0x63, 0x43, 0x1f, 0xc1, 0x1e, 0xbe,
+	0x15, 0x61, 0x82, 0xd3, 0xa7, 0xd0, 0x0e, 0x05, 0xe3, 0xb5, 0x80, 0xdf, 0x0e, 0x06, 0x28, 0x89,
+	0x41, 0xf7, 0xdd, 0x1f, 0x39, 0x80, 0x46, 0x26, 0x18, 0x5f, 0xf8, 0xcd, 0xbe, 0x33, 0x68, 0x87,
+	0xd6, 0x40, 0xca, 0x93, 0x38, 0xe5, 0x75, 0xab, 0xa6, 0xcf, 0xa0, 0x83, 0x6f, 0x13, 0x39, 0x4f,
+	0x2b, 0x29, 0xd3, 0x2e, 0x06, 0xd8, 0x9e, 0x73, 0x7a, 0x6e, 0xa3, 0x73, 0xd3, 0xe0, 0x73, 0x2c,
+	0xa8, 0x64, 0xee, 0x3b, 0x7d, 0x77, 0xd0, 0xad, 0x62, 0x67, 0x80, 0x36, 0x88, 0x86, 0x36, 0xcf,
+	0x65, 0xc4, 0x32, 0x4d, 0x7a, 0xd0, 0x42, 0xef, 0xcd, 0xaa, 0x56, 0x13, 0xcd, 0xab, 0xea, 0x01,
+	0xf9, 0xd0, 0xfa, 0x21, 0xb2, 0x3c, 0x96, 0x69, 0x31, 0x9f, 0xa5, 0x49, 0x8f, 0xa1, 0x63, 0xf2,
+	0x19, 0x3a, 0x07, 0xd0, 0x98, 0xa1, 0x61, 0x32, 0xee, 0x86, 0xd6, 0xa0, 0x5f, 0xed, 0xca, 0x26,
+	0x71, 0x22, 0xea, 0xab, 0x1e, 0x42, 0x73, 0x9a, 0xb1, 0x74, 0x16, 0x15, 0x75, 0x0b, 0x8b, 0x1c,
+	0x41, 0xe7, 0x7b, 0x9c, 0x88, 0x1b, 0xc5, 0x74, 0xb4, 0xdc, 0x0d, 0x3a, 0x3e, 0x33, 0x1d, 0xd9,
+	0xc9, 0x26, 0x62, 0xb9, 0x6b, 0xf4, 0x17, 0xa5, 0xcd, 0xf7, 0xc9, 0x13, 0xab, 0x05, 0xdc, 0x10,
+	0x69, 0x83, 0xf7, 0xe1, 0xdd, 0xc7, 0x4f, 0xfb, 0x0f, 0x48, 0x0b, 0xdc, 0xf7, 0x57, 0xd7, 0xfb,
+	0xce, 0xe9, 0x1f, 0x17, 0x3c, 0xb3, 0x95, 0xd7, 0xd0, 0xb4, 0x07, 0x42, 0xfc, 0x7f, 0x27, 0xb8,
+	0x3e, 0xd2, 0xe0, 0x71, 0x79, 0xb6, 0xc5, 0x51, 0x21, 0xdc, 0x4a, 0x7a, 0x1b, 0xbe, 0x3e, 0xb5,
+	0x2a, 0x78, 0x71, 0x06, 0xe4, 0x02, 0x5a, 0x85, 0xbe, 0xc9, 0x56, 0xd4, 0xc6, 0x75, 0x04, 0x47,
+	0xe5, 0x04, 0xab, 0xab, 0x20, 0x63, 0x6c, 0x84, 0x71, 0x52, 0x12, 0x80, 0x55, 0x4d, 0x50, 0x23,
+	0x0c, 0x72, 0x06, 0x1e, 0x4a, 0x73, 0x1b, 0xb7, 0x94, 0x6b, 0xd0, 0x2b, 0xe3, 0xac, 0x4c, 0xcf,
+	0xc0, 0xbd, 0x48, 0x12, 0xd2, 0xab, 0xae, 0x97, 0x57, 0x01, 0xad, 0x62, 0xcf, 0xa1, 0x51, 0xe8,
+	0xaf, 0x0c, 0x35, 0x0f, 0xdb, 0xd0, 0xb5, 0xba, 0xc6, 0x48, 0x36, 0x11, 0x55, 0x4d, 0xa2, 0x3f,
+	0x28, 0x35, 0x61, 0x95, 0xf1, 0xe6, 0xe5, 0xb7, 0xf1, 0x6d, 0xac, 0xa3, 0xf9, 0x74, 0x38, 0x93,
+	0x77, 0xa3, 0x22, 0x46, 0x8b, 0x59, 0x94, 0xca, 0x44, 0xde, 0xc6, 0x22, 0x1f, 0x4d, 0x25, 0xd3,
+	0xf9, 0x4f, 0x16, 0xa7, 0xa3, 0x4c, 0xcd, 0x46, 0xa8, 0xc8, 0x57, 0xf8, 0x33, 0x6d, 0x9a, 0xff,
+	0xee, 0x17, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x86, 0x97, 0xf3, 0x66, 0xc9, 0x05, 0x00, 0x00,
 }

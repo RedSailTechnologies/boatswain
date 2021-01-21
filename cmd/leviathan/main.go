@@ -12,6 +12,8 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
+	"github.com/redsailtechnologies/boatswain/pkg/deployment"
+	"github.com/redsailtechnologies/boatswain/pkg/git"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
@@ -20,12 +22,14 @@ import (
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
 	app "github.com/redsailtechnologies/boatswain/rpc/application"
 	cl "github.com/redsailtechnologies/boatswain/rpc/cluster"
+	dl "github.com/redsailtechnologies/boatswain/rpc/deployment"
 	rep "github.com/redsailtechnologies/boatswain/rpc/repo"
 )
 
 func main() {
-	var httpPort, mongoConn string
+	var httpPort, localAddr, mongoConn string
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
+	flag.StringVar(&localAddr, "local-addr", cfg.EnvOrDefaultString("LOCAL_ADDR", "http://127.0.0.1"), "local address")
 	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
 	authCfg := auth.Flags()
 	flag.Parse()
@@ -48,8 +52,14 @@ func main() {
 	application := application.NewService(authAgent, cluster, kube.DefaultAgent{})
 	appTwirp := app.NewApplicationServer(application, hooks, twirp.WithServerPathPrefix("/api"))
 
-	repo := repo.NewService(authAgent, helm.DefaultAgent{}, store)
+	repo := repo.NewService(authAgent, git.DefaultAgent{}, helm.DefaultAgent{}, store)
 	repTwirp := rep.NewRepoServer(repo, hooks, twirp.WithServerPathPrefix("/api"))
+
+	cclient := cl.NewClusterProtobufClient(localAddr+":"+httpPort, &http.Client{}, twirp.WithClientPathPrefix("/api"))
+	rclient := rep.NewRepoProtobufClient(localAddr+":"+httpPort, &http.Client{}, twirp.WithClientPathPrefix("/api"))
+
+	deploy := deployment.NewService(authAgent, cclient, rclient, store)
+	depTwirp := dl.NewDeploymentServer(deploy, hooks, twirp.WithServerPathPrefix("/api"))
 
 	// Client
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
@@ -61,6 +71,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle(appTwirp.PathPrefix(), appTwirp)
 	mux.Handle(clTwirp.PathPrefix(), clTwirp)
+	mux.Handle(depTwirp.PathPrefix(), depTwirp)
 	mux.Handle(repTwirp.PathPrefix(), repTwirp)
 	mux.Handle("/", tritonServer) // TODO AdamP - fix multiplexer
 

@@ -20,6 +20,14 @@
             <mat-label>Endpoint</mat-label>
             <input matInput required formControlName="endpoint" />
         </mat-form-field>
+        <br />
+        <mat-form-field>
+            <mat-select required placeholder="Type" formControlName="type">
+                <mat-option *ngFor="let type of repoTypes" [value]="type">
+                    {{type}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
     </form>
     <br />
 </div>

@@ -8,6 +8,9 @@ import { ApplicationsComponent } from './pages/applications/applications.compone
 import { LoginComponent } from './pages/login/login.component';
 import { CheckService } from './utils/auth/check.service';
 import { LogoutComponent } from './pages/logout/logout.component';
+import { DeploymentsComponent } from './pages/deployments/deployments.component';
+import { DeploymentComponent } from './pages/deployment/deployment.component';
+import { RunComponent } from './pages/run/run.component';
 
 const routes: Routes = [
   {path: '', component: HomeComponent},
@@ -16,11 +19,14 @@ const routes: Routes = [
   {path: 'clusters', component: ClustersComponent, canActivate: [CheckService]},
   {path: 'repos', component: ReposComponent, canActivate: [CheckService]},
   {path: 'projects', component: ProjectsComponent, canActivate: [CheckService]},
-  {path: 'applications', component: ApplicationsComponent, canActivate: [CheckService]}
+  {path: 'applications', component: ApplicationsComponent, canActivate: [CheckService]},
+  {path: 'deployments', component: DeploymentsComponent, canActivate: [CheckService]},
+  {path: 'deployment/:uuid', component: DeploymentComponent, canActivate: [CheckService]},
+  {path: 'run/:uuid', component: RunComponent, canActivate: [CheckService]}
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

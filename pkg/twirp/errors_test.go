@@ -17,7 +17,6 @@ func TestToTwirpError(t *testing.T) {
 	invalid := ddd.InvalidArgumentError{Arg: "arg", Val: "validation"}
 	notFound := ddd.NotFoundError{Entity: "Anything"}
 	required := ddd.RequiredArgumentError{Arg: "arg"}
-	authenticate := auth.AuthenticationError{}
 	authorize := auth.NotAuthorizedError{}
 
 	assert.Equal(t, true, errsEqual(ToTwirpError(destroyed, "").(twirp.Error), twirp.NotFoundError(destroyed.Error())))
@@ -25,7 +24,6 @@ func TestToTwirpError(t *testing.T) {
 	assert.Equal(t, true, errsEqual(ToTwirpError(invalid, "").(twirp.Error), twirp.InvalidArgumentError(invalid.Arg, invalid.Error())))
 	assert.Equal(t, true, errsEqual(ToTwirpError(notFound, "").(twirp.Error), twirp.NotFoundError(notFound.Error())))
 	assert.Equal(t, true, errsEqual(ToTwirpError(required, "").(twirp.Error), twirp.RequiredArgumentError(required.Arg)))
-	assert.Equal(t, true, errsEqual(ToTwirpError(authenticate, "").(twirp.Error), twirp.NewError(twirp.Unauthenticated, authenticate.Error())))
 	assert.Equal(t, true, errsEqual(ToTwirpError(authorize, "").(twirp.Error), twirp.NewError(twirp.Unauthenticated, authorize.Error())))
 	assert.Equal(t, true, errsEqual(ToTwirpError(errors.New(""), "message").(twirp.Error), twirp.InternalError("message")))
 }

@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"sort"
 	"time"
 
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
@@ -94,6 +95,11 @@ func (m *Mongo) GetEvents(coll, uuid string) ([]*StoredEvent, error) {
 		}
 		results = append(results, &result)
 	}
+
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Version < results[j].Version
+	})
+
 	return results, nil
 }
 

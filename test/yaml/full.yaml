@@ -1,0 +1,57 @@
+version: '1.0.0'
+clusters:
+  - test
+apps:
+  - name: grafana
+    helm:
+      chart: grafana
+      repo: bitnami
+      version: 4.2.5
+triggers:
+  - web:
+      name: grafana-trigger
+  - manual:
+      users:
+        - "Sam Tailor"
+strategy:
+  - name: deploy-grafana
+    condition: always
+    app:
+      name: grafana
+      cluster: test
+      namespace: default
+      helm:
+        command: install
+        wait: true
+  - name: upgrade-grafana
+    hold: 2m10s
+    condition: succeeded
+    app:
+      name: grafana
+      cluster: test
+      namespace: default
+      helm:
+        command: upgrade
+        wait: true
+        values:
+          raw:
+            version: 5.0.0
+  - name: rollback-grafana
+    hold: 1m
+    condition: succeeded
+    app:
+      name: grafana
+      cluster: test
+      namespace: default
+      helm:
+        command: rollback
+        wait: true
+  - name: uninstall-grafana
+    condition: succeeded
+    app:
+      name: grafana
+      cluster: test
+      namespace: default
+      helm:
+        command: uninstall
+        wait: true

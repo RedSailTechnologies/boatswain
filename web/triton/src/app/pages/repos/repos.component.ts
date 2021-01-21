@@ -20,9 +20,6 @@ export class ReposComponent implements OnInit {
   private client: Repo;
   private retries = 0;
   public repos: RepoRead[];
-  public charts: Map<RepoRead, ChartRead[]>;
-  public expandedRepo: RepoRead;
-  public expandedCharts: ChartRead[];
 
   constructor(
     private dialog: MatDialog,
@@ -106,23 +103,10 @@ export class ReposComponent implements OnInit {
   refreshRepos(): void {
     if (this.retries < 5) {
       this.retries++;
-      this.charts = new Map<RepoRead, ChartRead[]>();
       this.client
         .all({})
         .then((value) => {
           this.repos = value.repos;
-          value.repos.forEach((repo) => {
-            if (repo.ready) {
-              this.client
-                .charts(repo)
-                .then((results) => {
-                  this.charts.set(repo, results.charts);
-                })
-                .catch((_) => {
-                  setTimeout(() => this.refreshRepos(), 2 * 1000);
-                });
-            }
-          });
         })
         .catch((_) => {
           setTimeout(() => this.refreshRepos(), 2 * 1000);

@@ -9,6 +9,7 @@ import (
 
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
+	"github.com/redsailtechnologies/boatswain/pkg/git"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
@@ -21,14 +22,16 @@ var collection = "repos"
 // Service is the implementation for twirp to use
 type Service struct {
 	auth auth.Agent
+	git  git.Agent
 	helm helm.Agent
 	repo *Repository
 }
 
 // NewService creates the service
-func NewService(a auth.Agent, h helm.Agent, s storage.Storage) *Service {
+func NewService(a auth.Agent, g git.Agent, h helm.Agent, s storage.Storage) *Service {
 	return &Service{
 		auth: a,
+		git:  g,
 		helm: h,
 		repo: NewRepository(collection, s),
 	}
@@ -40,7 +43,7 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreate
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, ddd.NewTimestamp())
+	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, Type(cmd.Type), ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "could not create Repo")
@@ -63,11 +66,11 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdate
 
 	r, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
-		logger.Error("error loading cluster", "error", err)
+		logger.Error("error loading repo", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
-	err = r.Update(cmd.Name, cmd.Endpoint, ddd.NewTimestamp())
+	err = r.Update(cmd.Name, cmd.Endpoint, Type(cmd.Type), ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error updating Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "Repo could not be updated")
@@ -99,8 +102,7 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyRepo) (*pb.RepoDest
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
-	err = r.Destroy(ddd.NewTimestamp())
-	if err != nil {
+	if err = r.Destroy(ddd.NewTimestamp()); err != nil {
 		logger.Error("error destroying Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "Repo could not be destroyed")
 	}
@@ -126,18 +128,46 @@ func (s Service) Read(ctx context.Context, req *pb.ReadRepo) (*pb.RepoRead, erro
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
-	cr, err := r.toChartRepo()
-	if err != nil {
-		logger.Error("error converting Repo to helm chart repo", "error", err)
-		return nil, twirp.InternalError("error converting Repo to helm chart repo")
+	var ready bool
+	switch r.Type() {
+	case HELM:
+		ready = s.helmRepoReady(r)
+	case GIT:
+		ready = s.gitRepoReady(r)
+	default:
+		ready = false
 	}
 
 	return &pb.RepoRead{
 		Uuid:     r.UUID(),
 		Name:     r.Name(),
 		Endpoint: r.Endpoint(),
-		Ready:    s.helm.CheckIndex(cr),
+		Type:     pb.RepoType(r.Type()),
+		Ready:    ready,
 	}, nil
+}
+
+// Find finds the repo uuid by name
+func (s Service) Find(ctx context.Context, req *pb.FindRepo) (*pb.RepoFound, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
+	repos, err := s.repo.All()
+	if err != nil {
+		logger.Error("error getting Repos", "error", err)
+		return nil, twirp.InternalError("error loading Repos")
+	}
+
+	for _, repo := range repos {
+		if repo.Name() == req.Name {
+			return &pb.RepoFound{
+				Uuid: repo.UUID(),
+			}, nil
+		}
+	}
+
+	return nil, twirp.NotFoundError("could not find repo with that name")
 }
 
 // All gets all repos currently configured and their status
@@ -157,67 +187,100 @@ func (s Service) All(ctx context.Context, req *pb.ReadRepos) (*pb.ReposRead, err
 	}
 
 	for _, r := range repos {
-		cr, err := r.toChartRepo()
-		if err != nil {
-			logger.Error("error converting Repo to helm chart repo", "error", err)
-			return nil, twirp.InternalError("error converting Repo to helm chart repo")
+		var ready bool
+		switch r.Type() {
+		case HELM:
+			ready = s.helmRepoReady(r)
+		case GIT:
+			ready = s.gitRepoReady(r)
+		default:
+			ready = false
 		}
 
 		resp.Repos = append(resp.Repos, &pb.RepoRead{
 			Uuid:     r.UUID(),
 			Name:     r.Name(),
 			Endpoint: r.Endpoint(),
-			Ready:    s.helm.CheckIndex(cr),
+			Type:     pb.RepoType(r.Type()),
+			Ready:    ready,
 		})
 	}
 	return resp, nil
 }
 
-// Charts gets all the charts for this repository
-func (s Service) Charts(ctx context.Context, req *pb.ReadRepo) (*pb.ChartsRead, error) {
-	r, err := s.repo.Load(req.Uuid)
+// Chart gets all the charts for this repository
+func (s Service) Chart(ctx context.Context, req *pb.ReadChart) (*pb.ChartRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Editor); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
+	r, err := s.repo.Load(req.RepoId)
 	if err != nil {
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
-	cr, err := r.toChartRepo()
+	if r.Type() != HELM {
+		logger.Warn("cannot get chart for non-helm repo")
+		return nil, twirp.InvalidArgumentError("repo", "must be a helm repo")
+	}
+
+	_, err = r.toChartRepo()
 	if err != nil {
 		logger.Error("error converting Repo to helm chart repo", "error", err)
 		return nil, twirp.InternalError("error converting Repo to helm chart repo")
 	}
 
-	chartMap, err := s.helm.GetCharts(cr)
+	// FIXME - here we just want to get a single chart's contents
+	return nil, nil
+}
+
+// File gets the contents of a file from the git repo
+func (s Service) File(ctx context.Context, req *pb.ReadFile) (*pb.FileRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Editor); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
+	r, err := s.repo.Load(req.RepoId)
 	if err != nil {
-		logger.Error("error getting charts", "error", err)
-		return nil, twirp.NotFoundError("error getting charts from helm repo")
+		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
-	charts := make([]*pb.ChartRead, 0)
-	for key, val := range chartMap {
-		versions := make([]*pb.VersionRead, 0)
-
-		for _, version := range val {
-			versions = append(versions, &pb.VersionRead{
-				Name:         key,
-				ChartVersion: version.Metadata.Version,
-				AppVersion:   version.Metadata.AppVersion,
-				Description:  version.Metadata.Description,
-				Url:          buildChartURL(r.Endpoint(), version.URLs[0]),
-			})
-		}
-
-		charts = append(charts, &pb.ChartRead{
-			Name:     key,
-			Versions: versions,
-		})
+	if r.Type() != GIT {
+		logger.Warn("cannot get file for non-git repo")
+		return nil, twirp.InvalidArgumentError("repo", "must be a git repo")
 	}
 
-	return &pb.ChartsRead{Charts: charts}, nil
+	if !s.gitRepoReady(r) {
+		logger.Warn("cannot get file from git repo with offline status")
+		return nil, twirp.InvalidArgumentError("repo", "status is offline")
+	}
+
+	file := s.git.GetFile(r.Endpoint(), req.Branch, req.FilePath, "", "") // FIXME auth here
+	if file == nil {
+		return nil, twirp.NotFoundError("file not found")
+	}
+
+	return &pb.FileRead{
+		File: file,
+	}, nil
 }
 
 // Ready implements the ReadyService method so this service can be part of a health check routine
 func (s Service) Ready() error {
 	return s.repo.store.CheckReady()
+}
+
+func (s Service) gitRepoReady(r *Repo) bool {
+	return s.git.CheckRepo(r.Endpoint(), "", "") // FIXME auth here
+}
+
+func (s Service) helmRepoReady(r *Repo) bool {
+	cr, err := r.toChartRepo()
+	if err != nil {
+		logger.Error("error converting Repo to helm chart repo", "error", err)
+		return false
+	}
+	return s.helm.CheckIndex(cr)
 }
 
 func buildChartURL(repoURL string, chart string) string {

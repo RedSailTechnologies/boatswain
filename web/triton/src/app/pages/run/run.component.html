@@ -1,0 +1,57 @@
+<div class="page" *ngIf="run; else noData">
+    <mat-card style="margin:50px 25% 50px 25%;">
+        <mat-card-title>v{{run.version}}</mat-card-title>
+        <mat-card-subtitle style="flex:0 0 auto;">
+            Status: <a [style]="run.status == 'FAILED' ? 'color:lightcoral;' : ''">{{run.status}}</a>
+            <br />
+            Start: {{start}}
+            <span *ngIf="run.status != 'IN_PROGRESS'">
+                <br />
+                Stop: {{stop}}
+            </span>
+        </mat-card-subtitle>
+        <mat-card-content>
+            <mat-vertical-stepper [selectedIndex]="run.status == 'IN_PROGRESS' ? run.steps.length : run.steps.length - 1" #stepper> 
+                <div *ngFor="let step of run.steps">
+                    <mat-step [completed]="true" [hasError]="stepError(step.status)" [state]="stepError(step.status) ? 'error' : 'number'">
+                        <ng-template matStepperIcon="edit">
+                            <mat-icon>keyboard_arrow_right</mat-icon>
+                        </ng-template>
+                        <ng-template matStepperIcon="done">
+                            <mat-icon>keyboard_arrow_right</mat-icon>
+                        </ng-template>
+                        <ng-template matStepperIcon="error">
+                            <mat-icon>error</mat-icon>
+                        </ng-template>
+                        <ng-template matStepperIcon="number">
+                            <mat-icon>keyboard_arrow_down</mat-icon>
+                        </ng-template>
+                        <ng-template matStepLabel>
+                            <div *ngIf="step.status == 'IN_PROGRESS' && run.status == 'IN_PROGRESS'; else finished">
+                                <mat-spinner color="accent" [diameter]="40"></mat-spinner>
+                            </div>
+                            <ng-template #finished>
+                                <a [style]="statusColor(step.status)">{{step.name}}</a>
+                            </ng-template>
+                        </ng-template>
+                        <a *ngFor="let log of step.logs" [style]="log.level == 'ERROR' ? 'color:lightcoral;white-space:pre-wrap;' : 'white-space:pre-wrap;'">
+                            <mat-icon [color]="log.level == 'ERROR' ? 'warn' : 'accent'" style="font-size:12px;">message</mat-icon> {{formatDate(log.timestamp)}}
+                            <br />{{log.message}}<br /><br />
+                        </a>
+                    </mat-step>
+                </div>
+                <div *ngIf="run.steps[run.steps.length-1].status != 'IN_PROGRESS' && run.status == 'IN_PROGRESS'; else runFinished">
+                    <mat-step [completed]="true">
+                        <ng-template matStepLabel>
+                            <mat-spinner color="accent" [diameter]="40"></mat-spinner>
+                        </ng-template>
+                    </mat-step>
+                </div>
+                <ng-template #runFinished></ng-template>
+            </mat-vertical-stepper>
+        </mat-card-content>
+    </mat-card>
+</div>
+<ng-template #noData>
+    <mat-spinner color="primary" class="page-spinner"></mat-spinner>
+</ng-template>

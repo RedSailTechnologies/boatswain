@@ -1,0 +1,167 @@
+/*
+Deployment is the service for creation and management of application installs/upgrades.
+*/
+syntax = "proto3";
+package redsail.bosn;
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/delivery;delivery";
+
+service Deployment {
+    // creates a new delivery
+    rpc Create (CreateDeployment) returns (DeploymentCreated);
+
+    // edits an already existing deployment
+    rpc Update (UpdateDeployment) returns (DeploymentUpdated);
+    
+    // removes a deployment from the list of configurations
+    rpc Destroy (DestroyDeployment) returns (DeploymentDestroyed);
+
+    // reads out a deployment
+    rpc Read (ReadDeployment) returns (DeploymentRead);
+    
+    // gets all deployments currently configured and their status
+    rpc All (ReadDeployments) returns (DeploymentsRead);
+
+    // get the templated version of this deployment
+    rpc Template (TemplateDeployment) returns (DeploymentTemplated);
+
+    // trigger a deployment
+    rpc Trigger (TriggerDeployment) returns (DeploymentTriggered);
+
+    // read all the information about a particular run
+    rpc Run (ReadRun) returns (RunRead);
+
+    // read summaries of all runs for a particular deployment
+    rpc Runs (ReadRuns) returns (RunsRead);
+}
+
+message CreateDeployment {
+    string name = 1; // the name of this deployment
+    string repo_id = 2; // the unique id of the repo to get the deployment yaml from
+    string branch = 3; // the branch from the repo to get the file from
+    string file_path = 4; // the path to the deployment file
+}
+
+message DeploymentCreated {}
+
+message UpdateDeployment {
+    string uuid = 1; // unique id of the deployment
+    string name = 2; // the name of this deployment
+    string repo_id = 3; // the unique id of the repo to get the deployment yaml from
+    string branch = 4; // the branch from the repo to get the file from
+    string file_path = 5; // the path to the deployment file
+}
+
+message DeploymentUpdated {}
+
+message DestroyDeployment {
+    string uuid = 1; // unique id of the deployment
+}
+
+message DeploymentDestroyed {}
+
+message ReadDeployment {
+    string uuid = 1; // unique id of the deployment
+}
+
+message DeploymentRead {
+    string uuid = 1; // unique id of the deployment
+    string name = 2; // the name of this deployment
+    string repo_id = 3; // the unique id of the repo to get the deployment yaml from
+    string repo_name = 4; // the name of the repo
+    string branch = 5; // the branch from the repo to get the file from
+    string file_path = 6; // the path to the deployment file
+}
+
+message ReadDeployments {}
+
+message DeploymentReadSummary {
+    string uuid = 1; // unique id of the deployment
+    string name = 2; // the name of this deployment
+}
+
+message DeploymentsRead {
+    repeated DeploymentReadSummary deployments = 1; // the list of deployments
+}
+
+message TemplateDeployment {
+    string uuid = 1; // unique id of the deployment
+}
+
+message DeploymentTemplated {
+    string uuid = 1; // unique id of the deployment
+    string yaml = 2; // the templated yaml for this deployment
+}
+
+message TriggerDeployment {
+    enum TriggerType {
+        WEB = 0;
+        MANUAL = 1;
+    }
+    string uuid = 1; // unique id of the deployment
+    string name = 2; // name of the trigger within this deployment
+    TriggerType type = 3; // the type of trigger
+    bytes arguments = 4; // args for this run
+}
+
+message DeploymentTriggered {
+    string run_uuid = 1; // unique id of the resulting run
+}
+
+message ReadRun {
+    string deployment_uuid = 1; // unique id of the run
+}
+
+message StepLog {
+    int64 timestamp = 1;
+    LogLevel level = 2;
+    string message = 3;
+}
+
+message StepRead {
+    string name = 1;
+    Status status = 2;
+    int64 start_time = 3;
+    int64 stop_time = 4;
+    repeated StepLog logs = 5;
+}
+
+message RunRead {
+    string uuid = 1;
+    string version = 2;
+    Status status = 3;
+    int64 start_time = 4;
+    int64 stop_time = 5;
+    
+    repeated StepRead steps = 6;
+}
+
+message ReadRuns {
+    string deployment_uuid = 1; // unique id of the deployment to get runs for
+}
+
+message RunReadSummary {
+    string uuid = 1;
+    string version = 2;
+    Status status = 3;
+    int64 start_time = 4;
+    int64 stop_time = 5;
+}
+
+message RunsRead {
+    repeated RunReadSummary runs = 1; //the runs
+}
+
+enum LogLevel {
+    DEBUG = 0;
+    INFO = 1;
+    WARN = 2;
+    ERROR = 3;
+}
+
+enum Status {
+    NOT_STARTED = 0;
+    IN_PROGRESS = 1;
+    FAILED = 2;
+    SUCCEEDED = 3;
+    SKIPPED = 4;
+}

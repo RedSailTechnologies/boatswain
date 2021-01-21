@@ -37,16 +37,11 @@
                 Status
                 <a mat-list-item routerLink="clusters" routerLinkActive="active" aria-label="clusters" (click)="toggleSideNav()">Clusters</a>
                 <a mat-list-item routerLink="repos" routerLinkActive="active" aria-label="repos" (click)="toggleSideNav()">Repos</a>
-                <mat-divider></mat-divider>
-                <br/>
-                Apps
-                <a mat-list-item routerLink="projects" routerLinkActive="active" aria-label="projects" (click)="toggleSideNav()">Projects</a>
                 <a mat-list-item routerLink="applications" routerLinkActive="active" aria-label="applications" (click)="toggleSideNav()">Applications</a>
                 <mat-divider></mat-divider>
                 <br/>
-                Delivery
-                <a mat-list-item aria-label="deliveries">Deliveries</a>
-                <a mat-list-item aria-label="templates">Templates</a>
+                Deployment
+                <a mat-list-item routerLink="deployments" routerLinkActive="active" aria-label="deployments" (click)="toggleSideNav()">Deployments</a>
             </mat-nav-list>
         </div>
     </mat-sidenav>

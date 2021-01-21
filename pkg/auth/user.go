@@ -6,6 +6,8 @@ import (
 
 // User represents our representation of an oidc user
 type User struct {
+	token string
+
 	Name         string   `json:"name"`
 	Email        string   `json:"email"`
 	Subject      string   `json:"sub"`

@@ -64,7 +64,7 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.Cluster
 
 	c, err := s.repo.Load(cmd.Uuid)
 	if err != nil {
-		logger.Error("error loading cluster", "error", err)
+		logger.Error("error loading Cluster", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Cluster")
 	}
 
@@ -100,8 +100,7 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyCluster) (*pb.Clust
 		return nil, tw.ToTwirpError(err, "error loading Cluster")
 	}
 
-	err = c.Destroy(ddd.NewTimestamp())
-	if err != nil {
+	if err = c.Destroy(ddd.NewTimestamp()); err != nil {
 		logger.Error("error destroying Cluster", "error", err)
 		return nil, tw.ToTwirpError(err, "Cluster could not be destroyed")
 	}
@@ -141,6 +140,29 @@ func (s Service) Read(ctx context.Context, req *pb.ReadCluster) (*pb.ClusterRead
 		Cert:     c.Cert(),
 		Ready:    s.k8s.GetClusterStatus(cs, c.Name()),
 	}, nil
+}
+
+// Find finds the cluster uuid by name
+func (s Service) Find(ctx context.Context, req *pb.FindCluster) (*pb.ClusterFound, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
+	clusters, err := s.repo.All()
+	if err != nil {
+		logger.Error("error getting Clusters", "error", err)
+		return nil, twirp.InternalError("error loading Clusters")
+	}
+
+	for _, cluster := range clusters {
+		if cluster.Name() == req.Name {
+			return &pb.ClusterFound{
+				Uuid: cluster.UUID(),
+			}, nil
+		}
+	}
+
+	return nil, twirp.NotFoundError("could not find repo with that name")
 }
 
 // All gets all clusters currently configured and their status

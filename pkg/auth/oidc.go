@@ -81,40 +81,41 @@ func (o *OIDCAgent) Authenticate(ctx context.Context) (context.Context, error) {
 	tokenVal := ctx.Value(o.jwtKey)
 	if tokenVal == nil {
 		logger.Warn("jwt token not found")
-		return ctx, AuthenticationError{}
+		return ctx, twirp.NewError(twirp.Unauthenticated, "couldn't get jwt from Authorization header")
 	}
 	token := tokenVal.(string)
 
 	parsedToken, err := jwt.ParseSigned(token)
 	if err != nil {
 		logger.Error("couldn't parse signed jwt", "error", err)
-		return ctx, AuthenticationError{}
+		return ctx, twirp.NewError(twirp.Unauthenticated, "couldn't parse signed jwt")
 	}
 
 	if len(parsedToken.Headers) < 1 {
 		logger.Error("parsed token did not contain any headers", "token", parsedToken)
-		return ctx, AuthenticationError{}
+		return ctx, twirp.NewError(twirp.Unauthenticated, "parsed token did not contain any headers")
 	}
 	keyID := parsedToken.Headers[0].KeyID
 
 	key, err := o.getJWK(keyID)
 	if err != nil {
 		logger.Error("couldn't get key to verify jwt", "error", err)
-		return ctx, AuthenticationError{}
+		return ctx, twirp.NewError(twirp.Unauthenticated, "couldn't get key to verify jwt")
 	}
 
 	user := User{}
 	err = parsedToken.Claims(key.Key, &user)
 	if err != nil {
 		logger.Error("couldn't parse user claims", "error", err)
-		return ctx, AuthenticationError{}
+		return ctx, twirp.NewError(twirp.Unauthenticated, "couldn't parse user claims")
 	}
 
 	if err = user.validateScope(o.cfg.Scope); err != nil {
 		logger.Warn("error validating user scope", "error", err)
-		return ctx, AuthenticationError{}
+		return ctx, twirp.NewError(twirp.Unauthenticated, "error validating user scope")
 	}
 
+	user.token = token
 	return context.WithValue(ctx, o.userKey, user), nil
 }
 
@@ -147,6 +148,26 @@ func (o *OIDCAgent) Authorize(ctx context.Context, role Role) error {
 	method, _ := twirp.MethodName(ctx)
 	logger.Error(fmt.Sprintf("user not authorized for %s.%s", service, method), "user", user)
 	return NotAuthorizedError{}
+}
+
+// NewContext gets a context with this user's auth info
+func (o *OIDCAgent) NewContext(ctx context.Context) (context.Context, error) {
+	u := o.userFromContext(ctx)
+	if u.token == "" {
+		return nil, errors.New("user token could not be found")
+	}
+
+	c := context.Background()
+
+	header := make(http.Header)
+	header.Set("Authorization", fmt.Sprintf("Bearer %s", u.token))
+
+	return twirp.WithHTTPRequestHeaders(c, header)
+}
+
+// User gets the user from the context
+func (o *OIDCAgent) User(ctx context.Context) User {
+	return *o.userFromContext(ctx)
 }
 
 // Wrap wraps an existing http hander to store the auth JWT

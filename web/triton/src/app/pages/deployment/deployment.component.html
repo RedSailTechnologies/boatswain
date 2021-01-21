@@ -1,0 +1,71 @@
+<div class="page" *ngIf="deployment; else noData">
+    <mat-card style="margin:50px 25% 50px 25%;">
+        <mat-card-title style="text-align:center;">{{deployment.name}}</mat-card-title>
+        <mat-card-subtitle>
+            Repo: {{deployment.repoName}}
+            <br />
+            Branch: {{deployment.branch}}
+            <br />
+            File Path: {{deployment.filePath}}
+            <br />
+        </mat-card-subtitle>
+        <mat-card-content style="white-space:pre;">
+            <mat-accordion>
+                <mat-expansion-panel hideToggle="true">
+                    <mat-expansion-panel-header>
+                        <mat-panel-title>YAML</mat-panel-title>
+                        <mat-panel-description style="flex:0 0 auto;">
+                            click to view templated yaml
+                        </mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <div *ngIf="yaml; else noYaml" [style]="templateError ? 'color:lightcoral;' : ''">
+                        {{yaml}}
+                    </div>
+                    <ng-template #noYaml>
+                        <mat-spinner color="primary" class="page-spinner"></mat-spinner>
+                    </ng-template>
+                </mat-expansion-panel>
+                <mat-expansion-panel hideToggle="true">
+                    <mat-expansion-panel-header>
+                        <mat-panel-title>Runs</mat-panel-title>
+                        <mat-panel-description style="flex:0 0 auto;">
+                            click to view runs for this deployment
+                        </mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <div *ngIf="runs else noRuns">
+                        <table mat-table [dataSource]="runs" style="width: 100%;">
+                            <ng-container matColumnDef="name">
+                                <th mat-header-cell *matHeaderCellDef>Name</th>
+                                <td mat-cell *matCellDef="let run"> {{deployment.name}} v{{run.version}} </td>
+                            </ng-container>
+                            <ng-container matColumnDef="status">
+                                <th mat-header-cell *matHeaderCellDef>Status</th>
+                                <td mat-cell *matCellDef="let run">{{ run.status }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="start">
+                                <th mat-header-cell *matHeaderCellDef>Start</th>
+                                <td mat-cell *matCellDef="let run"> {{ run.startFormatted }} </td>
+                            </ng-container>
+                            <ng-container matColumnDef="stop">
+                                <th mat-header-cell *matHeaderCellDef>Stop</th>
+                                <td mat-cell *matCellDef="let run"> {{ run.stopFormatted }} </td>
+                            </ng-container>
+                    
+                            <tr mat-header-row *matHeaderRowDef="['name', 'status', 'start', 'stop']"></tr>
+                            <tr mat-row *matRowDef="let row; columns: ['name', 'status', 'start', 'stop'];" (dblclick)="redirect(row)"></tr>
+                        </table>
+                    </div>
+                    <ng-template #noRuns>
+                        <mat-spinner color="primary" class="page-spinner"></mat-spinner>
+                    </ng-template>
+                </mat-expansion-panel>
+            </mat-accordion>
+        </mat-card-content>
+        <mat-card-actions style="text-align:right;">
+            <button mat-raised-button color="accent" (click)="run()">Run</button>
+        </mat-card-actions>
+    </mat-card>
+</div>
+<ng-template #noData>
+    <mat-spinner color="primary" class="page-spinner"></mat-spinner>
+</ng-template>

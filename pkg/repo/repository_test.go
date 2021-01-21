@@ -290,7 +290,7 @@ func TestLoadDestroyed(t *testing.T) {
 }
 
 func TestSaveValid(t *testing.T) {
-	c, _ := Create("a", "name", "http://endpoint", ddd.NewTimestamp())
+	c, _ := Create("a", "name", "http://endpoint", HELM, ddd.NewTimestamp())
 	store := &mockStorage{}
 	store.On("GetVersion", mock.Anything, "a").Return(0)
 	store.On("StoreEvent", mock.Anything, "a", mock.Anything, mock.Anything, 1).Return(nil)
@@ -301,7 +301,7 @@ func TestSaveValid(t *testing.T) {
 
 func TestSaveStorageError(t *testing.T) {
 	e := errors.New("test error")
-	c, _ := Create("a", "name", "http://endpoint", ddd.NewTimestamp())
+	c, _ := Create("a", "name", "http://endpoint", HELM, ddd.NewTimestamp())
 	store := &mockStorage{}
 	store.On("GetVersion", mock.Anything, "a").Return(0)
 	store.On("StoreEvent", mock.Anything, "a", mock.Anything, mock.Anything, 1).Return(e)

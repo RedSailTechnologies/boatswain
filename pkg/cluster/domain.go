@@ -2,6 +2,8 @@ package cluster
 
 import "github.com/redsailtechnologies/boatswain/pkg/ddd"
 
+var entityName = "Cluster"
+
 // Created is the event for when a new cluster is created
 type Created struct {
 	Timestamp int64
@@ -41,8 +43,6 @@ func (e Updated) EventType() string {
 	return entityName + "Updated"
 }
 
-var entityName = "Cluster"
-
 // Cluster represents a kubernetes cluster we are monitoring/deploying to
 type Cluster struct {
 	events    []ddd.Event
@@ -70,8 +70,7 @@ func Create(uuid, name, endpoint, token, cert string, timestamp int64) (*Cluster
 	if uuid == "" {
 		return nil, ddd.IDError{}
 	}
-	err := validateFields(name, endpoint, token, cert)
-	if err != nil {
+	if err := validateFields(name, endpoint, token, cert); err != nil {
 		return nil, err
 	}
 
@@ -100,13 +99,13 @@ func (c *Cluster) Destroy(timestamp int64) error {
 
 // Update handles update commands
 func (c *Cluster) Update(name, endpoint, token, cert string, timestamp int64) error {
-	err := validateFields(name, endpoint, token, cert)
-	if err != nil {
+	if err := validateFields(name, endpoint, token, cert); err != nil {
 		return err
 	}
 	if c.destroyed {
 		return ddd.DestroyedError{Entity: entityName}
 	}
+
 	c.on(&Updated{
 		Timestamp: timestamp,
 		Name:      name,
@@ -144,7 +143,9 @@ func (c *Cluster) Cert() string {
 
 // Events returns this cluster's event history
 func (c *Cluster) Events() []ddd.Event {
-	return c.events
+	cp := make([]ddd.Event, len(c.events))
+	copy(cp, c.events)
+	return cp
 }
 
 // Version returns this cluster's version number (NOTE: aggregate version!)

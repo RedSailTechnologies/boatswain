@@ -7,6 +7,8 @@ routing:
     kraken:
       - Application
       - Cluster
+    gyarados:
+      - Deployment
     poseidon:
       - Repo
   connectTimeout: 0.25s

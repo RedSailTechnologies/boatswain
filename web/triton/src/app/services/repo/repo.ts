@@ -5,12 +5,14 @@ import {createTwirpRequest, throwTwirpError, Fetch} from './twirp';
 export interface CreateRepo {
     name: string;
     endpoint: string;
+    type: string;
     
 }
 
 interface CreateRepoJSON {
     name: string;
     endpoint: string;
+    type: string;
     
 }
 
@@ -19,6 +21,7 @@ const CreateRepoToJSON = (m: CreateRepo): CreateRepoJSON => {
     return {
         name: m.name,
         endpoint: m.endpoint,
+        type: m.type,
         
     };
 };
@@ -43,6 +46,7 @@ export interface UpdateRepo {
     uuid: string;
     name: string;
     endpoint: string;
+    type: string;
     
 }
 
@@ -50,6 +54,7 @@ interface UpdateRepoJSON {
     uuid: string;
     name: string;
     endpoint: string;
+    type: string;
     
 }
 
@@ -59,6 +64,7 @@ const UpdateRepoToJSON = (m: UpdateRepo): UpdateRepoJSON => {
         uuid: m.uuid,
         name: m.name,
         endpoint: m.endpoint,
+        type: m.type,
         
     };
 };
@@ -135,6 +141,7 @@ export interface RepoRead {
     uuid: string;
     name: string;
     endpoint: string;
+    type: string;
     ready: boolean;
     
 }
@@ -143,6 +150,7 @@ interface RepoReadJSON {
     uuid: string;
     name: string;
     endpoint: string;
+    type: string;
     ready: boolean;
     
 }
@@ -154,7 +162,45 @@ const JSONToRepoRead = (m: RepoRead | RepoReadJSON): RepoRead => {
         uuid: m.uuid,
         name: m.name,
         endpoint: m.endpoint,
+        type: m.type,
         ready: m.ready,
+        
+    };
+};
+
+export interface FindRepo {
+    name: string;
+    
+}
+
+interface FindRepoJSON {
+    name: string;
+    
+}
+
+
+const FindRepoToJSON = (m: FindRepo): FindRepoJSON => {
+    return {
+        name: m.name,
+        
+    };
+};
+
+export interface RepoFound {
+    uuid: string;
+    
+}
+
+interface RepoFoundJSON {
+    uuid: string;
+    
+}
+
+
+const JSONToRepoFound = (m: RepoFound | RepoFoundJSON): RepoFound => {
+    
+    return {
+        uuid: m.uuid,
         
     };
 };
@@ -193,15 +239,37 @@ const JSONToReposRead = (m: ReposRead | ReposReadJSON): ReposRead => {
     };
 };
 
-export interface ChartRead {
+export interface ReadChart {
+    repoId: string;
     name: string;
-    versions: VersionRead[];
+    version: string;
+    
+}
+
+interface ReadChartJSON {
+    repo_id: string;
+    name: string;
+    version: string;
+    
+}
+
+
+const ReadChartToJSON = (m: ReadChart): ReadChartJSON => {
+    return {
+        repo_id: m.repoId,
+        name: m.name,
+        version: m.version,
+        
+    };
+};
+
+export interface ChartRead {
+    chart: string;
     
 }
 
 interface ChartReadJSON {
-    name: string;
-    versions: VersionReadJSON[];
+    chart: string;
     
 }
 
@@ -209,58 +277,50 @@ interface ChartReadJSON {
 const JSONToChartRead = (m: ChartRead | ChartReadJSON): ChartRead => {
     
     return {
-        name: m.name,
-        versions: (m.versions as (VersionRead | VersionReadJSON)[]).map(JSONToVersionRead),
+        chart: m.chart,
         
     };
 };
 
-export interface VersionRead {
-    name: string;
-    chartVersion: string;
-    appVersion: string;
-    description: string;
-    url: string;
+export interface ReadFile {
+    repoId: string;
+    branch: string;
+    filePath: string;
     
 }
 
-interface VersionReadJSON {
-    name: string;
-    chart_version: string;
-    app_version: string;
-    description: string;
-    url: string;
+interface ReadFileJSON {
+    repo_id: string;
+    branch: string;
+    file_path: string;
     
 }
 
 
-const JSONToVersionRead = (m: VersionRead | VersionReadJSON): VersionRead => {
-    
+const ReadFileToJSON = (m: ReadFile): ReadFileJSON => {
     return {
-        name: m.name,
-        chartVersion: (((m as VersionRead).chartVersion) ? (m as VersionRead).chartVersion : (m as VersionReadJSON).chart_version),
-        appVersion: (((m as VersionRead).appVersion) ? (m as VersionRead).appVersion : (m as VersionReadJSON).app_version),
-        description: m.description,
-        url: m.url,
+        repo_id: m.repoId,
+        branch: m.branch,
+        file_path: m.filePath,
         
     };
 };
 
-export interface ChartsRead {
-    charts: ChartRead[];
+export interface FileRead {
+    file: string;
     
 }
 
-interface ChartsReadJSON {
-    charts: ChartReadJSON[];
+interface FileReadJSON {
+    file: string;
     
 }
 
 
-const JSONToChartsRead = (m: ChartsRead | ChartsReadJSON): ChartsRead => {
+const JSONToFileRead = (m: FileRead | FileReadJSON): FileRead => {
     
     return {
-        charts: (m.charts as (ChartRead | ChartReadJSON)[]).map(JSONToChartRead),
+        file: m.file,
         
     };
 };
@@ -274,9 +334,13 @@ export interface Repo {
     
     read: (readRepo: ReadRepo) => Promise<RepoRead>;
     
+    find: (findRepo: FindRepo) => Promise<RepoFound>;
+    
     all: (readRepos: ReadRepos) => Promise<ReposRead>;
     
-    charts: (readRepo: ReadRepo) => Promise<ChartsRead>;
+    chart: (readChart: ReadChart) => Promise<ChartRead>;
+    
+    file: (readFile: ReadFile) => Promise<FileRead>;
     
 }
 
@@ -351,6 +415,21 @@ export class DefaultRepo implements Repo {
         });
     }
     
+    find(findRepo: FindRepo): Promise<RepoFound> {
+        const url = this.hostname + this.pathPrefix + "Find";
+        let body: FindRepo | FindRepoJSON = findRepo;
+        if (!this.writeCamelCase) {
+            body = FindRepoToJSON(findRepo);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToRepoFound);
+        });
+    }
+    
     all(readRepos: ReadRepos): Promise<ReposRead> {
         const url = this.hostname + this.pathPrefix + "All";
         let body: ReadRepos | ReadReposJSON = readRepos;
@@ -366,18 +445,33 @@ export class DefaultRepo implements Repo {
         });
     }
     
-    charts(readRepo: ReadRepo): Promise<ChartsRead> {
-        const url = this.hostname + this.pathPrefix + "Charts";
-        let body: ReadRepo | ReadRepoJSON = readRepo;
+    chart(readChart: ReadChart): Promise<ChartRead> {
+        const url = this.hostname + this.pathPrefix + "Chart";
+        let body: ReadChart | ReadChartJSON = readChart;
         if (!this.writeCamelCase) {
-            body = ReadRepoToJSON(readRepo);
+            body = ReadChartToJSON(readChart);
         }
         return this.fetch(createTwirpRequest(url, body)).then((resp) => {
             if (!resp.ok) {
                 return throwTwirpError(resp);
             }
 
-            return resp.json().then(JSONToChartsRead);
+            return resp.json().then(JSONToChartRead);
+        });
+    }
+    
+    file(readFile: ReadFile): Promise<FileRead> {
+        const url = this.hostname + this.pathPrefix + "File";
+        let body: ReadFile | ReadFileJSON = readFile;
+        if (!this.writeCamelCase) {
+            body = ReadFileToJSON(readFile);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToFileRead);
         });
     }
     
