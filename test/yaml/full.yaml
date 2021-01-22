@@ -27,7 +27,7 @@ strategy:
           raw:
             ingress:
               enabled: true
-              host: localhost
+              hostName: localhost
               path: "/"
   - name: upgrade-grafana
     hold: 2m10s
