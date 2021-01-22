@@ -12,7 +12,7 @@ triggers:
       name: grafana-trigger
   - manual:
       users:
-        - "Sam Tailor"
+        - "Adam Page"
 strategy:
   - name: deploy-grafana
     condition: always
@@ -23,6 +23,12 @@ strategy:
       helm:
         command: install
         wait: true
+        values:
+          raw:
+            ingress:
+              enabled: true
+              host: localhost
+              path: "/"
   - name: upgrade-grafana
     hold: 2m10s
     condition: succeeded
@@ -33,9 +39,6 @@ strategy:
       helm:
         command: upgrade
         wait: true
-        values:
-          raw:
-            version: 5.0.0
   - name: rollback-grafana
     hold: 1m
     condition: succeeded
