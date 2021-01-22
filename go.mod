@@ -8,6 +8,7 @@ require (
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/golang/protobuf v1.4.3
 	github.com/google/uuid v1.1.2
+	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
 	github.com/stretchr/testify v1.6.1
 	github.com/twitchtv/twirp v7.1.0+incompatible
 	github.com/xdg/stringprep v1.0.0 // indirect
