@@ -6,7 +6,7 @@ apps:
     helm:
       chart: grafana
       repo: bitnami
-      version: 4.2.5
+      version: '4.2.5'
 triggers:
   - web:
       name: grafana-trigger
@@ -24,6 +24,12 @@ strategy:
         command: install
         wait: true
         values:
+          library:
+            chart: grafana
+            repo: bitnami
+            version: '4.2.5'
+            files:
+              - values.yaml
           raw:
             ingress:
               enabled: true
