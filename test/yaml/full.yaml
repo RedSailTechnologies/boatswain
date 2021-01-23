@@ -29,6 +29,11 @@ strategy:
             repo: bitnami
             version: '4.2.5'
             file: values-production.yaml
+          raw:
+            ingress:
+              enabled: true
+              hostName: localhost
+              path: "/"
   - name: upgrade-grafana
     hold: 2m10s
     condition: succeeded
@@ -39,12 +44,6 @@ strategy:
       helm:
         command: upgrade
         wait: true
-        values:
-          raw:
-            ingress:
-              enabled: true
-              hostName: localhost
-              path: "/"
   - name: rollback-grafana
     hold: 1m
     condition: succeeded
