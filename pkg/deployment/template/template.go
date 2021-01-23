@@ -68,10 +68,10 @@ type Step struct {
 			Version int    `yaml:"version"`
 			Values  *struct {
 				Library *struct {
-					Chart   string   `yaml:"chart"`
-					Repo    string   `yaml:"repo"`
-					Version string   `yaml:"version"`
-					Files   []string `yaml:"files"`
+					Chart   string `yaml:"chart"`
+					Repo    string `yaml:"repo"`
+					Version string `yaml:"version"`
+					File    string `yaml:"file"`
 				} `yaml:"library,omitempty"`
 				Raw *map[string]interface{} `yaml:"raw,omitempty"`
 			} `yaml:"values,omitempty"`

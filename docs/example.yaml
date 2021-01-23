@@ -91,7 +91,6 @@ strategy:
         command: upgrade # install, upgrade, rollback, uninstall - defaults to install
         wait: true # whether to deploy helm with the wait flag, defaults to false
         values:
-          # specify the values individually
           raw:
             someValue: ${{ .Parameters.someValue }}
 
@@ -108,8 +107,7 @@ strategy:
             chart: sample-routing-values
             repo: myrepo
             version: '10.0.2'
-            files:
-              - sample-app.yaml
+            file: sample-app.yaml
 
   - name: run-tests
     hold: 10m # a wait, executed before any conditional-defaults to 0m

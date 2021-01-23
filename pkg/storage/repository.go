@@ -53,9 +53,6 @@ func (r *ReadRepository) All() ([]ddd.Aggregate, error) {
 	return aggregates, nil
 }
 
-// TODO
-// func (r *ReadRepository) Find(uuid string) ([]*Deployment, error)
-
 // Load reads out a specific aggregate with the given uuid
 func (r *ReadRepository) Load(uuid string) (ddd.Aggregate, error) {
 	events, err := r.store.GetEvents(r.name, uuid)

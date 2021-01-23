@@ -1,21 +1,19 @@
 package helm
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-
-	"github.com/redsailtechnologies/boatswain/pkg/logger"
-
 	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/repo"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	"github.com/redsailtechnologies/boatswain/pkg/logger"
 )
 
 // Agent is the interface we use to talk to helm packages
@@ -39,7 +37,7 @@ type Args struct {
 	Namespace string
 	Endpoint  string
 	Token     string
-	Chart     []byte
+	Chart     *chart.Chart
 	Values    map[string]interface{}
 	Wait      bool
 	Logger    func(string, ...interface{})
@@ -58,7 +56,6 @@ func (a DefaultAgent) GetChart(name, version, endpoint string) ([]byte, error) {
 	pull := action.NewPull()
 	pull.ChartPathOptions = action.ChartPathOptions{
 		RepoURL: endpoint,
-		// InsecureSkipTLSverify: true // TODO AdamP do we need this?
 	}
 	pull.Settings = cli.New()
 	pull.RepoURL = endpoint
@@ -107,11 +104,6 @@ func (a DefaultAgent) GetCharts(r *repo.ChartRepository) (map[string]repo.ChartV
 
 // Install is the equivalent of `helm install`
 func (a DefaultAgent) Install(args Args) (*release.Release, error) {
-	chart, err := loader.LoadArchive(bytes.NewReader(args.Chart))
-	if err != nil {
-		return nil, err
-	}
-
 	cfg, err := helmClient(args.Endpoint, args.Token, args.Namespace, args.Logger)
 	if err != nil {
 		return nil, err
@@ -120,7 +112,8 @@ func (a DefaultAgent) Install(args Args) (*release.Release, error) {
 	install := action.NewInstall(cfg)
 	install.ReleaseName = args.Name
 	install.Namespace = args.Namespace
-	return install.Run(chart, args.Values)
+	install.Wait = args.Wait
+	return install.Run(args.Chart, args.Values)
 }
 
 // Rollback is the equivalent of `helm rollback`
@@ -132,6 +125,7 @@ func (a DefaultAgent) Rollback(version int, args Args) error {
 
 	rollback := action.NewRollback(cfg)
 	rollback.Version = version
+	rollback.Wait = args.Wait
 	return rollback.Run(args.Name)
 }
 
@@ -160,11 +154,6 @@ func (a DefaultAgent) Uninstall(args Args) (*release.UninstallReleaseResponse, e
 
 // Upgrade is the equivalent of `helm upgrade`
 func (a DefaultAgent) Upgrade(args Args) (*release.Release, error) {
-	chart, err := loader.LoadArchive(bytes.NewReader(args.Chart))
-	if err != nil {
-		return nil, err
-	}
-
 	cfg, err := helmClient(args.Endpoint, args.Token, args.Namespace, args.Logger)
 	if err != nil {
 		return nil, err
@@ -172,19 +161,17 @@ func (a DefaultAgent) Upgrade(args Args) (*release.Release, error) {
 
 	upgrade := action.NewUpgrade(cfg)
 	upgrade.Namespace = args.Namespace
-	return upgrade.Run(args.Name, chart, args.Values)
+	upgrade.Wait = args.Wait
+	return upgrade.Run(args.Name, args.Chart, args.Values)
 }
 
 func helmClient(endpoint, token, namespace string, logger func(t string, a ...interface{})) (*action.Configuration, error) {
 	flags := &genericclioptions.ConfigFlags{
 		APIServer:   &endpoint,
 		BearerToken: &token,
-		// TODO AdamP - flags only supports cert files, how do we want to handle?
-		// CertFile:    &cluster.Cert,
-		Insecure: &[]bool{true}[0],
 	}
-	actionConfig := new(action.Configuration)
 
+	actionConfig := new(action.Configuration)
 	if err := actionConfig.Init(flags, namespace, "secrets", logger); err != nil {
 		return nil, err
 	}
