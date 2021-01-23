@@ -28,8 +28,7 @@ strategy:
             chart: grafana
             repo: bitnami
             version: '4.2.5'
-            files:
-              - values.yaml
+            file: values-production.yaml
           raw:
             ingress:
               enabled: true
