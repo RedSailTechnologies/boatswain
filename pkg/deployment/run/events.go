@@ -6,14 +6,14 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/deployment/trigger"
 )
 
-var eventTypes = map[string]ddd.Event{
-	Created{}.EventType():       new(Created),
-	Started{}.EventType():       new(Started),
-	StepStarted{}.EventType():   new(StepStarted),
-	AppendLog{}.EventType():     new(AppendLog),
-	StepCompleted{}.EventType(): new(StepCompleted),
-	StepSkipped{}.EventType():   new(StepSkipped),
-	Completed{}.EventType():     new(Completed),
+var eventTypes = map[string]func() ddd.Event{
+	Created{}.EventType():       func() ddd.Event { return &Created{} },
+	Started{}.EventType():       func() ddd.Event { return &Started{} },
+	StepStarted{}.EventType():   func() ddd.Event { return &StepStarted{} },
+	AppendLog{}.EventType():     func() ddd.Event { return &AppendLog{} },
+	StepCompleted{}.EventType(): func() ddd.Event { return &StepCompleted{} },
+	StepSkipped{}.EventType():   func() ddd.Event { return &StepSkipped{} },
+	Completed{}.EventType():     func() ddd.Event { return &Completed{} },
 }
 
 // Created is the event for when a new run is started

@@ -12,7 +12,7 @@ triggers:
       name: wordpress-trigger
   - manual:
       users:
-        - "Sam Tailor"
+        - "Adam Page"
 strategy:
   - name: deploy-wordpress
     condition: always

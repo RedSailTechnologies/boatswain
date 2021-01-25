@@ -6,13 +6,13 @@ apps:
     helm:
       chart: grafana
       repo: bitnami
-      version: 4.2.5
+      version: '4.2.5'
 triggers:
   - web:
       name: grafana-trigger
   - manual:
       users:
-        - "Sam Tailor"
+        - "Adam Page"
 strategy:
   - name: deploy-grafana
     condition: always
@@ -23,6 +23,17 @@ strategy:
       helm:
         command: install
         wait: true
+        values:
+          library:
+            chart: grafana
+            repo: bitnami
+            version: '4.2.5'
+            file: values-production.yaml
+          raw:
+            ingress:
+              enabled: true
+              hostName: localhost
+              path: "/"
   - name: upgrade-grafana
     hold: 2m10s
     condition: succeeded
@@ -33,9 +44,6 @@ strategy:
       helm:
         command: upgrade
         wait: true
-        values:
-          raw:
-            version: 5.0.0
   - name: rollback-grafana
     hold: 1m
     condition: succeeded
