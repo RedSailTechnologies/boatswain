@@ -91,7 +91,8 @@ strategy:
         command: upgrade # install, upgrade, rollback, uninstall - defaults to install
         wait: true # whether to deploy helm with the wait flag, defaults to false
         values:
-          # specify the values individually
+          # raw values just as if all children of raw were sent to helm with -f
+          # note that these values will override library values if both are supplied
           raw:
             someValue: ${{ .Parameters.someValue }}
 
@@ -108,8 +109,7 @@ strategy:
             chart: sample-routing-values
             repo: myrepo
             version: '10.0.2'
-            files:
-              - sample-app.yaml
+            file: sample-app.yaml
 
   - name: run-tests
     hold: 10m # a wait, executed before any conditional-defaults to 0m
@@ -126,8 +126,6 @@ strategy:
       cluster: dev
       namespace: app-ns
       helm:
-        # whether or not to uninstall the app in question
-        # note that this takes precedence over rollback!
         command: uninstall
   
   - name: rollback-routing

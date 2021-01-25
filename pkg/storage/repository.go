@@ -10,14 +10,14 @@ import (
 // ReadRepository is a generic repository for reads
 type ReadRepository struct {
 	name       string
-	eventTypes map[string]ddd.Event
+	eventTypes map[string]func() ddd.Event
 	replay     func([]ddd.Event) ddd.Aggregate
 	store      Storage
 }
 
 // NewReadRepository gets a new generic repository for reads
 func NewReadRepository(n string,
-	et map[string]ddd.Event,
+	et map[string]func() ddd.Event,
 	r func([]ddd.Event) ddd.Aggregate,
 	s Storage) *ReadRepository {
 	return &ReadRepository{
@@ -53,9 +53,6 @@ func (r *ReadRepository) All() ([]ddd.Aggregate, error) {
 	return aggregates, nil
 }
 
-// TODO
-// func (r *ReadRepository) Find(uuid string) ([]*Deployment, error)
-
 // Load reads out a specific aggregate with the given uuid
 func (r *ReadRepository) Load(uuid string) (ddd.Aggregate, error) {
 	events, err := r.store.GetEvents(r.name, uuid)
@@ -81,20 +78,20 @@ func (r *ReadRepository) Load(uuid string) (ddd.Aggregate, error) {
 func (r *ReadRepository) unmarshal(events []*StoredEvent) ([]ddd.Event, error) {
 	unmarshaled := make([]ddd.Event, 0)
 	for _, event := range events {
-		var e ddd.Event
-		var ok bool
-		if e, ok = r.eventTypes[event.Type]; !ok {
+		if e, ok := r.eventTypes[event.Type]; !ok {
 			return nil, ddd.UnsupportedEventError{
 				EventType: event.Type,
 				Type:      strings.Title(r.name),
 			}
+		} else {
+			out := e()
+			err := json.Unmarshal([]byte(event.Data), &out)
+			if err != nil {
+				return nil, err
+			}
+			unmarshaled = append(unmarshaled, out.(ddd.Event))
 		}
 
-		err := json.Unmarshal([]byte(event.Data), &e)
-		if err != nil {
-			return nil, err
-		}
-		unmarshaled = append(unmarshaled, e.(ddd.Event))
 	}
 	return unmarshaled, nil
 }

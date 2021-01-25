@@ -2,10 +2,10 @@ package repo
 
 import "github.com/redsailtechnologies/boatswain/pkg/ddd"
 
-var eventTypes = map[string]ddd.Event{
-	Created{}.EventType():   new(Created),
-	Destroyed{}.EventType(): new(Destroyed),
-	Updated{}.EventType():   new(Updated),
+var eventTypes = map[string]func() ddd.Event{
+	Created{}.EventType():   func() ddd.Event { return &Created{} },
+	Destroyed{}.EventType(): func() ddd.Event { return &Destroyed{} },
+	Updated{}.EventType():   func() ddd.Event { return &Updated{} },
 }
 
 // Created is the event for when a new repo is created

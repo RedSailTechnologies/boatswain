@@ -6,6 +6,12 @@ import (
 	"fmt"
 	"time"
 
+	// TODO AdamP - we could consider factoring this into helm.DefaultAgent
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/chartutil"
+	"helm.sh/helm/v3/pkg/release"
+
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/deployment/template"
@@ -15,7 +21,6 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/repo"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
-	"helm.sh/helm/v3/pkg/release" // TODO - refactor to agent?
 )
 
 var retryCount int = 3
@@ -34,7 +39,6 @@ type Engine struct {
 
 // NewEngine initializes the engine with required dependencies
 func NewEngine(r *Run, s storage.Storage, g git.Agent, h helm.Agent, k kube.Agent) (*Engine, error) {
-	// TODO AdamP - we could filter out only what we need for repos and clusters
 	w := newWriteRepository(s)
 	if err := w.save(r); err != nil {
 		logger.Error("could not save created run", "error", err)
@@ -140,25 +144,62 @@ func (e *Engine) executeActionStep(step *template.Step) Status {
 			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
 			return Failed
 		}
-		endpoint, token, err := getClusterInfo(step.App.Cluster, clusters)
-		if err != nil {
-			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+		cluster := getCluster(step.App.Cluster, clusters)
+		if cluster == nil {
+			e.run.AppendLog("cluster not found", Error, ddd.NewTimestamp())
 			return Failed
 		}
 
-		var chart []byte
+		var raw []byte
 		if step.App.Helm.Command == "install" || step.App.Helm.Command == "upgrade" {
-			chart, err = e.downloadChart(app.Helm.Chart, app.Helm.Version, app.Helm.Repo)
+			raw, err = e.downloadChart(app.Helm.Chart, app.Helm.Version, app.Helm.Repo)
 			if err != nil {
 				e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
 				return Failed
 			}
 		}
 
-		// FIXME get library values and merge them
-		vals := make(map[string]interface{})
-		if step.App.Helm.Values != nil && step.App.Helm.Values.Raw != nil {
-			vals = *step.App.Helm.Values.Raw
+		var chart *chart.Chart
+		if raw != nil {
+			chart, err = loader.LoadArchive(bytes.NewBuffer(raw))
+			if err != nil {
+				e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+				return Failed
+			}
+		}
+
+		var vals map[string]interface{}
+		if step.App.Helm.Values != nil {
+			if step.App.Helm.Values.Library != nil {
+				lib := *step.App.Helm.Values.Library
+				libRaw, err := e.downloadChart(lib.Chart, lib.Version, lib.Repo)
+				if err != nil {
+					e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+					return Failed
+				}
+
+				libChart, err := loader.LoadArchive(bytes.NewBuffer(libRaw))
+				if err != nil {
+					e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+					return Failed
+				}
+
+				for _, file := range libChart.Files {
+					if file.Name == lib.File {
+						v, err := chartutil.ReadValues(file.Data)
+						if err != nil {
+							e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+							return Failed
+						}
+						vals = v.AsMap()
+					}
+				}
+			}
+
+			if step.App.Helm.Values.Raw != nil {
+				// order is important - favor raw values
+				vals = mergeVals(*step.App.Helm.Values.Raw, vals)
+			}
 		}
 
 		logs := &bytes.Buffer{}
@@ -173,10 +214,10 @@ func (e *Engine) executeActionStep(step *template.Step) Status {
 		args := helm.Args{
 			Name:      step.App.Name,
 			Namespace: step.App.Namespace,
-			Endpoint:  endpoint,
-			Token:     token,
+			Endpoint:  cluster.Endpoint(),
+			Token:     cluster.Token(),
 			Chart:     chart,
-			Values:    vals, // FIXME
+			Values:    vals,
 			Wait:      step.App.Helm.Wait,
 			Logger:    helmLogger,
 		}
@@ -283,13 +324,13 @@ func getApp(name string, apps []template.App) (*template.App, error) {
 	return nil, errors.New("app definition not found")
 }
 
-func getClusterInfo(c string, l []*cluster.Cluster) (string, string, error) {
+func getCluster(c string, l []*cluster.Cluster) *cluster.Cluster {
 	for _, cluster := range l {
 		if cluster.Name() == c {
-			return cluster.Endpoint(), cluster.Token(), nil
+			return cluster
 		}
 	}
-	return "", "", errors.New("cluster not found")
+	return nil
 }
 
 func getRepoInfo(r string, l []*repo.Repo) (string, error) {
@@ -299,4 +340,18 @@ func getRepoInfo(r string, l []*repo.Repo) (string, error) {
 		}
 	}
 	return "", errors.New("repo not found")
+}
+
+func mergeVals(one, two map[string]interface{}) map[string]interface{} {
+	if one == nil {
+		one = make(map[string]interface{})
+	}
+	c := &chart.Chart{}
+	c.Values = one
+
+	v, err := chartutil.CoalesceValues(c, two)
+	if err != nil {
+		return nil
+	}
+	return v.AsMap()
 }
