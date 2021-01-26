@@ -40,6 +40,8 @@ func (m *Mongo) CheckReady() error {
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
+
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
 		return err
 	}
@@ -57,6 +59,7 @@ func (m *Mongo) IDs(coll string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer client.Disconnect(ctx)
 
 	c := client.Database(m.db).Collection(coll)
 	r, err := c.Distinct(ctx, "uuid", bson.D{})
@@ -79,6 +82,7 @@ func (m *Mongo) GetEvents(coll, uuid string) ([]*StoredEvent, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer client.Disconnect(ctx)
 
 	c := client.Database(m.db).Collection(coll)
 	cur, err := c.Find(ctx, bson.M{"uuid": uuid})
@@ -112,6 +116,7 @@ func (m *Mongo) GetVersion(coll, uuid string) int {
 	if err != nil {
 		return 0
 	}
+	defer client.Disconnect(ctx)
 
 	c := client.Database(m.db).Collection(coll)
 	opts := options.FindOne()
