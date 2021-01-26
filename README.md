@@ -24,5 +24,8 @@ Documentation published with github pages [here](https://redsailtechnologies.git
   * Deployment trigger improvement
 * 0.8
   * Azure Devops service hook helper plugin
+  * Mongo security
 * 0.9
   * Approval steps
+  * External links
+  * Outstanding bug fixes
