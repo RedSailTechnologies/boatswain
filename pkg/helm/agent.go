@@ -5,10 +5,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"time"
 
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/repo"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -45,6 +47,13 @@ type Args struct {
 
 // CheckIndex checks the index.yaml file at the repo's endpoint
 func (a DefaultAgent) CheckIndex(r *repo.ChartRepository) bool {
+	getter, err := getter.NewHTTPGetter(getter.WithTimeout(1 * time.Second))
+	if err != nil {
+		logger.Warn("couldn't get http getter", "error", err)
+		return false
+	}
+
+	r.Client = getter
 	str, err := r.DownloadIndexFile()
 	return str != "" && err == nil
 }

@@ -1,7 +1,9 @@
 package git
 
 import (
+	"context"
 	"io/ioutil"
+	"time"
 
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
@@ -39,7 +41,10 @@ func (a DefaultAgent) CheckRepo(endpoint, username, password string) bool {
 			"+refs/heads/*:refs/remotes/origin/*",
 		},
 	}
-	err := r.Fetch(&fo)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	err := r.FetchContext(ctx, &fo)
 
 	// check that in addition to not having an error, we have at least one ref
 	if err != nil || len(store.ReferenceStorage) == 0 {
