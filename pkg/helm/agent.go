@@ -47,7 +47,7 @@ type Args struct {
 
 // CheckIndex checks the index.yaml file at the repo's endpoint
 func (a DefaultAgent) CheckIndex(r *repo.ChartRepository) bool {
-	getter, err := getter.NewHTTPGetter(getter.WithTimeout(1 * time.Second))
+	getter, err := getter.NewHTTPGetter(getter.WithTimeout(500*time.Millisecond), getter.WithInsecureSkipVerifyTLS(true))
 	if err != nil {
 		logger.Warn("couldn't get http getter", "error", err)
 		return false

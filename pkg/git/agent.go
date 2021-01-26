@@ -42,7 +42,7 @@ func (a DefaultAgent) CheckRepo(endpoint, username, password string) bool {
 		},
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 	defer cancel()
 	err := r.FetchContext(ctx, &fo)
 
