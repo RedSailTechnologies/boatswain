@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.4.2
+* 28c78bc always defer a disconnect once we know we have a client (#49)
+* a609aa5 Feature/values (#48)
+* f37e9c4 changes for 0.4.1 (#46)
+
 ## v0.4.1
 * 901728e Hotfix/fix the db name so its common (#42)
 * 98967f9 feature/changes for 0.4 (#41)
