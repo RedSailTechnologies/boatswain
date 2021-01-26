@@ -12,17 +12,17 @@ A kubernetes-native CD tool with first-class support for Helm v3.
 Documentation published with github pages [here](https://redsailtechnologies.github.io/boatswain/).
 
 ## Roadmap
-* 0.4
-  * Service health checks
-  * Dev/debug canaries
 * 0.5
-  * Cthulu first cut
-    * azdo plugin
-    * triggers
-    * PR canaries
-* 0.6+
-  * Mongodb security (for helm)
-  * External links from a run
-  * Enhance application filtering
-  * Update storage layer to have filtering
-  * TBD
+  * Demo version changes
+  * Fix Repo page read issue
+* 0.6
+  * Cluster agent and clusters rework
+  * Clean up Helm charts for public deployment
+* 0.7
+  * Trigger service (move out of deployments)
+  * Testing steps
+  * Deployment trigger improvement
+* 0.8
+  * Azure Devops service hook helper plugin
+* 0.9
+  * Approval steps
