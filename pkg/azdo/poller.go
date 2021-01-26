@@ -8,12 +8,13 @@ import (
 	"github.com/microsoft/azure-devops-go-api/azuredevops/build"
 )
 
+// Poller watches azdo projects to create triggers based on events
 type Poller struct {
 	token string
 	url   string
 }
 
-func (p *Poller) GetBuilds(proj string, prID int) ([]string, []string) {
+func (p *Poller) GetCompletedPRBuilds(proj string, prID int) ([]string, []string) {
 	connection := azuredevops.NewPatConnection(p.url, p.token)
 	ctx := context.Background()
 	client, err := build.NewClient(ctx, connection)

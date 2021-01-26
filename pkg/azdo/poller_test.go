@@ -32,10 +32,10 @@ func TestPoller(t *testing.T) {
 		}
 		fmt.Println()
 
-		prs, prIDs := sut.GetPullRequests(id, "active")
+		prs, _ := sut.GetPullRequests(id, "active")
 		fmt.Println("Pull Requests (Hammerhead, Active):")
-		for i, p := range prs {
-			fmt.Printf("    %s %d\n", p, prIDs[i])
+		for _, p := range prs {
+			fmt.Printf("    %s %d\n", p.Title, p.ID)
 		}
 		fmt.Println()
 
@@ -45,6 +45,18 @@ func TestPoller(t *testing.T) {
 		// 	fmt.Printf("    %s    %s\n", b, buildNums[i])
 		// }
 		// fmt.Println()
+	} else {
+		assert.True(t, false)
+	}
+}
+
+func TestAgentTemp(t *testing.T) {
+	if val, ok := os.LookupEnv("TOKEN"); ok {
+		sut := &DefaultAgent{
+			token: val,
+			url:   "https://dev.azure.com/smithtech/",
+		}
+		sut.GetEvents("99f96c49-1feb-43e5-b194-7d3e518924ab")
 	} else {
 		assert.True(t, false)
 	}

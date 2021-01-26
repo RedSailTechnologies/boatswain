@@ -2,15 +2,24 @@ package azdo
 
 import (
 	"context"
+	"errors"
+	"time"
+
+	"github.com/redsailtechnologies/boatswain/pkg/logger"
+
+	"github.com/google/uuid"
 
 	"github.com/microsoft/azure-devops-go-api/azuredevops"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/core"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/git"
+	"github.com/microsoft/azure-devops-go-api/azuredevops/servicehooks"
 )
 
 // Agent is the interface for interacting with an azdo project
 type Agent interface {
 	GetProjects() []string
+	GetPullRequests(repoID, status string) ([]*PullRequest, error)
+	GetRepositories(proj string) ([]*GitRepo, error)
 }
 
 // DefaultAgent is the default implementation of the azdo agent
@@ -25,6 +34,34 @@ func NewDefaultAgent(u, t string) *DefaultAgent {
 		token: t,
 		url:   u,
 	}
+}
+
+func (a *DefaultAgent) GetEvents(subID string) error {
+	connection := azuredevops.NewPatConnection(a.url, a.token)
+	ctx := context.Background()
+	client := servicehooks.NewClient(ctx, connection)
+
+	tempUUID, _ := uuid.Parse(subID)
+	sub, _ := client.GetSubscription(ctx, servicehooks.GetSubscriptionArgs{
+		SubscriptionId: &tempUUID,
+	})
+	if sub == nil {
+		return errors.New("something")
+	}
+
+	var notifications *[]servicehooks.Notification
+	for notifications == nil || len(*notifications) < 1 {
+		notifications, _ = client.GetNotifications(ctx, servicehooks.GetNotificationsArgs{
+			SubscriptionId: &tempUUID,
+		})
+		if notifications == nil {
+			return errors.New("something")
+		}
+		logger.Info("notifications found", "len", len(*notifications))
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	return nil
 }
 
 // GetPullRequests gets all pull requests based on the repo id and the pr status
