@@ -34,7 +34,8 @@ func main() {
 
 	authAgent := auth.NewOIDCAgent(authCfg)
 
-	hooks := twirp.ChainHooks(tw.JWTHook(authAgent), tw.LoggingHooks())
+	// hooks := twirp.ChainHooks(tw.JWTHook(authAgent), tw.LoggingHooks())
+	hooks := twirp.ChainHooks(tw.LoggingHooks())
 
 	r := repo.NewService(authAgent, git.DefaultAgent{}, helm.DefaultAgent{}, store)
 	repTwirp := rep.NewRepoServer(r, hooks, twirp.WithServerPathPrefix("/api"))
@@ -47,5 +48,5 @@ func main() {
 	mux.Handle(healthTwirp.PathPrefix(), healthTwirp)
 
 	logger.Info("starting poseidon component...I am Poseidon!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, authAgent.Wrap(mux)))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, mux))
 }
