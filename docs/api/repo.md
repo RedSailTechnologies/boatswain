@@ -62,6 +62,7 @@ Repo is the service managing external repositories, such as helm.
 | name | [string](#string) |  | name of the repo |
 | endpoint | [string](#string) |  | repo endpoint |
 | type | [RepoType](#redsail.bosn.RepoType) |  | type of repo |
+| token | [string](#string) |  | an auth token (if required for this repo) |
 
 
 
@@ -219,6 +220,7 @@ Repo is the service managing external repositories, such as helm.
 | name | [string](#string) |  | name of the repo |
 | endpoint | [string](#string) |  | repo endpoint |
 | type | [RepoType](#redsail.bosn.RepoType) |  | type of repo |
+| token | [string](#string) |  | an auth token (if required for this repo) |
 | ready | [bool](#bool) |  | repo ready status, based on whether index.yaml can be fetched |
 
 
@@ -263,6 +265,7 @@ Repo is the service managing external repositories, such as helm.
 | name | [string](#string) |  | name of the repo |
 | endpoint | [string](#string) |  | repo endpoint |
 | type | [RepoType](#redsail.bosn.RepoType) |  | type of repo |
+| token | [string](#string) |  | an auth token (if required for this repo) |
 
 
 
@@ -300,7 +303,6 @@ Repo is the service managing external repositories, such as helm.
 | Read | [ReadRepo](#redsail.bosn.ReadRepo) | [RepoRead](#redsail.bosn.RepoRead) | reads out a repo |
 | Find | [FindRepo](#redsail.bosn.FindRepo) | [RepoFound](#redsail.bosn.RepoFound) | finds the repo uuid by name |
 | All | [ReadRepos](#redsail.bosn.ReadRepos) | [ReposRead](#redsail.bosn.ReposRead) | gets all repos currently configured and their status |
-| Chart | [ReadChart](#redsail.bosn.ReadChart) | [ChartRead](#redsail.bosn.ChartRead) | gets a chart from this helm repository |
 | File | [ReadFile](#redsail.bosn.ReadFile) | [FileRead](#redsail.bosn.FileRead) | gets the contents of a file from this git repository |
 
  

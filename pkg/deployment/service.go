@@ -204,7 +204,7 @@ func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.
 		return nil, tw.ToTwirpError(err, "error loading Repo for Deployment")
 	}
 
-	f := s.git.GetFile(r.Endpoint(), d.Branch(), d.FilePath(), "", "")
+	f := s.git.GetFile(r.Endpoint(), r.Token(), d.Branch(), d.FilePath())
 	if f == nil {
 		logger.Error("could not get deployment file")
 		return nil, twirp.NotFoundError("deployment file not found")
@@ -241,7 +241,7 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 		return nil, tw.ToTwirpError(err, "error loading Repo for Deployment")
 	}
 
-	f := s.git.GetFile(repo.Endpoint(), d.Branch(), d.FilePath(), "", "")
+	f := s.git.GetFile(repo.Endpoint(), repo.Token(), d.Branch(), d.FilePath())
 	if f == nil {
 		logger.Error("could not get deployment file")
 		return nil, twirp.NotFoundError("deployment file not found")
