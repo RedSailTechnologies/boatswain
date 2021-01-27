@@ -4,8 +4,6 @@ import (
 	"context"
 
 	"github.com/twitchtv/twirp"
-	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/repo"
 
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
@@ -47,7 +45,7 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreate
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, Type(cmd.Type), ddd.NewTimestamp())
+	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, cmd.Token, Type(cmd.Type), ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "could not create Repo")
@@ -74,7 +72,7 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdate
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
-	err = r.Update(cmd.Name, cmd.Endpoint, Type(cmd.Type), ddd.NewTimestamp())
+	err = r.Update(cmd.Name, cmd.Endpoint, cmd.Token, Type(cmd.Type), ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error updating Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "Repo could not be updated")
@@ -212,32 +210,6 @@ func (s Service) All(ctx context.Context, req *pb.ReadRepos) (*pb.ReposRead, err
 	return resp, nil
 }
 
-// Chart gets all the charts for this repository
-func (s Service) Chart(ctx context.Context, req *pb.ReadChart) (*pb.ChartRead, error) {
-	if err := s.auth.Authorize(ctx, auth.Editor); err != nil {
-		return nil, tw.ToTwirpError(err, "not authorized")
-	}
-
-	r, err := s.read.Load(req.RepoId)
-	if err != nil {
-		return nil, tw.ToTwirpError(err, "error loading Repo")
-	}
-
-	if r.Type() != HELM {
-		logger.Warn("cannot get chart for non-helm repo")
-		return nil, twirp.InvalidArgumentError("repo", "must be a helm repo")
-	}
-
-	_, err = r.toChartRepo()
-	if err != nil {
-		logger.Error("error converting Repo to helm chart repo", "error", err)
-		return nil, twirp.InternalError("error converting Repo to helm chart repo")
-	}
-
-	// FIXME - here we just want to get a single chart's contents
-	return nil, nil
-}
-
 // File gets the contents of a file from the git repo
 func (s Service) File(ctx context.Context, req *pb.ReadFile) (*pb.FileRead, error) {
 	if err := s.auth.Authorize(ctx, auth.Editor); err != nil {
@@ -259,7 +231,7 @@ func (s Service) File(ctx context.Context, req *pb.ReadFile) (*pb.FileRead, erro
 		return nil, twirp.InvalidArgumentError("repo", "status is offline")
 	}
 
-	file := s.git.GetFile(r.Endpoint(), req.Branch, req.FilePath, "", "") // FIXME auth here
+	file := s.git.GetFile(r.Endpoint(), r.Token(), req.Branch, req.FilePath)
 	if file == nil {
 		return nil, twirp.NotFoundError("file not found")
 	}
@@ -275,16 +247,11 @@ func (s Service) Ready() error {
 }
 
 func (s Service) gitRepoReady(r *Repo) bool {
-	return s.git.CheckRepo(r.Endpoint(), "", "") // FIXME auth here
+	return s.git.CheckRepo(r.Endpoint(), r.Token())
 }
 
 func (s Service) helmRepoReady(r *Repo) bool {
-	cr, err := r.toChartRepo()
-	if err != nil {
-		logger.Error("error converting Repo to helm chart repo", "error", err)
-		return false
-	}
-	return s.helm.CheckIndex(cr)
+	return s.helm.CheckIndex(r.Name(), r.Endpoint(), r.Token())
 }
 
 func buildChartURL(repoURL string, chart string) string {
@@ -292,20 +259,4 @@ func buildChartURL(repoURL string, chart string) string {
 		repoURL = repoURL + "/"
 	}
 	return repoURL + chart
-}
-
-func (r *Repo) toChartRepo() (*repo.ChartRepository, error) {
-	providers := []getter.Provider{
-		getter.Provider{
-			Schemes: []string{"http", "https"},
-			New:     getter.NewHTTPGetter,
-		},
-	}
-
-	entry := &repo.Entry{
-		Name: r.Name(),
-		URL:  r.Endpoint(),
-	}
-
-	return repo.NewChartRepository(entry, providers)
 }

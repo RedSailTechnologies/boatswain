@@ -149,7 +149,7 @@ func (e *Engine) replaceTemplate(y map[string]interface{}, k string, t Substitut
 		return nil, err
 	}
 
-	file := e.git.GetFile(r.Endpoint(), t.Branch, t.Name, "", "")
+	file := e.git.GetFile(r.Endpoint(), r.Token(), t.Branch, t.Name)
 	if file == nil {
 		return nil, errors.New("file not found")
 	}

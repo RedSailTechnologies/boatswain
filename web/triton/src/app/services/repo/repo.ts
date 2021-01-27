@@ -6,6 +6,7 @@ export interface CreateRepo {
     name: string;
     endpoint: string;
     type: string;
+    token: string;
     
 }
 
@@ -13,6 +14,7 @@ interface CreateRepoJSON {
     name: string;
     endpoint: string;
     type: string;
+    token: string;
     
 }
 
@@ -22,6 +24,7 @@ const CreateRepoToJSON = (m: CreateRepo): CreateRepoJSON => {
         name: m.name,
         endpoint: m.endpoint,
         type: m.type,
+        token: m.token,
         
     };
 };
@@ -47,6 +50,7 @@ export interface UpdateRepo {
     name: string;
     endpoint: string;
     type: string;
+    token: string;
     
 }
 
@@ -55,6 +59,7 @@ interface UpdateRepoJSON {
     name: string;
     endpoint: string;
     type: string;
+    token: string;
     
 }
 
@@ -65,6 +70,7 @@ const UpdateRepoToJSON = (m: UpdateRepo): UpdateRepoJSON => {
         name: m.name,
         endpoint: m.endpoint,
         type: m.type,
+        token: m.token,
         
     };
 };
@@ -142,6 +148,7 @@ export interface RepoRead {
     name: string;
     endpoint: string;
     type: string;
+    token: string;
     ready: boolean;
     
 }
@@ -151,6 +158,7 @@ interface RepoReadJSON {
     name: string;
     endpoint: string;
     type: string;
+    token: string;
     ready: boolean;
     
 }
@@ -163,6 +171,7 @@ const JSONToRepoRead = (m: RepoRead | RepoReadJSON): RepoRead => {
         name: m.name,
         endpoint: m.endpoint,
         type: m.type,
+        token: m.token,
         ready: m.ready,
         
     };
@@ -254,15 +263,6 @@ interface ReadChartJSON {
 }
 
 
-const ReadChartToJSON = (m: ReadChart): ReadChartJSON => {
-    return {
-        repo_id: m.repoId,
-        name: m.name,
-        version: m.version,
-        
-    };
-};
-
 export interface ChartRead {
     chart: string;
     
@@ -273,14 +273,6 @@ interface ChartReadJSON {
     
 }
 
-
-const JSONToChartRead = (m: ChartRead | ChartReadJSON): ChartRead => {
-    
-    return {
-        chart: m.chart,
-        
-    };
-};
 
 export interface ReadFile {
     repoId: string;
@@ -337,8 +329,6 @@ export interface Repo {
     find: (findRepo: FindRepo) => Promise<RepoFound>;
     
     all: (readRepos: ReadRepos) => Promise<ReposRead>;
-    
-    chart: (readChart: ReadChart) => Promise<ChartRead>;
     
     file: (readFile: ReadFile) => Promise<FileRead>;
     
@@ -442,21 +432,6 @@ export class DefaultRepo implements Repo {
             }
 
             return resp.json().then(JSONToReposRead);
-        });
-    }
-    
-    chart(readChart: ReadChart): Promise<ChartRead> {
-        const url = this.hostname + this.pathPrefix + "Chart";
-        let body: ReadChart | ReadChartJSON = readChart;
-        if (!this.writeCamelCase) {
-            body = ReadChartToJSON(readChart);
-        }
-        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
-            if (!resp.ok) {
-                return throwTwirpError(resp);
-            }
-
-            return resp.json().then(JSONToChartRead);
         });
     }
     

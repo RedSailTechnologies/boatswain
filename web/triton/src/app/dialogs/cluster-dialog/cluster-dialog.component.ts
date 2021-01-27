@@ -70,7 +70,7 @@ export class ClusterDialogComponent implements OnInit {
       promise = this.client.create(cluster);
     } else {
       cluster = <UpdateCluster>{
-        "uuid": this.cluster != null ? this.cluster.uuid : null,
+        "uuid": this.cluster.uuid,
         "name": this.clusterForm.controls["name"].value,
         "endpoint": this.clusterForm.controls["endpoint"].value,
         "token": this.clusterForm.controls["token"].value == "***" ? this.cluster.token : this.clusterForm.controls["token"].value,

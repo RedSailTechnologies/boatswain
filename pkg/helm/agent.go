@@ -20,9 +20,8 @@ import (
 
 // Agent is the interface we use to talk to helm packages
 type Agent interface {
-	CheckIndex(*repo.ChartRepository) bool
-	GetChart(name, version, endpoint string) ([]byte, error)
-	GetCharts(*repo.ChartRepository) (map[string]repo.ChartVersions, error)
+	CheckIndex(name, endpoint, token string) bool
+	GetChart(name, version, endpoint, token string) ([]byte, error)
 	Install(args Args) (*release.Release, error)
 	Rollback(version int, args Args) error
 	Test(args Args) (*release.Release, error)
@@ -46,7 +45,12 @@ type Args struct {
 }
 
 // CheckIndex checks the index.yaml file at the repo's endpoint
-func (a DefaultAgent) CheckIndex(r *repo.ChartRepository) bool {
+func (a DefaultAgent) CheckIndex(name, endpoint, token string) bool {
+	r, err := toChartRepo(name, endpoint, token)
+	if err != nil {
+		return false
+	}
+
 	getter, err := getter.NewHTTPGetter(getter.WithTimeout(500*time.Millisecond), getter.WithInsecureSkipVerifyTLS(true))
 	if err != nil {
 		logger.Warn("couldn't get http getter", "error", err)
@@ -59,7 +63,7 @@ func (a DefaultAgent) CheckIndex(r *repo.ChartRepository) bool {
 }
 
 // GetChart downloads a single chart from a particular chart repo
-func (a DefaultAgent) GetChart(name, version, endpoint string) ([]byte, error) {
+func (a DefaultAgent) GetChart(name, version, endpoint, token string) ([]byte, error) {
 	out := os.TempDir()
 
 	pull := action.NewPull()
@@ -94,21 +98,6 @@ func (a DefaultAgent) GetChart(name, version, endpoint string) ([]byte, error) {
 	}
 
 	return bytes, nil
-}
-
-// GetCharts gets all charts from a particular chart repo
-func (a DefaultAgent) GetCharts(r *repo.ChartRepository) (map[string]repo.ChartVersions, error) {
-	str, err := r.DownloadIndexFile()
-	if err != nil {
-		return nil, err
-	}
-
-	idx, err := repo.LoadIndexFile(str)
-	if err != nil {
-		return nil, err
-	}
-
-	return idx.Entries, nil
 }
 
 // Install is the equivalent of `helm install`
@@ -186,4 +175,22 @@ func helmClient(endpoint, token, namespace string, logger func(t string, a ...in
 	}
 
 	return actionConfig, nil
+}
+
+func toChartRepo(name, endpoint, token string) (*repo.ChartRepository, error) {
+	providers := []getter.Provider{
+		getter.Provider{
+			Schemes: []string{"http", "https"},
+			New:     getter.NewHTTPGetter,
+		},
+	}
+
+	entry := &repo.Entry{
+		Name:     name,
+		URL:      endpoint,
+		Username: "boatswain", // much like git, just can't be ""
+		Password: token,
+	}
+
+	return repo.NewChartRepository(entry, providers)
 }

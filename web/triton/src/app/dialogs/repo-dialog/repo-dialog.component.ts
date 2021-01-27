@@ -19,6 +19,7 @@ export class RepoDialogComponent implements OnInit {
   public repoForm: FormGroup = new FormGroup({
     name: new FormControl(''),
     endpoint: new FormControl(''),
+    token: new FormControl(''),
     type: new FormControl(''),
   });
   public isAdd: boolean;
@@ -32,10 +33,11 @@ export class RepoDialogComponent implements OnInit {
     this.title = data["title"];
     this.isAdd = data["type"] == "add";
     if (!this.isAdd) {
-      var repo = data["repo"];
-      this.repoForm.controls["name"].setValue(repo.name);
-      this.repoForm.controls["endpoint"].setValue(repo.endpoint);
-      this.repoForm.controls["type"].setValue(repo.type);
+      this.repo = data["repo"];
+      this.repoForm.controls["name"].setValue(this.repo.name);
+      this.repoForm.controls["endpoint"].setValue(this.repo.endpoint);
+      this.repoForm.controls["token"].setValue("***");
+      this.repoForm.controls["type"].setValue(this.repo.type);
     }
     this.client = new DefaultRepo(`${location.protocol}//${location.host}/api`, auth.fetch());
   }
@@ -60,17 +62,18 @@ export class RepoDialogComponent implements OnInit {
     var repo
     if (this.isAdd) {
       repo = <CreateRepo>{
-        "uuid": this.repo != null ? this.repo.uuid : null,
         "name": this.repoForm.controls["name"].value,
         "endpoint": this.repoForm.controls["endpoint"].value,
+        "token": this.repoForm.controls["token"].value == "***" ? this.repo.token : this.repoForm.controls["token"].value,
         "type": <string><unknown>this.typeEnum(),
       };
       promise = this.client.create(repo);
     } else {
       repo = <UpdateRepo>{
-        "uuid": this.repo != null ? this.repo.uuid : null,
+        "uuid": this.repo.uuid,
         "name": this.repoForm.controls["name"].value,
         "endpoint": this.repoForm.controls["endpoint"].value,
+        "token": this.repoForm.controls["token"].value == "***" ? this.repo.token : this.repoForm.controls["token"].value,
         "type": <string><unknown>this.typeEnum(),
       };
       promise = this.client.update(repo);
