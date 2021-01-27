@@ -55,9 +55,9 @@ func NewService(a auth.Agent, g git.Agent, s storage.Storage) *Service {
 
 // Create adds a deployment to the list of configurations
 func (s Service) Create(ctx context.Context, cmd *pb.CreateDeployment) (*pb.DeploymentCreated, error) {
-	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
-		return nil, tw.ToTwirpError(err, "not authorized")
-	}
+	// if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
+	// 	return nil, tw.ToTwirpError(err, "not authorized")
+	// }
 
 	d, err := Create(ddd.NewUUID(), cmd.Name, cmd.RepoId, cmd.Branch, cmd.FilePath, ddd.NewTimestamp())
 	if err != nil {
@@ -76,9 +76,9 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateDeployment) (*pb.Depl
 
 // Update edits an already existing deployment
 func (s Service) Update(ctx context.Context, cmd *pb.UpdateDeployment) (*pb.DeploymentUpdated, error) {
-	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
-		return nil, tw.ToTwirpError(err, "not authorized")
-	}
+	// if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
+	// 	return nil, tw.ToTwirpError(err, "not authorized")
+	// }
 
 	d, err := s.read.Load(cmd.Uuid)
 	if err != nil {
@@ -103,9 +103,9 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateDeployment) (*pb.Depl
 
 // Destroy removes a deployment from the list of configurations
 func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyDeployment) (*pb.DeploymentDestroyed, error) {
-	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
-		return nil, tw.ToTwirpError(err, "not authorized")
-	}
+	// if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
+	// 	return nil, tw.ToTwirpError(err, "not authorized")
+	// }
 
 	d, err := s.read.Load(cmd.Uuid)
 	if err != nil {
@@ -134,9 +134,9 @@ func (s Service) Destroy(ctx context.Context, cmd *pb.DestroyDeployment) (*pb.De
 
 // Read reads out a deployment
 func (s Service) Read(ctx context.Context, req *pb.ReadDeployment) (*pb.DeploymentRead, error) {
-	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
-		return nil, tw.ToTwirpError(err, "not authorized")
-	}
+	// if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+	// 	return nil, tw.ToTwirpError(err, "not authorized")
+	// }
 
 	d, err := s.read.Load(req.Uuid)
 	if err != nil {
@@ -162,9 +162,9 @@ func (s Service) Read(ctx context.Context, req *pb.ReadDeployment) (*pb.Deployme
 
 // All gets all deployments currently configured and their status
 func (s Service) All(ctx context.Context, req *pb.ReadDeployments) (*pb.DeploymentsRead, error) {
-	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
-		return nil, tw.ToTwirpError(err, "not authorized")
-	}
+	// if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+	// 	return nil, tw.ToTwirpError(err, "not authorized")
+	// }
 
 	resp := &pb.DeploymentsRead{
 		Deployments: make([]*pb.DeploymentReadSummary, 0),
@@ -188,9 +188,9 @@ func (s Service) All(ctx context.Context, req *pb.ReadDeployments) (*pb.Deployme
 
 // Template takes a deployment and templates its yaml out for verification and viewing
 func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.DeploymentTemplated, error) {
-	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
-		return nil, tw.ToTwirpError(err, "not authorized")
-	}
+	// if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+	// 	return nil, tw.ToTwirpError(err, "not authorized")
+	// }
 
 	d, err := s.read.Load(req.Uuid)
 	if err != nil {
@@ -224,9 +224,9 @@ func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.
 
 // Trigger a deployment
 func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.DeploymentTriggered, error) {
-	if err := s.auth.Authorize(ctx, auth.Editor); err != nil {
-		return nil, tw.ToTwirpError(err, "not authorized")
-	}
+	// if err := s.auth.Authorize(ctx, auth.Editor); err != nil {
+	// 	return nil, tw.ToTwirpError(err, "not authorized")
+	// }
 
 	// template/validate the deployment
 	d, err := s.read.Load(cmd.Uuid)
@@ -288,9 +288,9 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 
 // Run reads all the information about a particular run
 func (s Service) Run(ctx context.Context, req *pb.ReadRun) (*pb.RunRead, error) {
-	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
-		return nil, tw.ToTwirpError(err, "not authorized")
-	}
+	// if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+	// 	return nil, tw.ToTwirpError(err, "not authorized")
+	// }
 
 	r, err := s.runRead.Load(req.DeploymentUuid)
 	if err != nil {
@@ -321,9 +321,9 @@ func (s Service) Run(ctx context.Context, req *pb.ReadRun) (*pb.RunRead, error) 
 
 // Runs reads a summary of all runs for a particular deployment
 func (s Service) Runs(ctx context.Context, req *pb.ReadRuns) (*pb.RunsRead, error) {
-	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
-		return nil, tw.ToTwirpError(err, "not authorized")
-	}
+	// if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+	// 	return nil, tw.ToTwirpError(err, "not authorized")
+	// }
 
 	runs, err := s.runRead.All()
 	if err != nil {

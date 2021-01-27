@@ -33,7 +33,8 @@ func main() {
 
 	authAgent := auth.NewOIDCAgent(authCfg)
 
-	hooks := twirp.ChainHooks(tw.JWTHook(authAgent), tw.LoggingHooks())
+	// hooks := twirp.ChainHooks(tw.JWTHook(authAgent), tw.LoggingHooks())
+	hooks := twirp.ChainHooks(tw.LoggingHooks())
 
 	deploy := deployment.NewService(authAgent, &git.DefaultAgent{}, store)
 	dTwirp := dl.NewDeploymentServer(deploy, hooks, twirp.WithServerPathPrefix("/api"))
@@ -46,5 +47,5 @@ func main() {
 	mux.Handle(healthTwirp.PathPrefix(), healthTwirp)
 
 	logger.Info("What? MAGIKARP is evolving?")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, authAgent.Wrap(mux)))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, mux))
 }
