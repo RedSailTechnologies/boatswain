@@ -21,6 +21,11 @@
             <input matInput required formControlName="endpoint" />
         </mat-form-field>
         <br />
+        <mat-form-field appearance="fill" style="width:100%;">
+            <mat-label>Token</mat-label>
+            <input matInput required formControlName="token" />
+        </mat-form-field>
+        <br />
         <mat-form-field>
             <mat-select required placeholder="Type" formControlName="type">
                 <mat-option *ngFor="let type of repoTypes" [value]="type">

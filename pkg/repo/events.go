@@ -14,6 +14,7 @@ type Created struct {
 	UUID      string
 	Name      string
 	Endpoint  string
+	Token     string
 	Type      Type
 }
 
@@ -37,6 +38,7 @@ type Updated struct {
 	Timestamp int64
 	Name      string
 	Endpoint  string
+	Token     string
 	Type      Type
 }
 

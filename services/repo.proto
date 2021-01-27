@@ -24,9 +24,6 @@ service Repo {
     // gets all repos currently configured and their status
     rpc All (ReadRepos) returns (ReposRead);
 
-    // gets a chart from this helm repository
-    rpc Chart (ReadChart) returns (ChartRead);
-
     // gets the contents of a file from this git repository
     rpc File (ReadFile) returns (FileRead);
 }
@@ -35,6 +32,7 @@ message CreateRepo {
     string name = 1; // name of the repo
     string endpoint = 2; // repo endpoint
     RepoType type = 3; // type of repo
+    string token = 4; // an auth token (if required for this repo)
 }
 
 message RepoCreated {}
@@ -44,6 +42,7 @@ message UpdateRepo {
     string name = 2; // name of the repo
     string endpoint = 3; // repo endpoint
     RepoType type = 4; // type of repo
+    string token = 5; // an auth token (if required for this repo)
 }
 
 message RepoUpdated {}
@@ -63,6 +62,7 @@ message RepoRead {
     string name = 2; // name of the repo
     string endpoint = 3; // repo endpoint
     RepoType type = 4; // type of repo
+    string token = 5; // an auth token (if required for this repo)
     bool ready = 6; // repo ready status, based on whether index.yaml can be fetched
 }
 
