@@ -248,32 +248,6 @@ const JSONToReposRead = (m: ReposRead | ReposReadJSON): ReposRead => {
     };
 };
 
-export interface ReadChart {
-    repoId: string;
-    name: string;
-    version: string;
-    
-}
-
-interface ReadChartJSON {
-    repo_id: string;
-    name: string;
-    version: string;
-    
-}
-
-
-export interface ChartRead {
-    chart: string;
-    
-}
-
-interface ChartReadJSON {
-    chart: string;
-    
-}
-
-
 export interface ReadFile {
     repoId: string;
     branch: string;

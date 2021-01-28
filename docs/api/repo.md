@@ -4,12 +4,10 @@
 ## Table of Contents
 
 - [repo.proto](#repo.proto)
-    - [ChartRead](#redsail.bosn.ChartRead)
     - [CreateRepo](#redsail.bosn.CreateRepo)
     - [DestroyRepo](#redsail.bosn.DestroyRepo)
     - [FileRead](#redsail.bosn.FileRead)
     - [FindRepo](#redsail.bosn.FindRepo)
-    - [ReadChart](#redsail.bosn.ReadChart)
     - [ReadFile](#redsail.bosn.ReadFile)
     - [ReadRepo](#redsail.bosn.ReadRepo)
     - [ReadRepos](#redsail.bosn.ReadRepos)
@@ -34,21 +32,6 @@
 
 ## repo.proto
 Repo is the service managing external repositories, such as helm.
-
-
-<a name="redsail.bosn.ChartRead"></a>
-
-### ChartRead
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| chart | [bytes](#bytes) |  | the contents of the chart |
-
-
-
-
 
 
 <a name="redsail.bosn.CreateRepo"></a>
@@ -108,23 +91,6 @@ Repo is the service managing external repositories, such as helm.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  | the name of the repo to search for |
-
-
-
-
-
-
-<a name="redsail.bosn.ReadChart"></a>
-
-### ReadChart
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| repo_id | [string](#string) |  | unique id of the repo |
-| name | [string](#string) |  | name of the chart |
-| version | [string](#string) |  | chart version |
 
 
 
