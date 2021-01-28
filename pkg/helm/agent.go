@@ -1,10 +1,12 @@
 package helm
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"time"
 
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
@@ -50,8 +52,35 @@ func (a DefaultAgent) CheckIndex(name, endpoint, token string) bool {
 		return false
 	}
 
-	str, err := r.DownloadIndexFile()
-	return str != "" && err == nil
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ch := make(chan error, 1)
+
+	// FIXME AdamP - This is really a hack, and leaves goroutines lingering, but the underlying problem
+	// is that the DownloadIndexFile call has a timeout, but no context. So while we can see if it took
+	// a while to get a response, we can't stop it from taking as long as it wants. My big problem with
+	// this approach is that we just leave goroutines out there to finish and we'd rather cancel them.
+	// Maybe we should consider just skipping repo status checks altogether, depending on their use.
+	go func() {
+		_, err := r.DownloadIndexFile()
+		if err != nil {
+			logger.Warn("error downloading repo index", "error", err)
+		}
+
+		select {
+		default:
+			ch <- err
+		case <-ctx.Done():
+			return
+		}
+	}()
+
+	select {
+	case err := <-ch:
+		return err == nil
+	case <-time.After(500 * time.Millisecond):
+		return false
+	}
 }
 
 // GetChart downloads a single chart from a particular chart repo
@@ -171,17 +200,24 @@ func helmClient(endpoint, token, namespace string, logger func(t string, a ...in
 
 func toChartRepo(name, endpoint, token string) (*repo.ChartRepository, error) {
 	providers := []getter.Provider{
-		getter.Provider{
+		{
 			Schemes: []string{"http", "https"},
 			New:     getter.NewHTTPGetter,
 		},
 	}
 
+	// set the username to anything if the token is set
+	un := ""
+	if token != "" {
+		un = "boatswain"
+	}
+
 	entry := &repo.Entry{
 		Name:     name,
 		URL:      endpoint,
-		Username: "boatswain", // much like git, just can't be ""
+		Username: un,
 		Password: token,
+		// InsecureSkipTLSverify: true, // FIXME - give this option to the user
 	}
 
 	return repo.NewChartRepository(entry, providers)

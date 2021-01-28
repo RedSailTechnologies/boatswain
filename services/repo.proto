@@ -80,16 +80,6 @@ message ReposRead {
     repeated RepoRead repos = 1; // repos read
 }
 
-message ReadChart {
-    string repo_id = 1; // unique id of the repo
-    string name = 2; // name of the chart
-    string version = 3; // chart version
-}
-
-message ChartRead {
-    bytes chart = 1; // the contents of the chart
-}
-
 message ReadFile {
     string repo_id = 1; // unique id of the repo
     string branch = 2; // the branch to read the file from
