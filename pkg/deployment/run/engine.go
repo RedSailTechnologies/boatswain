@@ -215,8 +215,10 @@ func (e *Engine) executeActionStep(step *template.Step) Status {
 		args := helm.Args{
 			Name:      step.App.Name,
 			Namespace: step.App.Namespace,
+			Cluster:   cluster.Name(),
 			Endpoint:  cluster.Endpoint(),
 			Token:     cluster.Token(),
+			Cert:      cluster.Cert(),
 			Chart:     chart,
 			Values:    vals,
 			Wait:      step.App.Helm.Wait,

@@ -37,8 +37,10 @@ type DefaultAgent struct{}
 type Args struct {
 	Name      string
 	Namespace string
+	Cluster   string
 	Endpoint  string
 	Token     string
+	Cert      string
 	Chart     *chart.Chart
 	Values    map[string]interface{}
 	Wait      bool
@@ -123,7 +125,7 @@ func (a DefaultAgent) GetChart(name, version, endpoint, token string) ([]byte, e
 
 // Install is the equivalent of `helm install`
 func (a DefaultAgent) Install(args Args) (*release.Release, error) {
-	cfg, err := helmClient(args.Endpoint, args.Token, args.Namespace, args.Logger)
+	cfg, err := helmClient(args.Cluster, args.Endpoint, args.Token, args.Cert, args.Namespace, args.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +142,7 @@ func (a DefaultAgent) Install(args Args) (*release.Release, error) {
 
 // Rollback is the equivalent of `helm rollback`
 func (a DefaultAgent) Rollback(version int, args Args) error {
-	cfg, err := helmClient(args.Endpoint, args.Token, args.Namespace, args.Logger)
+	cfg, err := helmClient(args.Cluster, args.Endpoint, args.Token, args.Cert, args.Namespace, args.Logger)
 	if err != nil {
 		return err
 	}
@@ -153,7 +155,7 @@ func (a DefaultAgent) Rollback(version int, args Args) error {
 
 // Test is the equivalent of `helm test`
 func (a DefaultAgent) Test(args Args) (*release.Release, error) {
-	cfg, err := helmClient(args.Endpoint, args.Token, args.Namespace, args.Logger)
+	cfg, err := helmClient(args.Cluster, args.Endpoint, args.Token, args.Cert, args.Namespace, args.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +167,7 @@ func (a DefaultAgent) Test(args Args) (*release.Release, error) {
 
 // Uninstall is the equivalent of `helm uninstall`
 func (a DefaultAgent) Uninstall(args Args) (*release.UninstallReleaseResponse, error) {
-	cfg, err := helmClient(args.Endpoint, args.Token, args.Namespace, args.Logger)
+	cfg, err := helmClient(args.Cluster, args.Endpoint, args.Token, args.Cert, args.Namespace, args.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +178,7 @@ func (a DefaultAgent) Uninstall(args Args) (*release.UninstallReleaseResponse, e
 
 // Upgrade is the equivalent of `helm upgrade`
 func (a DefaultAgent) Upgrade(args Args) (*release.Release, error) {
-	cfg, err := helmClient(args.Endpoint, args.Token, args.Namespace, args.Logger)
+	cfg, err := helmClient(args.Cluster, args.Endpoint, args.Token, args.Cert, args.Namespace, args.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -187,13 +189,18 @@ func (a DefaultAgent) Upgrade(args Args) (*release.Release, error) {
 	return upgrade.Run(args.Name, args.Chart, args.Values)
 }
 
-func helmClient(endpoint, token, namespace string, logger func(t string, a ...interface{})) (*action.Configuration, error) {
+func helmClient(cluster, endpoint, token, cert, namespace string, logger func(t string, a ...interface{})) (*action.Configuration, error) {
+	// FIXME AdamP - we write the ca file for the cluster here temporarily but this could be improved
+	caPath := path.Join(os.TempDir(), fmt.Sprintf("boatswain-%s-cafile", cluster))
+	if _, err := os.Open(caPath); err != nil {
+		ioutil.WriteFile(caPath, []byte(cert), os.ModePerm)
+	}
+
 	flags := &genericclioptions.ConfigFlags{
-		// TODO AdamP - cert needs to be in here
 		APIServer:   &endpoint,
 		BearerToken: &token,
 		Namespace:   &namespace,
-		Insecure:    &[]bool{true}[0], // FIXME
+		CAFile:      &caPath,
 	}
 
 	actionConfig := new(action.Configuration)
