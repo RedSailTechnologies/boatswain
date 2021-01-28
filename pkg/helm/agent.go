@@ -191,8 +191,8 @@ func helmClient(endpoint, token, namespace string, logger func(t string, a ...in
 	flags := &genericclioptions.ConfigFlags{
 		// TODO AdamP - cert needs to be in here
 		APIServer:   &endpoint,
-		Namespace:   &namespace,
 		BearerToken: &token,
+		Namespace:   &namespace,
 		Insecure:    &[]bool{true}[0], // FIXME
 	}
 

@@ -52,50 +52,54 @@ func (s Service) All(ctx context.Context, req *pb.ReadApplications) (*pb.Applica
 			return nil, twirp.InternalError("error getting cluster clientset")
 		}
 
-		deps, err := s.k8s.GetClusterDeployments(clientset, c.Name)
-		if err != nil {
-			return nil, twirp.InternalError("error getting deployments for cluster " + c.Name)
-		}
-
-		for _, dep := range deps {
-			ready := false
-			for _, c := range dep.Status.Conditions {
-				if c.Type == "Available" && c.Status == "True" {
-					ready = true
-				}
+		if s.k8s.GetClusterStatus(clientset, c.Name) {
+			deps, err := s.k8s.GetClusterDeployments(clientset, c.Name)
+			if err != nil {
+				return nil, twirp.InternalError("error getting deployments for cluster " + c.Name)
 			}
-			addApplication(
-				response,
-				dep.Labels["app.kubernetes.io/name"],
-				dep.Labels["app.kubernetes.io/part-of"],
-				dep.Labels["app.kubernetes.io/version"],
-				c.Name,
-				dep.Namespace,
-				ready,
-			)
-		}
 
-		sets, err := s.k8s.GetClusterStatefulSets(clientset, c.Name)
-		if err != nil {
-			return nil, twirp.InternalError("error getting statefulsets for cluster " + c.Name)
-		}
-
-		for _, set := range sets {
-			ready := false
-			for _, c := range set.Status.Conditions {
-				if c.Type == "Available" && c.Status == "True" {
-					ready = true
+			for _, dep := range deps {
+				ready := false
+				for _, c := range dep.Status.Conditions {
+					if c.Type == "Available" && c.Status == "True" {
+						ready = true
+					}
 				}
+				addApplication(
+					response,
+					dep.Labels["app.kubernetes.io/name"],
+					dep.Labels["app.kubernetes.io/part-of"],
+					dep.Labels["app.kubernetes.io/version"],
+					c.Name,
+					dep.Namespace,
+					ready,
+				)
 			}
-			addApplication(
-				response,
-				set.Labels["app.kubernetes.io/name"],
-				set.Labels["app.kubernetes.io/part-of"],
-				set.Labels["app.kubernetes.io/version"],
-				c.Name,
-				set.Namespace,
-				ready,
-			)
+
+			sets, err := s.k8s.GetClusterStatefulSets(clientset, c.Name)
+			if err != nil {
+				return nil, twirp.InternalError("error getting statefulsets for cluster " + c.Name)
+			}
+
+			for _, set := range sets {
+				ready := false
+				for _, c := range set.Status.Conditions {
+					if c.Type == "Available" && c.Status == "True" {
+						ready = true
+					}
+				}
+				addApplication(
+					response,
+					set.Labels["app.kubernetes.io/name"],
+					set.Labels["app.kubernetes.io/part-of"],
+					set.Labels["app.kubernetes.io/version"],
+					c.Name,
+					set.Namespace,
+					ready,
+				)
+			}
+		} else {
+			logger.Warn("could not get applications for cluster as it is not ready", "cluster", c.Name)
 		}
 	}
 	return response, nil
@@ -107,8 +111,11 @@ func (s Service) Ready() error {
 }
 
 func addApplication(resp *pb.ApplicationsRead, name, partOf, version, cluster, namespace string, ready bool) {
-	if name == "" || partOf == "" {
+	if name == "" {
 		return
+	}
+	if partOf == "" {
+		partOf = "(none)"
 	}
 
 	for _, app := range resp.Applications {
