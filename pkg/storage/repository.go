@@ -78,20 +78,21 @@ func (r *ReadRepository) Load(uuid string) (ddd.Aggregate, error) {
 func (r *ReadRepository) unmarshal(events []*StoredEvent) ([]ddd.Event, error) {
 	unmarshaled := make([]ddd.Event, 0)
 	for _, event := range events {
-		if e, ok := r.eventTypes[event.Type]; !ok {
+		var e func() ddd.Event
+		var ok bool
+		if e, ok = r.eventTypes[event.Type]; !ok {
 			return nil, ddd.UnsupportedEventError{
 				EventType: event.Type,
 				Type:      strings.Title(r.name),
 			}
-		} else {
-			out := e()
-			err := json.Unmarshal([]byte(event.Data), &out)
-			if err != nil {
-				return nil, err
-			}
-			unmarshaled = append(unmarshaled, out.(ddd.Event))
 		}
 
+		out := e()
+		err := json.Unmarshal([]byte(event.Data), &out)
+		if err != nil {
+			return nil, err
+		}
+		unmarshaled = append(unmarshaled, out.(ddd.Event))
 	}
 	return unmarshaled, nil
 }

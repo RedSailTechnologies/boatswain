@@ -200,7 +200,7 @@ func helmClient(endpoint, token, namespace string, logger func(t string, a ...in
 
 func toChartRepo(name, endpoint, token string) (*repo.ChartRepository, error) {
 	providers := []getter.Provider{
-		getter.Provider{
+		{
 			Schemes: []string{"http", "https"},
 			New:     getter.NewHTTPGetter,
 		},
