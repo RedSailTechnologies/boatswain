@@ -259,17 +259,17 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 	}
 
 	// validate the trigger
-	user := s.auth.User(ctx)
-	if err = trigger.Validate(&user, cmd, *t); err != nil {
-		logger.Error("invalid trigger", "error", err)
-		return nil, twirp.InternalErrorWith(err)
-	}
+	// user := s.auth.User(ctx)
+	// if err = trigger.Validate(&user, cmd, *t); err != nil {
+	// 	logger.Error("invalid trigger", "error", err)
+	// 	return nil, twirp.InternalErrorWith(err)
+	// }
 
 	// create the run
 	r, err := run.Create(ddd.NewUUID(), cmd.Uuid, t, &trigger.Trigger{
 		Name: cmd.Name,
 		Type: getTriggerType(cmd.Type),
-		User: user,
+		User: auth.User{},
 	})
 
 	// start the engine in the background

@@ -66,6 +66,7 @@ func (e *Engine) Run() {
 	}()
 
 	logger.Info("starting run", "uuid", e.run.UUID(), "start", ddd.NewTimestamp())
+	logger.Debug("template for run", "uuid", e.run.UUID(), "template", e.run.template)
 
 	err := e.run.Start(ddd.NewTimestamp())
 	if err != nil {
@@ -222,6 +223,8 @@ func (e *Engine) executeActionStep(step *template.Step) Status {
 			Logger:    helmLogger,
 		}
 
+		logger.Debug("helm args", "name", args.Name, "namespace", args.Namespace, "values", vals)
+
 		output := ""
 		switch step.App.Helm.Command {
 		case "install":
@@ -247,13 +250,17 @@ func (e *Engine) executeActionStep(step *template.Step) Status {
 			return Failed
 		}
 
+		logger.Debug("output", "output", output)
+		logger.Debug("logs", "logs", logs.String())
+
 		if err != nil {
+			logger.Debug("error", "error", err.Error())
 			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
 			return Failed
 		}
-
 		e.run.AppendLog(logs.String(), Info, ddd.NewTimestamp())
 		e.run.AppendLog(output, Info, ddd.NewTimestamp())
+
 		return Succeeded
 	}
 

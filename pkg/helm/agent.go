@@ -132,6 +132,9 @@ func (a DefaultAgent) Install(args Args) (*release.Release, error) {
 	install.ReleaseName = args.Name
 	install.Namespace = args.Namespace
 	install.Wait = args.Wait
+	install.InsecureSkipTLSverify = true // FIXME
+	logger.Debug("chart", "chart", args.Chart)
+	logger.Debug("running install", "install", install)
 	return install.Run(args.Chart, args.Values)
 }
 
@@ -186,8 +189,11 @@ func (a DefaultAgent) Upgrade(args Args) (*release.Release, error) {
 
 func helmClient(endpoint, token, namespace string, logger func(t string, a ...interface{})) (*action.Configuration, error) {
 	flags := &genericclioptions.ConfigFlags{
+		// TODO AdamP - cert needs to be in here
 		APIServer:   &endpoint,
+		Namespace:   &namespace,
 		BearerToken: &token,
+		Insecure:    &[]bool{true}[0], // FIXME
 	}
 
 	actionConfig := new(action.Configuration)
