@@ -218,6 +218,7 @@ func TestUpdateValid(t *testing.T) {
 		Uuid:     "a",
 		Name:     "NEWname",
 		Endpoint: "http://NEWendpoint",
+		Token:    "abcdefg",
 	})
 
 	assert.Equal(t, &pb.RepoUpdated{}, res)
@@ -468,12 +469,4 @@ func TestDestroyStoreEventError(t *testing.T) {
 func TestBuildChartURL(t *testing.T) {
 	assert.Equal(t, "http://repo.com/chart", buildChartURL("http://repo.com", "chart"))
 	assert.Equal(t, "http://repo.com/chart", buildChartURL("http://repo.com/", "chart"))
-}
-
-// toChartRepo
-func TestToChartRepo(t *testing.T) {
-	sut, _ := Create(ddd.NewUUID(), "name", "https://endpoint", HELM, ddd.NewTimestamp())
-	cr, err := sut.toChartRepo()
-	assert.Nil(t, err)
-	assert.NotNil(t, cr)
 }

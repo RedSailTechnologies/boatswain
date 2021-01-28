@@ -13,6 +13,7 @@ type Repo struct {
 	uuid     string
 	name     string
 	endpoint string
+	token    string
 	repoType Type
 }
 
@@ -26,7 +27,7 @@ func Replay(events []ddd.Event) ddd.Aggregate {
 }
 
 // Create handles create commands
-func Create(uuid, name, endpoint string, t Type, timestamp int64) (*Repo, error) {
+func Create(uuid, name, endpoint, token string, t Type, timestamp int64) (*Repo, error) {
 	if uuid == "" {
 		return nil, ddd.IDError{}
 	}
@@ -40,6 +41,7 @@ func Create(uuid, name, endpoint string, t Type, timestamp int64) (*Repo, error)
 		UUID:      uuid,
 		Name:      name,
 		Endpoint:  endpoint,
+		Token:     token,
 		Type:      t,
 	})
 	return r, nil
@@ -57,7 +59,7 @@ func (r *Repo) Destroy(timestamp int64) error {
 }
 
 // Update handles update commands
-func (r *Repo) Update(name, endpoint string, t Type, timestamp int64) error {
+func (r *Repo) Update(name, endpoint, token string, t Type, timestamp int64) error {
 	err := validateFields(name, endpoint)
 	if err != nil {
 		return err
@@ -69,6 +71,7 @@ func (r *Repo) Update(name, endpoint string, t Type, timestamp int64) error {
 		Timestamp: timestamp,
 		Name:      name,
 		Endpoint:  endpoint,
+		Token:     token,
 		Type:      t,
 	})
 	return nil
@@ -92,6 +95,11 @@ func (r *Repo) Name() string {
 // Endpoint gets the repo's endpoint
 func (r *Repo) Endpoint() string {
 	return r.endpoint
+}
+
+// Token gets the repo's access token
+func (r *Repo) Token() string {
+	return r.token
 }
 
 // Type gets the repo type (helm, git, etc.)
@@ -119,12 +127,14 @@ func (r *Repo) on(event ddd.Event) {
 		r.uuid = e.UUID
 		r.name = e.Name
 		r.endpoint = e.Endpoint
+		r.token = e.Token
 		r.repoType = e.Type
 	case *Destroyed:
 		r.destroyed = true
 	case *Updated:
 		r.name = e.Name
 		r.endpoint = e.Endpoint
+		r.token = e.Token
 		r.repoType = e.Type
 	}
 }

@@ -285,11 +285,11 @@ func (e *Engine) downloadChart(c, v, r string) ([]byte, error) {
 		return nil, err
 	}
 
-	repo, err := getRepoInfo(r, allRepos)
+	endpoint, token, err := getRepoInfo(r, allRepos)
 	if err != nil {
 		return nil, err
 	}
-	return e.helm.GetChart(c, v, repo)
+	return e.helm.GetChart(c, v, endpoint, token)
 }
 
 func (e *Engine) persist() {
@@ -333,13 +333,13 @@ func getCluster(c string, l []*cluster.Cluster) *cluster.Cluster {
 	return nil
 }
 
-func getRepoInfo(r string, l []*repo.Repo) (string, error) {
+func getRepoInfo(r string, l []*repo.Repo) (string, string, error) {
 	for _, repo := range l {
 		if repo.Name() == r {
-			return repo.Endpoint(), nil
+			return repo.Endpoint(), repo.Token(), nil
 		}
 	}
-	return "", errors.New("repo not found")
+	return "", "", errors.New("repo not found")
 }
 
 func mergeVals(one, two map[string]interface{}) map[string]interface{} {

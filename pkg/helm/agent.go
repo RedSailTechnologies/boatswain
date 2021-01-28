@@ -1,6 +1,7 @@
 package helm
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -20,9 +21,8 @@ import (
 
 // Agent is the interface we use to talk to helm packages
 type Agent interface {
-	CheckIndex(*repo.ChartRepository) bool
-	GetChart(name, version, endpoint string) ([]byte, error)
-	GetCharts(*repo.ChartRepository) (map[string]repo.ChartVersions, error)
+	CheckIndex(name, endpoint, token string) bool
+	GetChart(name, version, endpoint, token string) ([]byte, error)
 	Install(args Args) (*release.Release, error)
 	Rollback(version int, args Args) error
 	Test(args Args) (*release.Release, error)
@@ -46,20 +46,45 @@ type Args struct {
 }
 
 // CheckIndex checks the index.yaml file at the repo's endpoint
-func (a DefaultAgent) CheckIndex(r *repo.ChartRepository) bool {
-	getter, err := getter.NewHTTPGetter(getter.WithTimeout(500*time.Millisecond), getter.WithInsecureSkipVerifyTLS(true))
+func (a DefaultAgent) CheckIndex(name, endpoint, token string) bool {
+	r, err := toChartRepo(name, endpoint, token)
 	if err != nil {
-		logger.Warn("couldn't get http getter", "error", err)
 		return false
 	}
 
-	r.Client = getter
-	str, err := r.DownloadIndexFile()
-	return str != "" && err == nil
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ch := make(chan error, 1)
+
+	// FIXME AdamP - This is really a hack, and leaves goroutines lingering, but the underlying problem
+	// is that the DownloadIndexFile call has a timeout, but no context. So while we can see if it took
+	// a while to get a response, we can't stop it from taking as long as it wants. My big problem with
+	// this approach is that we just leave goroutines out there to finish and we'd rather cancel them.
+	// Maybe we should consider just skipping repo status checks altogether, depending on their use.
+	go func() {
+		_, err := r.DownloadIndexFile()
+		if err != nil {
+			logger.Warn("error downloading repo index", "error", err)
+		}
+
+		select {
+		default:
+			ch <- err
+		case <-ctx.Done():
+			return
+		}
+	}()
+
+	select {
+	case err := <-ch:
+		return err == nil
+	case <-time.After(500 * time.Millisecond):
+		return false
+	}
 }
 
 // GetChart downloads a single chart from a particular chart repo
-func (a DefaultAgent) GetChart(name, version, endpoint string) ([]byte, error) {
+func (a DefaultAgent) GetChart(name, version, endpoint, token string) ([]byte, error) {
 	out := os.TempDir()
 
 	pull := action.NewPull()
@@ -94,21 +119,6 @@ func (a DefaultAgent) GetChart(name, version, endpoint string) ([]byte, error) {
 	}
 
 	return bytes, nil
-}
-
-// GetCharts gets all charts from a particular chart repo
-func (a DefaultAgent) GetCharts(r *repo.ChartRepository) (map[string]repo.ChartVersions, error) {
-	str, err := r.DownloadIndexFile()
-	if err != nil {
-		return nil, err
-	}
-
-	idx, err := repo.LoadIndexFile(str)
-	if err != nil {
-		return nil, err
-	}
-
-	return idx.Entries, nil
 }
 
 // Install is the equivalent of `helm install`
@@ -186,4 +196,29 @@ func helmClient(endpoint, token, namespace string, logger func(t string, a ...in
 	}
 
 	return actionConfig, nil
+}
+
+func toChartRepo(name, endpoint, token string) (*repo.ChartRepository, error) {
+	providers := []getter.Provider{
+		{
+			Schemes: []string{"http", "https"},
+			New:     getter.NewHTTPGetter,
+		},
+	}
+
+	// set the username to anything if the token is set
+	un := ""
+	if token != "" {
+		un = "boatswain"
+	}
+
+	entry := &repo.Entry{
+		Name:     name,
+		URL:      endpoint,
+		Username: un,
+		Password: token,
+		// InsecureSkipTLSverify: true, // FIXME - give this option to the user
+	}
+
+	return repo.NewChartRepository(entry, providers)
 }

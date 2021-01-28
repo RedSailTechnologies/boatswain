@@ -1,9 +1,7 @@
 package git
 
 import (
-	"context"
 	"io/ioutil"
-	"time"
 
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
@@ -18,15 +16,15 @@ import (
 
 // Agent is the interface for git interaction
 type Agent interface {
-	CheckRepo(endpoint, username, password string) bool
-	GetFile(endpoint, branch, path, username, password string) []byte
+	CheckRepo(endpoint, token string) bool
+	GetFile(endpoint, token, branch, path string) []byte
 }
 
 // DefaultAgent is the default implementaiton of the Agent interface
 type DefaultAgent struct{}
 
 // CheckRepo tries to fetch from the endpoint to check if it is valid
-func (a DefaultAgent) CheckRepo(endpoint, username, password string) bool {
+func (a DefaultAgent) CheckRepo(endpoint, token string) bool {
 	store := memory.NewStorage()
 	rc := config.RemoteConfig{
 		URLs: []string{
@@ -35,32 +33,25 @@ func (a DefaultAgent) CheckRepo(endpoint, username, password string) bool {
 	}
 	r := git.NewRemote(store, &rc)
 
-	fo := git.FetchOptions{
-		Auth: getAuth(username, password),
-		RefSpecs: []config.RefSpec{
-			"+refs/heads/*:refs/remotes/origin/*",
-		},
-	}
+	refs, err := r.List(&git.ListOptions{
+		Auth: getAuth(token),
+	})
 
-	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
-	defer cancel()
-	err := r.FetchContext(ctx, &fo)
-
-	// check that in addition to not having an error, we have at least one ref
-	if err != nil || len(store.ReferenceStorage) == 0 {
+	// addition to not having an error (although probably sufficient), check we have at least one ref
+	if err != nil || len(refs) == 0 {
 		return false
 	}
 	return true
 }
 
 // GetFile gets a single file from the repo
-func (a DefaultAgent) GetFile(endpoint, branch, path, username, password string) []byte {
+func (a DefaultAgent) GetFile(endpoint, token, branch, path string) []byte {
 	store := memory.NewStorage()
 	fs := memfs.New()
 
 	_, err := git.Clone(store, fs, &git.CloneOptions{
 		URL:           endpoint,
-		Auth:          getAuth(username, password),
+		Auth:          getAuth(token),
 		ReferenceName: plumbing.NewBranchReferenceName(branch),
 		SingleBranch:  true,
 		Depth:         1,
@@ -83,11 +74,12 @@ func (a DefaultAgent) GetFile(endpoint, branch, path, username, password string)
 	return b
 }
 
-func getAuth(username, password string) transport.AuthMethod {
-	if username != "" || password != "" {
+func getAuth(token string) transport.AuthMethod {
+	if token != "" {
 		return &http.BasicAuth{
-			Username: username,
-			Password: password,
+			// required to not be "", but anything else works
+			Username: "boatswain",
+			Password: token,
 		}
 	}
 	return nil

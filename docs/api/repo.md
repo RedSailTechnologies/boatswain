@@ -4,12 +4,10 @@
 ## Table of Contents
 
 - [repo.proto](#repo.proto)
-    - [ChartRead](#redsail.bosn.ChartRead)
     - [CreateRepo](#redsail.bosn.CreateRepo)
     - [DestroyRepo](#redsail.bosn.DestroyRepo)
     - [FileRead](#redsail.bosn.FileRead)
     - [FindRepo](#redsail.bosn.FindRepo)
-    - [ReadChart](#redsail.bosn.ReadChart)
     - [ReadFile](#redsail.bosn.ReadFile)
     - [ReadRepo](#redsail.bosn.ReadRepo)
     - [ReadRepos](#redsail.bosn.ReadRepos)
@@ -36,21 +34,6 @@
 Repo is the service managing external repositories, such as helm.
 
 
-<a name="redsail.bosn.ChartRead"></a>
-
-### ChartRead
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| chart | [bytes](#bytes) |  | the contents of the chart |
-
-
-
-
-
-
 <a name="redsail.bosn.CreateRepo"></a>
 
 ### CreateRepo
@@ -62,6 +45,7 @@ Repo is the service managing external repositories, such as helm.
 | name | [string](#string) |  | name of the repo |
 | endpoint | [string](#string) |  | repo endpoint |
 | type | [RepoType](#redsail.bosn.RepoType) |  | type of repo |
+| token | [string](#string) |  | an auth token (if required for this repo) |
 
 
 
@@ -107,23 +91,6 @@ Repo is the service managing external repositories, such as helm.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  | the name of the repo to search for |
-
-
-
-
-
-
-<a name="redsail.bosn.ReadChart"></a>
-
-### ReadChart
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| repo_id | [string](#string) |  | unique id of the repo |
-| name | [string](#string) |  | name of the chart |
-| version | [string](#string) |  | chart version |
 
 
 
@@ -219,6 +186,7 @@ Repo is the service managing external repositories, such as helm.
 | name | [string](#string) |  | name of the repo |
 | endpoint | [string](#string) |  | repo endpoint |
 | type | [RepoType](#redsail.bosn.RepoType) |  | type of repo |
+| token | [string](#string) |  | an auth token (if required for this repo) |
 | ready | [bool](#bool) |  | repo ready status, based on whether index.yaml can be fetched |
 
 
@@ -263,6 +231,7 @@ Repo is the service managing external repositories, such as helm.
 | name | [string](#string) |  | name of the repo |
 | endpoint | [string](#string) |  | repo endpoint |
 | type | [RepoType](#redsail.bosn.RepoType) |  | type of repo |
+| token | [string](#string) |  | an auth token (if required for this repo) |
 
 
 
@@ -300,7 +269,6 @@ Repo is the service managing external repositories, such as helm.
 | Read | [ReadRepo](#redsail.bosn.ReadRepo) | [RepoRead](#redsail.bosn.RepoRead) | reads out a repo |
 | Find | [FindRepo](#redsail.bosn.FindRepo) | [RepoFound](#redsail.bosn.RepoFound) | finds the repo uuid by name |
 | All | [ReadRepos](#redsail.bosn.ReadRepos) | [ReposRead](#redsail.bosn.ReposRead) | gets all repos currently configured and their status |
-| Chart | [ReadChart](#redsail.bosn.ReadChart) | [ChartRead](#redsail.bosn.ChartRead) | gets a chart from this helm repository |
 | File | [ReadFile](#redsail.bosn.ReadFile) | [FileRead](#redsail.bosn.FileRead) | gets the contents of a file from this git repository |
 
  
