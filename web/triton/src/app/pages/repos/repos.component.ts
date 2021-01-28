@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import {
   RepoRead,
-  ChartRead,
   Repo,
   DefaultRepo,
 } from 'src/app/services/repo/repo';
