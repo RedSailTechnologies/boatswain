@@ -188,6 +188,7 @@ func helmClient(endpoint, token, namespace string, logger func(t string, a ...in
 	flags := &genericclioptions.ConfigFlags{
 		APIServer:   &endpoint,
 		BearerToken: &token,
+		Namespace:   &namespace,
 	}
 
 	actionConfig := new(action.Configuration)
