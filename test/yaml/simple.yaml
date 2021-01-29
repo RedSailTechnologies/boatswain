@@ -2,22 +2,22 @@ version: '1.0.0'
 clusters:
   - test
 apps:
-  - name: wordpress
+  - name: grafana
     helm:
-      chart: wordpress
+      chart: grafana
       repo: bitnami
-      version: 10.3.1
+      version: '4.2.5'
 triggers:
   - web:
-      name: wordpress-trigger
+      name: grafana-trigger
   - manual:
       users:
         - "Adam Page"
 strategy:
-  - name: deploy-wordpress
+  - name: deploy-grafana
     condition: always
     app:
-      name: wordpress
+      name: grafana
       cluster: test
       namespace: default
       helm:
