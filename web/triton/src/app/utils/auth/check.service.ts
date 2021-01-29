@@ -14,7 +14,7 @@ export class CheckService implements CanActivate {
     if (this.auth.loggedIn()) {
       return true
     }
-    this.auth.startLogin(route.routeConfig.path);
+    this.auth.startLogin(state.url);
     return false;
   }
 }

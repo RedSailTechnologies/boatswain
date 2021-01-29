@@ -33,7 +33,7 @@
                         </mat-panel-description>
                     </mat-expansion-panel-header>
                     <div *ngIf="runs else noRuns">
-                        <table mat-table [dataSource]="runs" style="width: 100%;">
+                        <table mat-table [dataSource]="runs.slice(0, 10)" style="width: 100%;">
                             <ng-container matColumnDef="name">
                                 <th mat-header-cell *matHeaderCellDef>Name</th>
                                 <td mat-cell *matCellDef="let run"> {{deployment.name}} v{{run.version}} </td>

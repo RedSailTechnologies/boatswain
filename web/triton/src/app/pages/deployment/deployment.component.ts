@@ -48,6 +48,7 @@ export class DeploymentComponent implements OnInit {
         this.client.runs(<ReadRuns>{
           deploymentUuid: id
         }).then(value => {
+          value.runs = value.runs.sort((a, b) => a.startTime > b.startTime ? -1 : 1)
           this.runs = value.runs;
           this.runs.forEach(x => {
             if (x.startTime != 0) {
