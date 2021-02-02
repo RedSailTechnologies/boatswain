@@ -100,7 +100,7 @@ message TriggerDeployment {
     string uuid = 1; // unique id of the deployment
     string name = 2; // name of the trigger within this deployment
     TriggerType type = 3; // the type of trigger
-    bytes arguments = 4; // args for this run
+    string arguments = 4; // args for this run
 }
 
 message DeploymentTriggered {

@@ -134,7 +134,6 @@ func (a DefaultAgent) Install(args Args) (*release.Release, error) {
 	install.ReleaseName = args.Name
 	install.Namespace = args.Namespace
 	install.Wait = args.Wait
-	install.InsecureSkipTLSverify = true // FIXME
 	logger.Debug("chart", "chart", args.Chart)
 	logger.Debug("running install", "install", install)
 	return install.Run(args.Chart, args.Values)
@@ -230,7 +229,6 @@ func toChartRepo(name, endpoint, token string) (*repo.ChartRepository, error) {
 		URL:      endpoint,
 		Username: un,
 		Password: token,
-		// InsecureSkipTLSverify: true, // FIXME - give this option to the user
 	}
 
 	return repo.NewChartRepository(entry, providers)

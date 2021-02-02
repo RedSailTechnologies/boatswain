@@ -360,7 +360,7 @@ Deployment is the service for creation and management of application installs/up
 | uuid | [string](#string) |  | unique id of the deployment |
 | name | [string](#string) |  | name of the trigger within this deployment |
 | type | [TriggerDeployment.TriggerType](#redsail.bosn.TriggerDeployment.TriggerType) |  | the type of trigger |
-| arguments | [bytes](#bytes) |  | args for this run |
+| arguments | [string](#string) |  | args for this run |
 
 
 

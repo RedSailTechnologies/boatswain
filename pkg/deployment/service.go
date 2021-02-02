@@ -248,7 +248,7 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 	}
 
 	te := template.NewEngine(&git.DefaultAgent{}, s.repo)
-	t, err := te.Run(f, cmd.Arguments)
+	t, err := te.Run(f, []byte(cmd.Arguments))
 	if err != nil {
 		logger.Error("yaml file could not be templated", "error", err)
 		return nil, twirp.InternalErrorWith(err)
