@@ -4,17 +4,11 @@ import {createTwirpRequest, throwTwirpError, Fetch} from './twirp';
 
 export interface CreateCluster {
     name: string;
-    endpoint: string;
-    token: string;
-    cert: string;
     
 }
 
 interface CreateClusterJSON {
     name: string;
-    endpoint: string;
-    token: string;
-    cert: string;
     
 }
 
@@ -22,18 +16,17 @@ interface CreateClusterJSON {
 const CreateClusterToJSON = (m: CreateCluster): CreateClusterJSON => {
     return {
         name: m.name,
-        endpoint: m.endpoint,
-        token: m.token,
-        cert: m.cert,
         
     };
 };
 
 export interface ClusterCreated {
+    uuid: string;
     
 }
 
 interface ClusterCreatedJSON {
+    uuid: string;
     
 }
 
@@ -41,6 +34,7 @@ interface ClusterCreatedJSON {
 const JSONToClusterCreated = (m: ClusterCreated | ClusterCreatedJSON): ClusterCreated => {
     
     return {
+        uuid: m.uuid,
         
     };
 };
@@ -48,18 +42,12 @@ const JSONToClusterCreated = (m: ClusterCreated | ClusterCreatedJSON): ClusterCr
 export interface UpdateCluster {
     uuid: string;
     name: string;
-    endpoint: string;
-    token: string;
-    cert: string;
     
 }
 
 interface UpdateClusterJSON {
     uuid: string;
     name: string;
-    endpoint: string;
-    token: string;
-    cert: string;
     
 }
 
@@ -68,9 +56,6 @@ const UpdateClusterToJSON = (m: UpdateCluster): UpdateClusterJSON => {
     return {
         uuid: m.uuid,
         name: m.name,
-        endpoint: m.endpoint,
-        token: m.token,
-        cert: m.cert,
         
     };
 };
@@ -146,9 +131,6 @@ const ReadClusterToJSON = (m: ReadCluster): ReadClusterJSON => {
 export interface ClusterRead {
     uuid: string;
     name: string;
-    endpoint: string;
-    token: string;
-    cert: string;
     ready: boolean;
     
 }
@@ -156,9 +138,6 @@ export interface ClusterRead {
 interface ClusterReadJSON {
     uuid: string;
     name: string;
-    endpoint: string;
-    token: string;
-    cert: string;
     ready: boolean;
     
 }
@@ -169,9 +148,6 @@ const JSONToClusterRead = (m: ClusterRead | ClusterReadJSON): ClusterRead => {
     return {
         uuid: m.uuid,
         name: m.name,
-        endpoint: m.endpoint,
-        token: m.token,
-        cert: m.cert,
         ready: m.ready,
         
     };

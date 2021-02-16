@@ -13,9 +13,7 @@ type Created struct {
 	Timestamp int64
 	UUID      string
 	Name      string
-	Endpoint  string
 	Token     string
-	Cert      string
 }
 
 // EventType marks this as an event
@@ -37,9 +35,6 @@ func (e Destroyed) EventType() string {
 type Updated struct {
 	Timestamp int64
 	Name      string
-	Endpoint  string
-	Token     string
-	Cert      string
 }
 
 // EventType marks this as an event

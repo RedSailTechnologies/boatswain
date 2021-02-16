@@ -1,131 +1,47 @@
 package helm
 
 import (
-	"context"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
-	"time"
-
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/repo"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-
-	"github.com/redsailtechnologies/boatswain/pkg/logger"
+	"k8s.io/client-go/rest"
 )
 
 // Agent is the interface we use to talk to helm packages
 type Agent interface {
-	CheckIndex(name, endpoint, token string) bool
-	GetChart(name, version, endpoint, token string) ([]byte, error)
-	Install(args Args) (*release.Release, error)
-	Rollback(version int, args Args) error
-	Test(args Args) (*release.Release, error)
-	Uninstall(args Args) (*release.UninstallReleaseResponse, error)
-	Upgrade(args Args) (*release.Release, error)
+	Install(kube rest.Config, args Args) (*release.Release, error)
+	Rollback(kube rest.Config, version int, args Args) error
+	Test(kube rest.Config, args Args) (*release.Release, error)
+	Uninstall(kube rest.Config, args Args) (*release.UninstallReleaseResponse, error)
+	Upgrade(kube rest.Config, args Args) (*release.Release, error)
 }
 
 // DefaultAgent is the default implementation of the Agent interface
-type DefaultAgent struct{}
+type DefaultAgent struct {
+	kube *rest.Config
+}
 
-// Args are arguments common to the install, upgrade, etc. commands
+// Args are arguments common to all commands
 type Args struct {
 	Name      string
 	Namespace string
-	Cluster   string
-	Endpoint  string
-	Token     string
-	Cert      string
 	Chart     *chart.Chart
 	Values    map[string]interface{}
 	Wait      bool
 	Logger    func(string, ...interface{})
 }
 
-// CheckIndex checks the index.yaml file at the repo's endpoint
-func (a DefaultAgent) CheckIndex(name, endpoint, token string) bool {
-	r, err := toChartRepo(name, endpoint, token)
-	if err != nil {
-		return false
+// NewDefaultAgent inits the default agent with the specified kube interface
+func NewDefaultAgent(kube *rest.Config) *DefaultAgent {
+	return &DefaultAgent{
+		kube: kube,
 	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	ch := make(chan error, 1)
-
-	// FIXME AdamP - This is really a hack, and leaves goroutines lingering, but the underlying problem
-	// is that the DownloadIndexFile call has a timeout, but no context. So while we can see if it took
-	// a while to get a response, we can't stop it from taking as long as it wants. My big problem with
-	// this approach is that we just leave goroutines out there to finish and we'd rather cancel them.
-	// Maybe we should consider just skipping repo status checks altogether, depending on their use.
-	go func() {
-		_, err := r.DownloadIndexFile()
-		if err != nil {
-			logger.Warn("error downloading repo index", "error", err)
-		}
-
-		select {
-		default:
-			ch <- err
-		case <-ctx.Done():
-			return
-		}
-	}()
-
-	select {
-	case err := <-ch:
-		return err == nil
-	case <-time.After(500 * time.Millisecond):
-		return false
-	}
-}
-
-// GetChart downloads a single chart from a particular chart repo
-func (a DefaultAgent) GetChart(name, version, endpoint, token string) ([]byte, error) {
-	out := os.TempDir()
-
-	pull := action.NewPull()
-	pull.ChartPathOptions = action.ChartPathOptions{
-		RepoURL: endpoint,
-	}
-	pull.Settings = cli.New()
-	pull.RepoURL = endpoint
-	pull.Version = version
-
-	pull.DestDir = out
-
-	_, err := pull.Run(name)
-	if err != nil {
-		return nil, err
-	}
-
-	path := path.Join(out, fmt.Sprintf("%s-%s.tgz", name, version))
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
-	bytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO - some better dir management here could be good as if this fails we just eventually overload the filesystem
-	if err = os.Remove(path); err != nil {
-		logger.Warn("could not remove temporary remove temporary file which could lead to disk overusage", "error", err)
-	}
-
-	return bytes, nil
 }
 
 // Install is the equivalent of `helm install`
-func (a DefaultAgent) Install(args Args) (*release.Release, error) {
-	cfg, err := helmClient(args.Cluster, args.Endpoint, args.Token, args.Cert, args.Namespace, args.Logger)
+func (a DefaultAgent) Install(kube rest.Config, args Args) (*release.Release, error) {
+	cfg, err := helmClient(kube, args.Namespace, args.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -138,8 +54,8 @@ func (a DefaultAgent) Install(args Args) (*release.Release, error) {
 }
 
 // Rollback is the equivalent of `helm rollback`
-func (a DefaultAgent) Rollback(version int, args Args) error {
-	cfg, err := helmClient(args.Cluster, args.Endpoint, args.Token, args.Cert, args.Namespace, args.Logger)
+func (a DefaultAgent) Rollback(kube rest.Config, version int, args Args) error {
+	cfg, err := helmClient(kube, args.Namespace, args.Logger)
 	if err != nil {
 		return err
 	}
@@ -151,8 +67,8 @@ func (a DefaultAgent) Rollback(version int, args Args) error {
 }
 
 // Test is the equivalent of `helm test`
-func (a DefaultAgent) Test(args Args) (*release.Release, error) {
-	cfg, err := helmClient(args.Cluster, args.Endpoint, args.Token, args.Cert, args.Namespace, args.Logger)
+func (a DefaultAgent) Test(kube rest.Config, args Args) (*release.Release, error) {
+	cfg, err := helmClient(kube, args.Namespace, args.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -163,8 +79,8 @@ func (a DefaultAgent) Test(args Args) (*release.Release, error) {
 }
 
 // Uninstall is the equivalent of `helm uninstall`
-func (a DefaultAgent) Uninstall(args Args) (*release.UninstallReleaseResponse, error) {
-	cfg, err := helmClient(args.Cluster, args.Endpoint, args.Token, args.Cert, args.Namespace, args.Logger)
+func (a DefaultAgent) Uninstall(kube rest.Config, args Args) (*release.UninstallReleaseResponse, error) {
+	cfg, err := helmClient(kube, args.Namespace, args.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -174,8 +90,8 @@ func (a DefaultAgent) Uninstall(args Args) (*release.UninstallReleaseResponse, e
 }
 
 // Upgrade is the equivalent of `helm upgrade`
-func (a DefaultAgent) Upgrade(args Args) (*release.Release, error) {
-	cfg, err := helmClient(args.Cluster, args.Endpoint, args.Token, args.Cert, args.Namespace, args.Logger)
+func (a DefaultAgent) Upgrade(kube rest.Config, args Args) (*release.Release, error) {
+	cfg, err := helmClient(kube, args.Namespace, args.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -186,18 +102,18 @@ func (a DefaultAgent) Upgrade(args Args) (*release.Release, error) {
 	return upgrade.Run(args.Name, args.Chart, args.Values)
 }
 
-func helmClient(cluster, endpoint, token, cert, namespace string, logger func(t string, a ...interface{})) (*action.Configuration, error) {
-	// FIXME AdamP - we write the ca file for the cluster here temporarily but this could be improved
-	caPath := path.Join(os.TempDir(), fmt.Sprintf("boatswain-%s-cafile", cluster))
-	if _, err := os.Open(caPath); err != nil {
-		ioutil.WriteFile(caPath, []byte(cert), os.ModePerm)
+func helmClient(kube rest.Config, namespace string, logger func(t string, a ...interface{})) (*action.Configuration, error) {
+	url, _, err := rest.DefaultServerURL(kube.Host, kube.APIPath, *kube.GroupVersion, kube.Insecure)
+	if err != nil {
+		return nil, err
 	}
+	urlString := url.String()
 
 	flags := &genericclioptions.ConfigFlags{
-		APIServer:   &endpoint,
-		BearerToken: &token,
+		APIServer:   &urlString,
+		BearerToken: &kube.BearerToken,
 		Namespace:   &namespace,
-		CAFile:      &caPath,
+		CAFile:      &kube.CAFile,
 	}
 
 	actionConfig := new(action.Configuration)
@@ -206,29 +122,4 @@ func helmClient(cluster, endpoint, token, cert, namespace string, logger func(t 
 	}
 
 	return actionConfig, nil
-}
-
-func toChartRepo(name, endpoint, token string) (*repo.ChartRepository, error) {
-	providers := []getter.Provider{
-		{
-			Schemes: []string{"http", "https"},
-			New:     getter.NewHTTPGetter,
-		},
-	}
-
-	// set the username to anything if the token is set
-	un := ""
-	if token != "" {
-		un = "boatswain"
-	}
-
-	entry := &repo.Entry{
-		Name:     name,
-		URL:      endpoint,
-		Username: un,
-		Password: token,
-		// InsecureSkipTLSverify: true, // FIXME - give this option to the user
-	}
-
-	return repo.NewChartRepository(entry, providers)
 }

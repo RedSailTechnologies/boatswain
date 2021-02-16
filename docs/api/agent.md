@@ -3,195 +3,140 @@
 
 ## Table of Contents
 
-- [cluster.proto](#cluster.proto)
-    - [ClusterCreated](#redsail.bosn.ClusterCreated)
-    - [ClusterDestroyed](#redsail.bosn.ClusterDestroyed)
-    - [ClusterFound](#redsail.bosn.ClusterFound)
-    - [ClusterRead](#redsail.bosn.ClusterRead)
-    - [ClusterUpdated](#redsail.bosn.ClusterUpdated)
-    - [ClustersRead](#redsail.bosn.ClustersRead)
-    - [CreateCluster](#redsail.bosn.CreateCluster)
-    - [DestroyCluster](#redsail.bosn.DestroyCluster)
-    - [FindCluster](#redsail.bosn.FindCluster)
-    - [ReadCluster](#redsail.bosn.ReadCluster)
-    - [ReadClusters](#redsail.bosn.ReadClusters)
-    - [UpdateCluster](#redsail.bosn.UpdateCluster)
+- [agent.proto](#agent.proto)
+    - [Action](#redsail.bosn.Action)
+    - [ActionsRead](#redsail.bosn.ActionsRead)
+    - [AgentRegistered](#redsail.bosn.AgentRegistered)
+    - [ReadActions](#redsail.bosn.ReadActions)
+    - [RegisterAgent](#redsail.bosn.RegisterAgent)
+    - [Result](#redsail.bosn.Result)
+    - [ResultReturned](#redsail.bosn.ResultReturned)
+    - [ReturnResult](#redsail.bosn.ReturnResult)
   
-    - [Cluster](#redsail.bosn.Cluster)
+    - [Agent](#redsail.bosn.Agent)
+    - [AgentAction](#redsail.bosn.AgentAction)
   
 - [Scalar Value Types](#scalar-value-types)
 
 
 
-<a name="cluster.proto"></a>
+<a name="agent.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cluster.proto
-Cluster is the service managing external clusters.
+## agent.proto
+Agent is the service for external clusters to call into to register and receive actions.
 
 
-<a name="redsail.bosn.ClusterCreated"></a>
+<a name="redsail.bosn.Action"></a>
 
-### ClusterCreated
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| uuid | [string](#string) |  | the uuid of the cluster, used when setting up the agent |
-
-
-
-
-
-
-<a name="redsail.bosn.ClusterDestroyed"></a>
-
-### ClusterDestroyed
-
-
-
-
-
-
-
-<a name="redsail.bosn.ClusterFound"></a>
-
-### ClusterFound
+### Action
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| uuid | [string](#string) |  | unique id of the cluster found |
+| uuid | [string](#string) |  |  |
+| cluster_uuid | [string](#string) |  |  |
+| cluster_token | [string](#string) |  | etc... |
 
 
 
 
 
 
-<a name="redsail.bosn.ClusterRead"></a>
+<a name="redsail.bosn.ActionsRead"></a>
 
-### ClusterRead
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| uuid | [string](#string) |  | unique id of the cluster |
-| name | [string](#string) |  | name of the cluster |
-| ready | [bool](#bool) |  | server ready status, based on agent status |
-
-
-
-
-
-
-<a name="redsail.bosn.ClusterUpdated"></a>
-
-### ClusterUpdated
-
-
-
-
-
-
-
-<a name="redsail.bosn.ClustersRead"></a>
-
-### ClustersRead
+### ActionsRead
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| clusters | [ClusterRead](#redsail.bosn.ClusterRead) | repeated | clusters read |
+| actions | [Action](#redsail.bosn.Action) | repeated |  |
 
 
 
 
 
 
-<a name="redsail.bosn.CreateCluster"></a>
+<a name="redsail.bosn.AgentRegistered"></a>
 
-### CreateCluster
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | name of the cluster |
-
-
-
-
-
-
-<a name="redsail.bosn.DestroyCluster"></a>
-
-### DestroyCluster
+### AgentRegistered
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| uuid | [string](#string) |  | unique id of the cluster |
+| cluster_token | [string](#string) |  | the unique token for the agent to used when calling for actions |
 
 
 
 
 
 
-<a name="redsail.bosn.FindCluster"></a>
+<a name="redsail.bosn.ReadActions"></a>
 
-### FindCluster
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | the name of the cluster to search for |
-
-
-
-
-
-
-<a name="redsail.bosn.ReadCluster"></a>
-
-### ReadCluster
+### ReadActions
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| uuid | [string](#string) |  | unique id of the cluster |
+| cluster_uuid | [string](#string) |  |  |
+| cluster_token | [string](#string) |  |  |
 
 
 
 
 
 
-<a name="redsail.bosn.ReadClusters"></a>
+<a name="redsail.bosn.RegisterAgent"></a>
 
-### ReadClusters
-
-
-
-
-
-
-
-<a name="redsail.bosn.UpdateCluster"></a>
-
-### UpdateCluster
+### RegisterAgent
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| uuid | [string](#string) |  | unique id of the cluster |
-| name | [string](#string) |  | name of the cluster |
+| cluster_uuid | [string](#string) |  | the uuid of the agent to register |
+
+
+
+
+
+
+<a name="redsail.bosn.Result"></a>
+
+### Result
+etc ...
+
+
+
+
+
+
+<a name="redsail.bosn.ResultReturned"></a>
+
+### ResultReturned
+
+
+
+
+
+
+
+<a name="redsail.bosn.ReturnResult"></a>
+
+### ReturnResult
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| action_uuid | [string](#string) |  |  |
+| cluster_uuid | [string](#string) |  |  |
+| cluster_token | [string](#string) |  |  |
+| result | [Result](#redsail.bosn.Result) |  |  |
 
 
 
@@ -204,19 +149,26 @@ Cluster is the service managing external clusters.
  
 
 
-<a name="redsail.bosn.Cluster"></a>
+<a name="redsail.bosn.Agent"></a>
 
-### Cluster
+### Agent
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Create | [CreateCluster](#redsail.bosn.CreateCluster) | [ClusterCreated](#redsail.bosn.ClusterCreated) | adds a cluster to the list of configurations |
-| Update | [UpdateCluster](#redsail.bosn.UpdateCluster) | [ClusterUpdated](#redsail.bosn.ClusterUpdated) | edits an already existing cluster |
-| Destroy | [DestroyCluster](#redsail.bosn.DestroyCluster) | [ClusterDestroyed](#redsail.bosn.ClusterDestroyed) | removes a cluster from the list of configurations |
-| Read | [ReadCluster](#redsail.bosn.ReadCluster) | [ClusterRead](#redsail.bosn.ClusterRead) | reads out a cluster |
-| Find | [FindCluster](#redsail.bosn.FindCluster) | [ClusterFound](#redsail.bosn.ClusterFound) | finds the cluster uuid by name |
-| All | [ReadClusters](#redsail.bosn.ReadClusters) | [ClustersRead](#redsail.bosn.ClustersRead) | gets all clusters currently configured and their status |
+| Register | [RegisterAgent](#redsail.bosn.RegisterAgent) | [AgentRegistered](#redsail.bosn.AgentRegistered) | registers this agent |
+| Actions | [ReadActions](#redsail.bosn.ReadActions) | [ActionsRead](#redsail.bosn.ActionsRead) | gets the next action for the agent or an empty list if there&#39;s nothing to do |
+| Results | [ReturnResult](#redsail.bosn.ReturnResult) | [ResultReturned](#redsail.bosn.ResultReturned) | returns a result for this agent |
+
+
+<a name="redsail.bosn.AgentAction"></a>
+
+### AgentAction
+
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| Run | [Action](#redsail.bosn.Action) | [Result](#redsail.bosn.Result) |  |
 
  
 

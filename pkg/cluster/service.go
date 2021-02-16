@@ -6,8 +6,6 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 
 	"github.com/twitchtv/twirp"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
@@ -45,7 +43,7 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateCluster) (*pb.Cluster
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	c, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, cmd.Token, cmd.Cert, ddd.NewTimestamp())
+	c, err := Create(ddd.NewUUID(), cmd.Name, ddd.NewUUID(), ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Cluster", "error", err)
 		return nil, tw.ToTwirpError(err, "could not create Cluster")
@@ -72,7 +70,7 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateCluster) (*pb.Cluster
 		return nil, tw.ToTwirpError(err, "error loading Cluster")
 	}
 
-	err = c.Update(cmd.Name, cmd.Endpoint, cmd.Token, cmd.Cert, ddd.NewTimestamp())
+	err = c.Update(cmd.Name, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error updating Cluster", "error", err)
 		return nil, tw.ToTwirpError(err, "Cluster could not be updated")
@@ -137,12 +135,9 @@ func (s Service) Read(ctx context.Context, req *pb.ReadCluster) (*pb.ClusterRead
 	}
 
 	return &pb.ClusterRead{
-		Uuid:     c.UUID(),
-		Name:     c.Name(),
-		Endpoint: c.Endpoint(),
-		Token:    c.Token(),
-		Cert:     c.Cert(),
-		Ready:    s.k8s.GetClusterStatus(cs, c.Name()),
+		Uuid:  c.UUID(),
+		Name:  c.Name(),
+		Ready: s.k8s.GetClusterStatus(cs, c.Name()), // FIXME
 	}, nil
 }
 
@@ -193,12 +188,9 @@ func (s Service) All(ctx context.Context, req *pb.ReadClusters) (*pb.ClustersRea
 		}
 
 		resp.Clusters = append(resp.Clusters, &pb.ClusterRead{
-			Uuid:     c.UUID(),
-			Name:     c.Name(),
-			Endpoint: c.Endpoint(),
-			Token:    c.Token(),
-			Cert:     c.Cert(),
-			Ready:    s.k8s.GetClusterStatus(cs, c.Name()),
+			Uuid:  c.UUID(),
+			Name:  c.Name(),
+			Ready: s.k8s.GetClusterStatus(cs, c.Name()),
 		})
 	}
 	return resp, nil
@@ -207,15 +199,4 @@ func (s Service) All(ctx context.Context, req *pb.ReadClusters) (*pb.ClustersRea
 // Ready implements the ReadyService method so this service can be part of a health check routine
 func (s Service) Ready() error {
 	return s.ready()
-}
-
-func (c *Cluster) toClientset() (*kubernetes.Clientset, error) {
-	restConfig := &rest.Config{
-		Host:        c.Endpoint(),
-		BearerToken: c.Token(),
-		TLSClientConfig: rest.TLSClientConfig{
-			CAData: []byte(c.Cert()),
-		},
-	}
-	return kubernetes.NewForConfig(restConfig)
 }
