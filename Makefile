@@ -1,4 +1,4 @@
-.PHONY: client echo help kraken target version
+.PHONY: all clean changes docs echo help init gyarados kraken leviathan package poseidon proto push template tentacle test triton version versionprev
 
 # Build env
 DEBUG=false
@@ -14,7 +14,7 @@ HELM_OUT=bin/
 LEVI_CMD=cmd/leviathan/
 LEVI_OUT=bin/
 PROJECT_NAME=null
-SERVICE_LIST=gyarados kraken poseidon
+SERVICE_LIST=gyarados kraken poseidon tentacle
 TRITON_PATH=web/triton/
 TEST_OUT=
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
@@ -85,6 +85,15 @@ leviathan: echo proto
 	@cd $(WORKDIR)/$(TRITON_PATH); npm run build
 	@cp -r $(TRITON_PATH)dist/triton $(LEVI_OUT)
 
+## package: generates helm packages
+package: echo
+	@echo Packaging charts to $(HELM_OUT)
+	@mkdir -p $(HELM_OUT)
+	@helm dependency update --skip-refresh deploy/boatswain
+	@for chart in $(CHART_LIST); do \
+		helm package deploy/$$chart --version $(shell make version) --app-version $(shell make version) --destination $(HELM_OUT); \
+	done
+
 ## poseidon: builds the poseidon image
 poseidon: echo
 	@$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=poseidon template
@@ -100,15 +109,6 @@ proto: echo
 	    --twirp_typescript_out=version=v6:$(GEN_TS)/$$service \
 		--doc_out=$(GEN_DOC) --doc_opt=markdown,$$service.md \
 	    $$service.proto; \
-	done
-
-## package: generates helm packages
-package: echo
-	@echo Packaging charts to $(HELM_OUT)
-	@mkdir -p $(HELM_OUT)
-	@helm dependency update deploy/boatswain
-	@for chart in $(CHART_LIST); do \
-		helm package deploy/$$chart --version $(shell make version) --app-version $(shell make version) --destination $(HELM_OUT); \
 	done
 
 ## push: pushes local images
@@ -127,6 +127,10 @@ else
 	@echo Building $(PROJECT_NAME) release container
 	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=release --tag $(DOCKER_REPO)$(PROJECT_NAME):$(DOCKER_TAG) $(DOCKER_OPTS)
 endif
+
+## tentacle: builds the tentacle image
+tentacle: echo
+	@$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=tentacle template
 
 ## test: runs all unit tests, set TEST_OUT=html for html coverage report
 test: echo proto

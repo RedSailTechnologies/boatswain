@@ -24,7 +24,7 @@ func main() {
 	var bosnURL, clusterUUID, timeoutString string
 	flag.StringVar(&bosnURL, "bosn-url", cfg.EnvOrDefaultString("BOSN_URL", "http://localhost/"), "boatswain base url")
 	flag.StringVar(&clusterUUID, "cluster-uuid", cfg.EnvOrDefaultString("CLUSTER_UUID", ""), "cluster unique id")
-	flag.StringVar(&timeoutString, "timeout", cfg.EnvOrDefaultString("TIMEOUT", "2s"), "callback timeout to boatswain")
+	flag.StringVar(&timeoutString, "timeout", cfg.EnvOrDefaultString("TIMEOUT", "1s"), "callback timeout to boatswain")
 	timeout, err := time.ParseDuration(timeoutString)
 	if err != nil {
 		logger.Fatal("could not parse agent timeout, see https://golang.org/pkg/time/#ParseDuration for details")
