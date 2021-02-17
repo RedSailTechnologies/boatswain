@@ -52,7 +52,8 @@ func main() {
 	hooks := twirp.ChainHooks(tw.JWTHook(auth), tw.LoggingHooks())
 
 	agent := agent.NewService(store)
-	agTwirp := ag.NewAgentServer(agent, tw.LoggingHooks(), twirp.WithServerPathPrefix("/agents"))
+	agentException := tw.LoggingException{Method: "Actions", Service: "Agent"}
+	agTwirp := ag.NewAgentServer(agent, tw.LoggingHooksWithExceptions(agentException), twirp.WithServerPathPrefix("/agents"))
 	aaTwirp := ag.NewAgentActionServer(agent, tw.LoggingHooks(), twirp.WithServerPathPrefix("/agents"))
 
 	cluster := cluster.NewService(agentClient, auth, store)
@@ -67,7 +68,7 @@ func main() {
 	deploy := deployment.NewService(agentClient, auth, &git.DefaultAgent{}, store)
 	depTwirp := dl.NewDeploymentServer(deploy, hooks, twirp.WithServerPathPrefix("/api"))
 
-	health := health.NewService(application, cluster)
+	health := health.NewService(agent, application, cluster, deploy, repo)
 	healthTwirp := hl.NewHealthServer(health, twirp.WithServerPathPrefix("/health"))
 
 	// Browser Client

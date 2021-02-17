@@ -40,7 +40,8 @@ func main() {
 
 	agentClient := ag.NewAgentActionProtobufClient("http://localhost:8080", &http.Client{}, twirp.WithClientPathPrefix("/agents")) // FIXME
 	agent := agent.NewService(store)
-	agTwirp := ag.NewAgentServer(agent, tw.LoggingHooks(), twirp.WithServerPathPrefix("/agents"))
+	agentException := tw.LoggingException{Method: "Actions", Service: "Agent"}
+	agTwirp := ag.NewAgentServer(agent, tw.LoggingHooksWithExceptions(agentException), twirp.WithServerPathPrefix("/agents"))
 	aaTwirp := ag.NewAgentActionServer(agent, tw.LoggingHooks(), twirp.WithServerPathPrefix("/agents"))
 
 	cluster := cluster.NewService(agentClient, auth, store)
@@ -60,5 +61,5 @@ func main() {
 	mux.Handle(healthTwirp.PathPrefix(), healthTwirp)
 
 	logger.Info("starting kraken component...RELEASE THE KRAKEN!!!")
-	go logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, mux))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, mux))
 }

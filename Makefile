@@ -21,7 +21,7 @@ WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
 ## all: builds the client and all services
-all: echo proto gyarados kraken poseidon triton
+all: echo proto gyarados leviathan kraken poseidon triton
 
 ## clean: removes binaries, images, etc
 clean:
@@ -79,11 +79,9 @@ kraken: echo
 
 ## leviathan: builds the leviathan binary
 leviathan: echo proto
-	@echo Building leviathan server to $(LEVI_OUT)
-	@ rm -rf $(LEVI_OUT)
-	@go build -o $(LEVI_OUT)leviathan $(LEVI_CMD)main.go
-	@cd $(WORKDIR)/$(TRITON_PATH); npm run build
-	@cp -r $(TRITON_PATH)dist/triton $(LEVI_OUT)
+	@sed -i 's/^\*\*\/web\/$$/#**\/web\//g' .dockerignore
+	@-$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=leviathan template
+	@sed -i 's/^#\*\*\/web\/$$/**\/web\//g' .dockerignore
 
 ## package: generates helm packages
 package: echo
@@ -116,6 +114,7 @@ push:
 	@for service in $(SERVICE_LIST); do \
 	  docker push $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
 	done
+	docker push $(DOCKER_REPO)leviathan:$(DOCKER_TAG) $(DOCKER_OPTS)
 	docker push $(DOCKER_REPO)triton:$(DOCKER_TAG) $(DOCKER_OPTS)
 
 template:

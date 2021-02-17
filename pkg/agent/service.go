@@ -14,22 +14,23 @@ import (
 
 // Service is the implementation for twirp to use
 type Service struct {
-	actions map[string]map[string]*pb.Action
-	cluster *cluster.ReadRepository
-	results map[string]chan *pb.Result
-
+	actions     map[string][]*pb.Action
+	cluster     *cluster.ReadRepository
+	results     map[string]chan *pb.Result
 	actionsLock *sync.Mutex
 	resultsLock *sync.Mutex
+	ready       func() error
 }
 
 // NewService creates the new service with dependencies
 func NewService(s storage.Storage) *Service {
 	return &Service{
-		actions:     make(map[string]map[string]*pb.Action),
+		actions:     make(map[string][]*pb.Action),
 		cluster:     cluster.NewReadRepository(s),
 		results:     make(map[string]chan *pb.Result),
 		actionsLock: &sync.Mutex{},
 		resultsLock: &sync.Mutex{},
+		ready:       s.CheckReady,
 	}
 }
 
@@ -53,18 +54,15 @@ func (s Service) Actions(ctx context.Context, cmd *pb.ReadActions) (*pb.ActionsR
 	}
 
 	if actions, ok := s.actions[cmd.ClusterUuid]; ok {
-		actionList := make([]*pb.Action, 0)
-		for _, action := range actions {
-			actionList = append(actionList, action)
-		}
-		delete(actions, cmd.ClusterUuid)
+		s.actionsLock.Lock()
+		defer s.actionsLock.Unlock()
+		delete(s.actions, cmd.ClusterUuid)
+
 		return &pb.ActionsRead{
-			Actions: actionList,
+			Actions: actions,
 		}, nil
 	}
-	return &pb.ActionsRead{
-		Actions: make([]*pb.Action, 0),
-	}, nil
+	return &pb.ActionsRead{}, nil
 }
 
 // Results returns a result for this agent
@@ -74,8 +72,10 @@ func (s Service) Results(ctx context.Context, cmd *pb.ReturnResult) (*pb.ResultR
 	}
 
 	s.resultsLock.Lock()
-	s.results[cmd.ActionUuid] <- cmd.Result // FIXME
-	s.resultsLock.Unlock()
+	defer s.resultsLock.Unlock()
+	if _, ok := s.results[cmd.ActionUuid]; ok {
+		s.results[cmd.ActionUuid] <- cmd.Result
+	}
 
 	return &pb.ResultReturned{}, nil
 }
@@ -91,9 +91,9 @@ func (s Service) Run(ctx context.Context, cmd *pb.Action) (*pb.Result, error) {
 
 	s.actionsLock.Lock()
 	if _, ok := s.actions[cmd.ClusterUuid]; !ok {
-		s.actions[cmd.ClusterUuid] = make(map[string]*pb.Action)
+		s.actions[cmd.ClusterUuid] = make([]*pb.Action, 0)
 	}
-	s.actions[cmd.ClusterUuid][cmd.Uuid] = cmd
+	s.actions[cmd.ClusterUuid] = append(s.actions[cmd.ClusterUuid], cmd)
 	s.actionsLock.Unlock()
 
 	ch := make(chan *pb.Result, 1)
@@ -112,13 +112,14 @@ func (s Service) Run(ctx context.Context, cmd *pb.Action) (*pb.Result, error) {
 		}
 	}
 
-	s.actionsLock.Lock()
-	delete(s.actions[cmd.ClusterUuid], cmd.Uuid)
-	s.actionsLock.Unlock()
-
 	s.resultsLock.Lock()
+	defer s.resultsLock.Unlock()
 	delete(s.results, cmd.Uuid)
-	s.resultsLock.Unlock()
 
 	return result, nil
+}
+
+// Ready implements the ReadyService method so this service can be part of a health check routine
+func (s Service) Ready() error {
+	return s.ready()
 }

@@ -11,7 +11,7 @@ import (
 )
 
 func performAction(action *agent.Action) {
-	logger.Info("performing action", "action", action.Action, "type", action.ActionType)
+	logger.Info("performing action", "id", action.Uuid, "action", action.Action, "type", action.ActionType)
 	response := &agent.ReturnResult{
 		ActionUuid:   action.Uuid,
 		ClusterUuid:  action.ClusterUuid,
@@ -34,6 +34,7 @@ func performAction(action *agent.Action) {
 		response.Result.Error = "action type not found"
 		client.Results(context.Background(), response)
 	}
+	logger.Info("result sent", "id", action.Uuid, "error", response.Result.Error)
 }
 
 func runKubeAction(action *agent.Action, response *agent.ReturnResult) *agent.ReturnResult {

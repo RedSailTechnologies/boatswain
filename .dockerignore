@@ -3,17 +3,22 @@
 **/.dockerignore
 **/Makefile
 **/.github
+**/.git
+**/.gitignore
 
 # ignore other repo stuff not needed
 **/web/
-**/deploy/
-**/services/
-**/test/
+**/node_modules
+deploy/
+services/
+test/
 
 # misc
 **/LICENSE
 **/README.md
-**/api/
+**/CHANGELOG.md
 **/docs/
 **/**-debug-config.yaml
 temp.yaml
+**/bin
+**/.vscode

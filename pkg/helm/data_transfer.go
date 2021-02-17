@@ -3,7 +3,6 @@ package helm
 import (
 	"encoding/json"
 
-	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/release"
 )
 
@@ -11,7 +10,7 @@ import (
 type Args struct {
 	Name      string
 	Namespace string
-	Chart     *chart.Chart
+	Chart     []byte
 	Values    map[string]interface{}
 	Version   int
 	Wait      bool
@@ -78,7 +77,17 @@ func ConvertRelease(data []byte) (*release.Release, string, error) {
 	if result.Type != ReleaseResult {
 		return nil, result.Logs, ResultTypeError{}
 	}
-	return result.Data.(*release.Release), result.Logs, nil
+
+	b, err := json.Marshal(result.Data)
+	if err != nil {
+		return nil, result.Logs, err
+	}
+	release := &release.Release{}
+	err = json.Unmarshal(b, &release)
+	if err != nil {
+		return nil, result.Logs, err
+	}
+	return release, result.Logs, nil
 }
 
 // ConvertUninstallReleaseResponse converts the marshaled data to a typed uninstall response
@@ -91,7 +100,17 @@ func ConvertUninstallReleaseResponse(data []byte) (*release.UninstallReleaseResp
 	if result.Type != UninstallReleaseResponseResult {
 		return nil, result.Logs, ResultTypeError{}
 	}
-	return result.Data.(*release.UninstallReleaseResponse), result.Logs, nil
+
+	b, err := json.Marshal(result.Data)
+	if err != nil {
+		return nil, result.Logs, err
+	}
+	uninstall := &release.UninstallReleaseResponse{}
+	err = json.Unmarshal(b, &uninstall)
+	if err != nil {
+		return nil, result.Logs, err
+	}
+	return uninstall, result.Logs, nil
 }
 
 func unmarshalResult(data []byte) (*Result, error) {

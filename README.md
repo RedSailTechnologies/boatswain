@@ -17,7 +17,6 @@ Documentation published with github pages [here](https://redsailtechnologies.git
   * Fix Repo page read issue
 * 0.6
   * Cluster agent and clusters rework
-  * Clean up Helm charts for public deployment
 * 0.7
   * Trigger service (move out of deployments)
   * Testing steps
@@ -29,3 +28,5 @@ Documentation published with github pages [here](https://redsailtechnologies.git
   * Approval steps
   * External links
   * Outstanding bug fixes
+* 1.0
+  * Clean up Helm charts for public deployment (istio compatibility, etc.)

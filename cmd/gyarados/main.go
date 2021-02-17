@@ -14,6 +14,7 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
+	"github.com/redsailtechnologies/boatswain/rpc/agent"
 	dl "github.com/redsailtechnologies/boatswain/rpc/deployment"
 	hl "github.com/redsailtechnologies/boatswain/rpc/health"
 )
@@ -31,20 +32,22 @@ func main() {
 		logger.Fatal("mongo init failed")
 	}
 
-	authAgent := auth.NewOIDCAgent(authCfg)
+	auth := auth.NewOIDCAgent(authCfg)
 
-	hooks := twirp.ChainHooks(tw.JWTHook(authAgent), tw.LoggingHooks())
+	hooks := twirp.ChainHooks(tw.JWTHook(auth), tw.LoggingHooks())
 
-	deploy := deployment.NewService(authAgent, &git.DefaultAgent{}, store)
+	agent := agent.NewAgentActionProtobufClient("http://localhost:8080", &http.Client{}, twirp.WithClientPathPrefix("/agents")) // FIXME
+
+	deploy := deployment.NewService(agent, auth, &git.DefaultAgent{}, store)
 	dTwirp := dl.NewDeploymentServer(deploy, hooks, twirp.WithServerPathPrefix("/api"))
 
 	health := health.NewService(deploy)
 	healthTwirp := hl.NewHealthServer(health, twirp.WithServerPathPrefix("/health"))
 
 	mux := http.NewServeMux()
-	mux.Handle(dTwirp.PathPrefix(), dTwirp)
+	mux.Handle(dTwirp.PathPrefix(), auth.Wrap(dTwirp))
 	mux.Handle(healthTwirp.PathPrefix(), healthTwirp)
 
 	logger.Info("What? MAGIKARP is evolving?")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, authAgent.Wrap(mux)))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, mux))
 }

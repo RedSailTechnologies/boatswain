@@ -12,11 +12,6 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: setup docker
-        id: buildx
-        uses: docker/setup-buildx-action@v1
-        with:
-          install: true
       - name: install go
         uses: actions/setup-go@v2
         with:

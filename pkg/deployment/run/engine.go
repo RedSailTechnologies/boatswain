@@ -62,6 +62,7 @@ func (e *Engine) Run() {
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Error("recovering from panic", "error", err)
+			e.run.AppendLog(err.(error).Error(), Error, ddd.NewTimestamp())
 			e.finalize(Failed)
 		}
 	}()
@@ -152,19 +153,9 @@ func (e *Engine) executeActionStep(step *template.Step) Status {
 			return Failed
 		}
 
-		// TODO AdamP - lets refactor this so we just download the chart here, ship it over as a tgz and then unzip it on the other side
-		var raw []byte
+		var chart []byte
 		if step.App.Helm.Command == "install" || step.App.Helm.Command == "upgrade" {
-			raw, err = e.downloadChart(app.Helm.Chart, app.Helm.Version, app.Helm.Repo)
-			if err != nil {
-				e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
-				return Failed
-			}
-		}
-
-		var chart *chart.Chart
-		if raw != nil {
-			chart, err = loader.LoadArchive(bytes.NewBuffer(raw))
+			chart, err = e.downloadChart(app.Helm.Chart, app.Helm.Version, app.Helm.Repo)
 			if err != nil {
 				e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
 				return Failed

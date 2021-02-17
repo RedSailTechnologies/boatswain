@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/chart/loader"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
 )
@@ -58,14 +59,20 @@ func (a DefaultAgent) Install(args *Args) (*Result, error) {
 		return nil, err
 	}
 
+	var chart *chart.Chart
+	if args.Chart != nil {
+		chart, err = loader.LoadArchive(bytes.NewBuffer(args.Chart))
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	install := action.NewInstall(cfg)
 	install.ReleaseName = args.Name
 	install.Namespace = args.Namespace
 	install.Wait = args.Wait
 
-	logger.Info("chart dependencies", "chart", args.Chart.Dependencies())
-	logger.Info("chart vals", "vals", args.Chart.Values)
-	result, err := install.Run(args.Chart, args.Values)
+	result, err := install.Run(chart, args.Values)
 	return &Result{
 		Data: result,
 		Logs: logs.String(),
@@ -132,11 +139,19 @@ func (a DefaultAgent) Upgrade(args *Args) (*Result, error) {
 		return nil, err
 	}
 
+	var chart *chart.Chart
+	if args.Chart != nil {
+		chart, err = loader.LoadArchive(bytes.NewBuffer(args.Chart))
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	upgrade := action.NewUpgrade(cfg)
 	upgrade.Namespace = args.Namespace
 	upgrade.Wait = args.Wait
 
-	result, err := upgrade.Run(args.Name, args.Chart, args.Values)
+	result, err := upgrade.Run(args.Name, chart, args.Values)
 	return &Result{
 		Data: result,
 		Logs: logs.String(),
