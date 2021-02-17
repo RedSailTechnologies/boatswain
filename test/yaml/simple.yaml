@@ -6,7 +6,7 @@ apps:
     helm:
       chart: wordpress
       repo: bitnami
-      version: 10.3.1
+      version: 10.6.5
 triggers:
   - web:
       name: wordpress-trigger
