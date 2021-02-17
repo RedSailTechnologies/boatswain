@@ -30,7 +30,7 @@ func Create(uuid, name, token string, timestamp int64) (*Cluster, error) {
 		return nil, ddd.IDError{}
 	}
 	if name == "" {
-		return nil, ddd.RequiredArgumentError{Arg: "Name"}
+		return nil, ddd.RequiredArgumentError{Arg: "name"}
 	}
 
 	c := &Cluster{}
@@ -57,7 +57,7 @@ func (c *Cluster) Destroy(timestamp int64) error {
 // Update handles update commands
 func (c *Cluster) Update(name string, timestamp int64) error {
 	if name == "" {
-		return ddd.RequiredArgumentError{Arg: "Name"}
+		return ddd.RequiredArgumentError{Arg: "name"}
 	}
 	if c.destroyed {
 		return ddd.DestroyedError{Entity: entityName}

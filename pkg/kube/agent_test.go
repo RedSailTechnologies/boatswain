@@ -28,6 +28,8 @@ func TestGetClusterStatus(t *testing.T) {
 		},
 	)
 
-	sut := &DefaultAgent{}
-	assert.True(t, sut.GetClusterStatus(fakeClientset, "doesntmatter"))
+	sut := NewDefaultAgent(fakeClientset)
+	result, err := sut.GetStatus(&Args{})
+	assert.True(t, result.Data.(bool))
+	assert.Nil(t, err)
 }
