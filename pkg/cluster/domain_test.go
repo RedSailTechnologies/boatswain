@@ -14,30 +14,25 @@ func TestEventTypes(t *testing.T) {
 }
 
 func TestInvalidUUIDErrors(t *testing.T) {
-	sut, err := Create("", "name", "endpoint", "token", "cert", ddd.NewTimestamp())
+	sut, err := Create("", "name", "token", ddd.NewTimestamp())
 	assert.Error(t, err)
 	assert.Nil(t, sut)
 }
 
 func TestValidation(t *testing.T) {
+	id := ddd.NewUUID()
+	name := ""
+	token := ddd.NewUUID()
+	ti := ddd.NewTimestamp()
+	sut, err := Create(id, name, ddd.NewUUID(), ti)
+	assert.Error(t, err)
+	assert.Equal(t, k, err.(ddd.RequiredArgumentError).Arg)
+	assert.Nil(t, sut)
 	cases := map[string][]string{
-		"Name":     []string{"", "endpoint", "token", "cert"},
-		"Endpoint": []string{"name", "", "token", "cert"},
-		"Token":    []string{"name", "endpoint", "", "cert"},
-		"Cert":     []string{"name", "endpoint", "token", ""},
+		"Name": []string{""},
 	}
 
 	for k, v := range cases {
-		id := ddd.NewUUID()
-		name := v[0]
-		endpoint := v[1]
-		token := v[2]
-		cert := v[3]
-		ti := ddd.NewTimestamp()
-		sut, err := Create(id, name, endpoint, token, cert, ti)
-		assert.Error(t, err)
-		assert.Equal(t, k, err.(ddd.RequiredArgumentError).Arg)
-		assert.Nil(t, sut)
 	}
 }
 

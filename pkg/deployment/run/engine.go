@@ -2,8 +2,9 @@ package run
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
 	"errors"
-	"fmt"
 	"time"
 
 	// TODO AdamP - we could consider factoring this into helm.DefaultAgent
@@ -17,10 +18,10 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/deployment/template"
 	"github.com/redsailtechnologies/boatswain/pkg/git"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
-	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/repo"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
+	"github.com/redsailtechnologies/boatswain/rpc/agent"
 )
 
 var retryCount int = 3
@@ -32,13 +33,13 @@ type Engine struct {
 	clusters *cluster.ReadRepository
 	repos    *repo.ReadRepository
 
-	git  git.Agent
-	helm helm.Agent
-	kube kube.Agent
+	agent agent.AgentAction
+	git   git.Agent
+	repo  repo.Agent
 }
 
 // NewEngine initializes the engine with required dependencies
-func NewEngine(r *Run, s storage.Storage, g git.Agent, h helm.Agent, k kube.Agent) (*Engine, error) {
+func NewEngine(r *Run, s storage.Storage, a agent.AgentAction, g git.Agent, ra repo.Agent) (*Engine, error) {
 	w := newWriteRepository(s)
 	if err := w.save(r); err != nil {
 		logger.Error("could not save created run", "error", err)
@@ -49,9 +50,9 @@ func NewEngine(r *Run, s storage.Storage, g git.Agent, h helm.Agent, k kube.Agen
 		write:    w,
 		clusters: cluster.NewReadRepository(s),
 		repos:    repo.NewReadRepository(s),
+		agent:    a,
 		git:      g,
-		helm:     h,
-		kube:     k,
+		repo:     ra,
 	}
 	return engine, nil
 }
@@ -130,6 +131,7 @@ func (e *Engine) executeStep(step *template.Step) Status {
 
 func (e *Engine) executeActionStep(step *template.Step) Status {
 	if step.App.Helm != nil {
+		var err error
 		app, err := getApp(step.App.Name, e.run.Apps())
 		if err != nil {
 			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
@@ -150,6 +152,7 @@ func (e *Engine) executeActionStep(step *template.Step) Status {
 			return Failed
 		}
 
+		// TODO AdamP - lets refactor this so we just download the chart here, ship it over as a tgz and then unzip it on the other side
 		var raw []byte
 		if step.App.Helm.Command == "install" || step.App.Helm.Command == "upgrade" {
 			raw, err = e.downloadChart(app.Helm.Chart, app.Helm.Version, app.Helm.Repo)
@@ -202,59 +205,79 @@ func (e *Engine) executeActionStep(step *template.Step) Status {
 			}
 		}
 
-		logs := &bytes.Buffer{}
-		helmLogger := func(t string, a ...interface{}) {
-			str := fmt.Sprintf(t, a...)
-			if str[len(str)-1] != '\n' {
-				str = str + "\n"
-			}
-			logs.Write([]byte(str))
-		}
-
 		args := helm.Args{
 			Name:      step.App.Name,
 			Namespace: step.App.Namespace,
-			Cluster:   cluster.Name(),
-			Endpoint:  cluster.Endpoint(),
-			Token:     cluster.Token(),
-			Cert:      cluster.Cert(),
 			Chart:     chart,
 			Values:    vals,
 			Wait:      step.App.Helm.Wait,
-			Logger:    helmLogger,
 		}
-
-		output := ""
-		switch step.App.Helm.Command {
-		case "install":
-			var r *release.Release
-			r, err = e.helm.Install(args)
-			if r != nil {
-				output = r.Info.Notes
-			}
-		case "rollback":
-			err = e.helm.Rollback(step.App.Helm.Version, args)
-		case "uninstall":
-			var r *release.UninstallReleaseResponse
-			r, err = e.helm.Uninstall(args)
-			output = r.Info
-		case "upgrade":
-			var r *release.Release
-			r, err = e.helm.Upgrade(args)
-			if r != nil {
-				output = r.Info.Notes
-			}
-		default:
-			e.run.AppendLog("helm command not found", Error, ddd.NewTimestamp())
-			return Failed
-		}
-
+		jsonArgs, err := json.Marshal(args)
 		if err != nil {
 			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
 			return Failed
 		}
 
-		e.run.AppendLog(logs.String(), Info, ddd.NewTimestamp())
+		action := &agent.Action{
+			Uuid:           ddd.NewUUID(),
+			ClusterUuid:    cluster.UUID(),
+			ClusterToken:   cluster.Token(),
+			ActionType:     agent.ActionType_HELM_ACTION,
+			TimeoutSeconds: 600, // FIXME - configurable?
+			Args:           jsonArgs,
+		}
+
+		var result *agent.Result
+		switch step.App.Helm.Command {
+		case "install":
+			action.Action = string(helm.Install)
+		case "rollback":
+			action.Action = string(helm.Rollback)
+		case "uninstall":
+			action.Action = string(helm.Uninstall)
+		case "upgrade":
+			action.Action = string(helm.Upgrade)
+		default:
+			e.run.AppendLog("helm command not found", Error, ddd.NewTimestamp())
+			return Failed
+		}
+
+		result, err = e.agent.Run(context.Background(), action)
+		if err != nil {
+			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+			return Failed
+		} else if result.Error != "" {
+			e.run.AppendLog(result.Error, Error, ddd.NewTimestamp())
+			return Failed
+		}
+
+		output := ""
+		logs := ""
+		if action.Action != string(helm.Rollback) && action.Action != string(helm.Uninstall) {
+			var r *release.Release
+			r, logs, err = helm.ConvertRelease(result.Data)
+			if err != nil {
+				e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+				return Failed
+			}
+			output = r.Info.Notes
+		} else if action.Action == string(helm.Uninstall) {
+			var u *release.UninstallReleaseResponse
+			u, logs, err = helm.ConvertUninstallReleaseResponse(result.Data)
+			if err != nil {
+				e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+				return Failed
+			}
+			output = u.Info
+		} else {
+			logs, err = helm.ConvertNone(result.Data)
+			if err != nil {
+				e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+				return Failed
+			}
+		}
+
+		e.run.AppendLog(logs, Info, ddd.NewTimestamp())
 		e.run.AppendLog(output, Info, ddd.NewTimestamp())
 		return Succeeded
 	}
@@ -291,7 +314,7 @@ func (e *Engine) downloadChart(c, v, r string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return e.helm.GetChart(c, v, endpoint, token)
+	return e.repo.GetChart(c, v, endpoint, token)
 }
 
 func (e *Engine) persist() {

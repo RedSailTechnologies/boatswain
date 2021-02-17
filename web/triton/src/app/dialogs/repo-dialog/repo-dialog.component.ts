@@ -96,9 +96,9 @@ export class RepoDialogComponent implements OnInit {
 
   typeEnum() : number {
     switch (this.repoForm.controls["type"].value) {
-      case "HELM":
+      case "HELM_REPO":
         return 0;
-      case "GIT":
+      case "GIT_REPO":
         return 1;
     }
   }

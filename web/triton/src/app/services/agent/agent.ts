@@ -126,6 +126,10 @@ export interface Action {
     uuid: string;
     clusterUuid: string;
     clusterToken: string;
+    actionType: string;
+    action: string;
+    timeoutSeconds: number;
+    args: string;
     
 }
 
@@ -133,6 +137,10 @@ interface ActionJSON {
     uuid: string;
     cluster_uuid: string;
     cluster_token: string;
+    action_type: string;
+    action: string;
+    timeout_seconds: number;
+    args: string;
     
 }
 
@@ -142,6 +150,10 @@ const ActionToJSON = (m: Action): ActionJSON => {
         uuid: m.uuid,
         cluster_uuid: m.clusterUuid,
         cluster_token: m.clusterToken,
+        action_type: m.actionType,
+        action: m.action,
+        timeout_seconds: m.timeoutSeconds,
+        args: m.args,
         
     };
 };
@@ -152,21 +164,31 @@ const JSONToAction = (m: Action | ActionJSON): Action => {
         uuid: m.uuid,
         clusterUuid: (((m as Action).clusterUuid) ? (m as Action).clusterUuid : (m as ActionJSON).cluster_uuid),
         clusterToken: (((m as Action).clusterToken) ? (m as Action).clusterToken : (m as ActionJSON).cluster_token),
+        actionType: (((m as Action).actionType) ? (m as Action).actionType : (m as ActionJSON).action_type),
+        action: m.action,
+        timeoutSeconds: (((m as Action).timeoutSeconds) ? (m as Action).timeoutSeconds : (m as ActionJSON).timeout_seconds),
+        args: m.args,
         
     };
 };
 
 export interface Result {
+    data: string;
+    error: string;
     
 }
 
 interface ResultJSON {
+    data: string;
+    error: string;
     
 }
 
 
 const ResultToJSON = (m: Result): ResultJSON => {
     return {
+        data: m.data,
+        error: m.error,
         
     };
 };
@@ -174,6 +196,8 @@ const ResultToJSON = (m: Result): ResultJSON => {
 const JSONToResult = (m: Result | ResultJSON): Result => {
     
     return {
+        data: m.data,
+        error: m.error,
         
     };
 };

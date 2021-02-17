@@ -8,21 +8,23 @@ import (
 
 	"github.com/twitchtv/twirp"
 
+	"github.com/redsailtechnologies/boatswain/pkg/agent"
 	"github.com/redsailtechnologies/boatswain/pkg/application"
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
 	"github.com/redsailtechnologies/boatswain/pkg/deployment"
 	"github.com/redsailtechnologies/boatswain/pkg/git"
-	"github.com/redsailtechnologies/boatswain/pkg/helm"
-	"github.com/redsailtechnologies/boatswain/pkg/kube"
+	"github.com/redsailtechnologies/boatswain/pkg/health"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/repo"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
+	ag "github.com/redsailtechnologies/boatswain/rpc/agent"
 	app "github.com/redsailtechnologies/boatswain/rpc/application"
 	cl "github.com/redsailtechnologies/boatswain/rpc/cluster"
 	dl "github.com/redsailtechnologies/boatswain/rpc/deployment"
+	hl "github.com/redsailtechnologies/boatswain/rpc/health"
 	rep "github.com/redsailtechnologies/boatswain/rpc/repo"
 )
 
@@ -41,37 +43,51 @@ func main() {
 	}
 
 	// Auth
-	authAgent := auth.NewOIDCAgent(authCfg)
+	auth := auth.NewOIDCAgent(authCfg)
+
+	// Twirp Clients
+	agentClient := ag.NewAgentActionProtobufClient("http://localhost:8080", &http.Client{}, twirp.WithClientPathPrefix("/agents")) // FIXME
 
 	// Services
-	hooks := twirp.ChainHooks(tw.JWTHook(authAgent), tw.LoggingHooks())
+	hooks := twirp.ChainHooks(tw.JWTHook(auth), tw.LoggingHooks())
 
-	cluster := cluster.NewService(authAgent, kube.DefaultAgent{}, store)
+	agent := agent.NewService(store)
+	agTwirp := ag.NewAgentServer(agent, tw.LoggingHooks(), twirp.WithServerPathPrefix("/agents"))
+	aaTwirp := ag.NewAgentActionServer(agent, tw.LoggingHooks(), twirp.WithServerPathPrefix("/agents"))
+
+	cluster := cluster.NewService(agentClient, auth, store)
 	clTwirp := cl.NewClusterServer(cluster, hooks, twirp.WithServerPathPrefix("/api"))
 
-	application := application.NewService(authAgent, cluster, kube.DefaultAgent{})
+	application := application.NewService(agentClient, auth, store)
 	appTwirp := app.NewApplicationServer(application, hooks, twirp.WithServerPathPrefix("/api"))
 
-	repo := repo.NewService(authAgent, git.DefaultAgent{}, helm.DefaultAgent{}, store)
+	repo := repo.NewService(auth, git.DefaultAgent{}, repo.DefaultAgent{}, store)
 	repTwirp := rep.NewRepoServer(repo, hooks, twirp.WithServerPathPrefix("/api"))
 
-	deploy := deployment.NewService(authAgent, &git.DefaultAgent{}, store)
+	deploy := deployment.NewService(agentClient, auth, &git.DefaultAgent{}, store)
 	depTwirp := dl.NewDeploymentServer(deploy, hooks, twirp.WithServerPathPrefix("/api"))
 
-	// Client
+	health := health.NewService(application, cluster)
+	healthTwirp := hl.NewHealthServer(health, twirp.WithServerPathPrefix("/health"))
+
+	// Browser Client
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		logger.Fatal("could not get current directory")
 	}
 	tritonServer := http.FileServer(http.Dir(dir + "/triton"))
 
+	// Muxing...please stand by...
 	mux := http.NewServeMux()
-	mux.Handle(appTwirp.PathPrefix(), appTwirp)
-	mux.Handle(clTwirp.PathPrefix(), clTwirp)
-	mux.Handle(depTwirp.PathPrefix(), depTwirp)
-	mux.Handle(repTwirp.PathPrefix(), repTwirp)
+	mux.Handle(agTwirp.PathPrefix(), agTwirp)
+	mux.Handle(aaTwirp.PathPrefix(), aaTwirp)
+	mux.Handle(appTwirp.PathPrefix(), auth.Wrap(appTwirp))
+	mux.Handle(clTwirp.PathPrefix(), auth.Wrap(clTwirp))
+	mux.Handle(depTwirp.PathPrefix(), auth.Wrap(depTwirp))
+	mux.Handle(repTwirp.PathPrefix(), auth.Wrap(repTwirp))
+	mux.Handle(healthTwirp.PathPrefix(), healthTwirp)
 	mux.Handle("/", tritonServer) // TODO AdamP - fix multiplexer
 
 	logger.Info("starting leviathan server...ITS HUUUUUUUUUUGE!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, authAgent.Wrap(mux)))
+	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, mux))
 }

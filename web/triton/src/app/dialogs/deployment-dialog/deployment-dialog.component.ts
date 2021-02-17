@@ -68,7 +68,7 @@ export class DeploymentDialogComponent implements OnInit {
       auth.fetch()
     );
     repoClient.all({}).then((value) => {
-      this.repos = value.repos.filter((x) => x.type == 'GIT');
+      this.repos = value.repos.filter((x) => x.type == 'GIT_REPO');
     });
   }
 

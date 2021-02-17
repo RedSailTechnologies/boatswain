@@ -17,9 +17,6 @@ export class ClusterDialogComponent implements OnInit {
   private cluster: ClusterRead;
   public clusterForm: FormGroup = new FormGroup({
     name: new FormControl(''),
-    endpoint: new FormControl(''),
-    token: new FormControl(''),
-    cert: new FormControl(''),
   });
   public isAdd: boolean;
   public title: string;
@@ -34,9 +31,6 @@ export class ClusterDialogComponent implements OnInit {
     if (!this.isAdd) {
       this.cluster = data["cluster"];
       this.clusterForm.controls["name"].setValue(this.cluster.name);
-      this.clusterForm.controls["endpoint"].setValue(this.cluster.endpoint);
-      this.clusterForm.controls["token"].setValue("***");
-      this.clusterForm.controls["cert"].setValue("***");
     }
     this.client = new DefaultCluster(`${location.protocol}//${location.host}/api`, auth.fetch());
   }
@@ -62,20 +56,12 @@ export class ClusterDialogComponent implements OnInit {
     if (this.isAdd) {
       cluster = <CreateCluster>{
         "name": this.clusterForm.controls["name"].value,
-        "endpoint": this.clusterForm.controls["endpoint"].value,
-        "token": this.clusterForm.controls["token"].value == "***" ? this.cluster.token : this.clusterForm.controls["token"].value,
-        "cert": this.clusterForm.controls["cert"].value == "***" ? this.cluster.cert : this.clusterForm.controls["cert"].value,
-        "ready": false
       };
       promise = this.client.create(cluster);
     } else {
       cluster = <UpdateCluster>{
         "uuid": this.cluster.uuid,
         "name": this.clusterForm.controls["name"].value,
-        "endpoint": this.clusterForm.controls["endpoint"].value,
-        "token": this.clusterForm.controls["token"].value == "***" ? this.cluster.token : this.clusterForm.controls["token"].value,
-        "cert": this.clusterForm.controls["cert"].value == "***" ? this.cluster.cert : this.clusterForm.controls["cert"].value,
-        "ready": false
       };
       promise = this.client.update(cluster);
     }

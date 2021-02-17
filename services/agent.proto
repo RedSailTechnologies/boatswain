@@ -51,15 +51,17 @@ message Action {
     string cluster_uuid = 2;
     string cluster_token = 3;
     ActionType action_type = 4;
-    bytes args = 5;
-    // etc...
+    string action = 5;
+    int64 timeout_seconds = 6;
+    bytes args = 7;
 }
 
 message Result {
-    // etc ...
+    bytes data = 1;
+    string error = 2;
 }
 
 enum ActionType{
-    HELM = 0;
-    KUBE = 1;
+    HELM_ACTION = 0;
+    KUBE_ACTION = 1;
 }

@@ -109,6 +109,7 @@ func (c *Cluster) on(event ddd.Event) {
 	case *Created:
 		c.uuid = e.UUID
 		c.name = e.Name
+		c.token = e.Token
 	case *Destroyed:
 		c.destroyed = true
 	case *Updated:

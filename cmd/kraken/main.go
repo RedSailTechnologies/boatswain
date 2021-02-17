@@ -6,15 +6,16 @@ import (
 
 	"github.com/twitchtv/twirp"
 
+	"github.com/redsailtechnologies/boatswain/pkg/agent"
 	"github.com/redsailtechnologies/boatswain/pkg/application"
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
 	"github.com/redsailtechnologies/boatswain/pkg/health"
-	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
+	ag "github.com/redsailtechnologies/boatswain/rpc/agent"
 	app "github.com/redsailtechnologies/boatswain/rpc/application"
 	cl "github.com/redsailtechnologies/boatswain/rpc/cluster"
 	hl "github.com/redsailtechnologies/boatswain/rpc/health"
@@ -33,24 +34,31 @@ func main() {
 		logger.Fatal("mongo init failed")
 	}
 
-	authAgent := auth.NewOIDCAgent(authCfg)
+	auth := auth.NewOIDCAgent(authCfg)
 
-	hooks := twirp.ChainHooks(tw.JWTHook(authAgent), tw.LoggingHooks())
+	hooks := twirp.ChainHooks(tw.JWTHook(auth), tw.LoggingHooks())
 
-	cluster := cluster.NewService(authAgent, kube.DefaultAgent{}, store)
+	agentClient := ag.NewAgentActionProtobufClient("http://localhost:8080", &http.Client{}, twirp.WithClientPathPrefix("/agents")) // FIXME
+	agent := agent.NewService(store)
+	agTwirp := ag.NewAgentServer(agent, tw.LoggingHooks(), twirp.WithServerPathPrefix("/agents"))
+	aaTwirp := ag.NewAgentActionServer(agent, tw.LoggingHooks(), twirp.WithServerPathPrefix("/agents"))
+
+	cluster := cluster.NewService(agentClient, auth, store)
 	clTwirp := cl.NewClusterServer(cluster, hooks, twirp.WithServerPathPrefix("/api"))
 
-	application := application.NewService(authAgent, cluster, kube.DefaultAgent{})
+	application := application.NewService(agentClient, auth, store)
 	appTwirp := app.NewApplicationServer(application, hooks, twirp.WithServerPathPrefix("/api"))
 
 	health := health.NewService(application, cluster)
 	healthTwirp := hl.NewHealthServer(health, twirp.WithServerPathPrefix("/health"))
 
 	mux := http.NewServeMux()
-	mux.Handle(appTwirp.PathPrefix(), appTwirp)
-	mux.Handle(clTwirp.PathPrefix(), clTwirp)
+	mux.Handle(agTwirp.PathPrefix(), agTwirp)
+	mux.Handle(aaTwirp.PathPrefix(), aaTwirp)
+	mux.Handle(appTwirp.PathPrefix(), auth.Wrap(appTwirp))
+	mux.Handle(clTwirp.PathPrefix(), auth.Wrap(clTwirp))
 	mux.Handle(healthTwirp.PathPrefix(), healthTwirp)
 
 	logger.Info("starting kraken component...RELEASE THE KRAKEN!!!")
-	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, authAgent.Wrap(mux)))
+	go logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, mux))
 }

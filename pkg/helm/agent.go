@@ -1,35 +1,47 @@
 package helm
 
 import (
+	"bytes"
+	"fmt"
+
+	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/release"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
 )
 
 // Agent is the interface we use to talk to helm packages
 type Agent interface {
-	Install(kube rest.Config, args Args) (*release.Release, error)
-	Rollback(kube rest.Config, version int, args Args) error
-	Test(kube rest.Config, args Args) (*release.Release, error)
-	Uninstall(kube rest.Config, args Args) (*release.UninstallReleaseResponse, error)
-	Upgrade(kube rest.Config, args Args) (*release.Release, error)
+	Install(args *Args) (*Result, error)
+	Rollback(args *Args) (*Result, error)
+	Test(args *Args) (*Result, error)
+	Uninstall(args *Args) (*Result, error)
+	Upgrade(args *Args) (*Result, error)
 }
+
+// AgentAction is an enum/alias to make calling methods typed
+type AgentAction string
+
+const (
+	// Install represents the Install method
+	Install AgentAction = "Install"
+
+	// Rollback represents the Rollback method
+	Rollback AgentAction = "Rollback"
+
+	// Test represents the Test method
+	Test AgentAction = "Test"
+
+	// Uninstall represents the Uninstall method
+	Uninstall AgentAction = "Uninstall"
+
+	// Upgrade represents the Upgrade method
+	Upgrade AgentAction = "Upgrade"
+)
 
 // DefaultAgent is the default implementation of the Agent interface
 type DefaultAgent struct {
 	kube *rest.Config
-}
-
-// Args are arguments common to all commands
-type Args struct {
-	Name      string
-	Namespace string
-	Chart     *chart.Chart
-	Values    map[string]interface{}
-	Wait      bool
-	Logger    func(string, ...interface{})
 }
 
 // NewDefaultAgent inits the default agent with the specified kube interface
@@ -40,8 +52,8 @@ func NewDefaultAgent(kube *rest.Config) *DefaultAgent {
 }
 
 // Install is the equivalent of `helm install`
-func (a DefaultAgent) Install(kube rest.Config, args Args) (*release.Release, error) {
-	cfg, err := helmClient(kube, args.Namespace, args.Logger)
+func (a DefaultAgent) Install(args *Args) (*Result, error) {
+	cfg, logs, err := helmClient(a.kube, args.Namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -50,48 +62,72 @@ func (a DefaultAgent) Install(kube rest.Config, args Args) (*release.Release, er
 	install.ReleaseName = args.Name
 	install.Namespace = args.Namespace
 	install.Wait = args.Wait
-	return install.Run(args.Chart, args.Values)
+
+	logger.Info("chart dependencies", "chart", args.Chart.Dependencies())
+	logger.Info("chart vals", "vals", args.Chart.Values)
+	result, err := install.Run(args.Chart, args.Values)
+	return &Result{
+		Data: result,
+		Logs: logs.String(),
+		Type: ReleaseResult,
+	}, err
 }
 
 // Rollback is the equivalent of `helm rollback`
-func (a DefaultAgent) Rollback(kube rest.Config, version int, args Args) error {
-	cfg, err := helmClient(kube, args.Namespace, args.Logger)
+func (a DefaultAgent) Rollback(args *Args) (*Result, error) {
+	cfg, logs, err := helmClient(a.kube, args.Namespace)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rollback := action.NewRollback(cfg)
-	rollback.Version = version
+	rollback.Version = args.Version
 	rollback.Wait = args.Wait
-	return rollback.Run(args.Name)
+
+	err = rollback.Run(args.Name)
+	return &Result{
+		Logs: logs.String(),
+		Type: NoneResult,
+	}, err
 }
 
 // Test is the equivalent of `helm test`
-func (a DefaultAgent) Test(kube rest.Config, args Args) (*release.Release, error) {
-	cfg, err := helmClient(kube, args.Namespace, args.Logger)
+func (a DefaultAgent) Test(args *Args) (*Result, error) {
+	cfg, logs, err := helmClient(a.kube, args.Namespace)
 	if err != nil {
 		return nil, err
 	}
 
 	test := action.NewReleaseTesting(cfg)
 	test.Namespace = args.Namespace
-	return test.Run(args.Name)
+
+	result, err := test.Run(args.Name)
+	return &Result{
+		Data: result,
+		Logs: logs.String(),
+		Type: ReleaseResult,
+	}, err
 }
 
 // Uninstall is the equivalent of `helm uninstall`
-func (a DefaultAgent) Uninstall(kube rest.Config, args Args) (*release.UninstallReleaseResponse, error) {
-	cfg, err := helmClient(kube, args.Namespace, args.Logger)
+func (a DefaultAgent) Uninstall(args *Args) (*Result, error) {
+	cfg, logs, err := helmClient(a.kube, args.Namespace)
 	if err != nil {
 		return nil, err
 	}
 
 	uninstall := action.NewUninstall(cfg)
-	return uninstall.Run(args.Name)
+	result, err := uninstall.Run(args.Name)
+	return &Result{
+		Data: result,
+		Logs: logs.String(),
+		Type: UninstallReleaseResponseResult,
+	}, err
 }
 
 // Upgrade is the equivalent of `helm upgrade`
-func (a DefaultAgent) Upgrade(kube rest.Config, args Args) (*release.Release, error) {
-	cfg, err := helmClient(kube, args.Namespace, args.Logger)
+func (a DefaultAgent) Upgrade(args *Args) (*Result, error) {
+	cfg, logs, err := helmClient(a.kube, args.Namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -99,18 +135,27 @@ func (a DefaultAgent) Upgrade(kube rest.Config, args Args) (*release.Release, er
 	upgrade := action.NewUpgrade(cfg)
 	upgrade.Namespace = args.Namespace
 	upgrade.Wait = args.Wait
-	return upgrade.Run(args.Name, args.Chart, args.Values)
+
+	result, err := upgrade.Run(args.Name, args.Chart, args.Values)
+	return &Result{
+		Data: result,
+		Logs: logs.String(),
+		Type: ReleaseResult,
+	}, err
 }
 
-func helmClient(kube rest.Config, namespace string, logger func(t string, a ...interface{})) (*action.Configuration, error) {
-	url, _, err := rest.DefaultServerURL(kube.Host, kube.APIPath, *kube.GroupVersion, kube.Insecure)
-	if err != nil {
-		return nil, err
+func helmClient(kube *rest.Config, namespace string) (*action.Configuration, *bytes.Buffer, error) {
+	logs := &bytes.Buffer{}
+	logger := func(t string, a ...interface{}) {
+		str := fmt.Sprintf(t, a...)
+		if str[len(str)-1] != '\n' {
+			str = str + "\n"
+		}
+		logs.Write([]byte(str))
 	}
-	urlString := url.String()
 
 	flags := &genericclioptions.ConfigFlags{
-		APIServer:   &urlString,
+		APIServer:   &kube.Host,
 		BearerToken: &kube.BearerToken,
 		Namespace:   &namespace,
 		CAFile:      &kube.CAFile,
@@ -118,8 +163,8 @@ func helmClient(kube rest.Config, namespace string, logger func(t string, a ...i
 
 	actionConfig := new(action.Configuration)
 	if err := actionConfig.Init(flags, namespace, "secrets", logger); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return actionConfig, nil
+	return actionConfig, logs, nil
 }

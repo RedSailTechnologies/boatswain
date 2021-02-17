@@ -8,7 +8,6 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/git"
-	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
@@ -21,18 +20,18 @@ var collection = "repos"
 type Service struct {
 	auth  auth.Agent
 	git   git.Agent
-	helm  helm.Agent
+	repo  Agent
 	read  *ReadRepository
 	write *writeRepository
 	ready func() error
 }
 
 // NewService creates the service
-func NewService(a auth.Agent, g git.Agent, h helm.Agent, s storage.Storage) *Service {
+func NewService(a auth.Agent, g git.Agent, r Agent, s storage.Storage) *Service {
 	return &Service{
 		auth:  a,
 		git:   g,
-		helm:  h,
+		repo:  r,
 		read:  NewReadRepository(s),
 		write: newWriteRepository(s),
 		ready: s.CheckReady,
@@ -251,7 +250,7 @@ func (s Service) gitRepoReady(r *Repo) bool {
 }
 
 func (s Service) helmRepoReady(r *Repo) bool {
-	return s.helm.CheckIndex(r.Name(), r.Endpoint(), r.Token())
+	return s.repo.CheckIndex(r.Name(), r.Endpoint(), r.Token())
 }
 
 func buildChartURL(repoURL string, chart string) string {

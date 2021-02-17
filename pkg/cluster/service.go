@@ -2,16 +2,18 @@ package cluster
 
 import (
 	"context"
-
-	"github.com/redsailtechnologies/boatswain/pkg/auth"
+	"encoding/json"
+	"errors"
 
 	"github.com/twitchtv/twirp"
 
+	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
+	"github.com/redsailtechnologies/boatswain/rpc/agent"
 	pb "github.com/redsailtechnologies/boatswain/rpc/cluster"
 )
 
@@ -19,18 +21,18 @@ var collection = "clusters"
 
 // Service is the implementation for twirp to use
 type Service struct {
+	agent agent.AgentAction
 	auth  auth.Agent
-	k8s   kube.Agent
 	read  *ReadRepository
 	write *writeRepository
 	ready func() error
 }
 
 // NewService creates the service
-func NewService(a auth.Agent, k kube.Agent, s storage.Storage) *Service {
+func NewService(ag agent.AgentAction, au auth.Agent, s storage.Storage) *Service {
 	return &Service{
-		auth:  a,
-		k8s:   k,
+		agent: ag,
+		auth:  au,
 		read:  NewReadRepository(s),
 		write: newWriteRepository(s),
 		ready: s.CheckReady,
@@ -55,7 +57,9 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateCluster) (*pb.Cluster
 		return nil, twirp.InternalError("error saving created Cluster")
 	}
 
-	return &pb.ClusterCreated{}, nil
+	return &pb.ClusterCreated{
+		Uuid: c.UUID(),
+	}, nil
 }
 
 // Update edits an already existing cluster
@@ -128,16 +132,15 @@ func (s Service) Read(ctx context.Context, req *pb.ReadCluster) (*pb.ClusterRead
 		return nil, tw.ToTwirpError(err, "error loading Cluster")
 	}
 
-	cs, err := c.toClientset()
+	status, err := s.getClusterStatus(c)
 	if err != nil {
-		logger.Error("error converting Cluster to kube clientset", "error", err)
-		return nil, twirp.InternalError("error converting Cluster to kubernetes Clientset")
+		logger.Error("error getting Cluster status", "error", err)
 	}
 
 	return &pb.ClusterRead{
 		Uuid:  c.UUID(),
 		Name:  c.Name(),
-		Ready: s.k8s.GetClusterStatus(cs, c.Name()), // FIXME
+		Ready: status,
 	}, nil
 }
 
@@ -181,16 +184,15 @@ func (s Service) All(ctx context.Context, req *pb.ReadClusters) (*pb.ClustersRea
 	}
 
 	for _, c := range clusters {
-		cs, err := c.toClientset()
+		status, err := s.getClusterStatus(c)
 		if err != nil {
-			logger.Error("error converting Cluster to kube clientset", "error", err)
-			return nil, twirp.InternalError("error converting Cluster to kubernetes clientset")
+			logger.Error("error getting Cluster status", "error", err)
 		}
 
 		resp.Clusters = append(resp.Clusters, &pb.ClusterRead{
 			Uuid:  c.UUID(),
 			Name:  c.Name(),
-			Ready: s.k8s.GetClusterStatus(cs, c.Name()),
+			Ready: status,
 		})
 	}
 	return resp, nil
@@ -199,4 +201,29 @@ func (s Service) All(ctx context.Context, req *pb.ReadClusters) (*pb.ClustersRea
 // Ready implements the ReadyService method so this service can be part of a health check routine
 func (s Service) Ready() error {
 	return s.ready()
+}
+
+func (s Service) getClusterStatus(c *Cluster) (bool, error) {
+	args := &kube.Args{}
+	jsonArgs, err := json.Marshal(args)
+	if err != nil {
+		return false, err
+	}
+
+	result, err := s.agent.Run(context.Background(), &agent.Action{
+		Uuid:           ddd.NewUUID(),
+		ClusterUuid:    c.UUID(),
+		ClusterToken:   c.Token(),
+		ActionType:     agent.ActionType_KUBE_ACTION,
+		Action:         string(kube.GetStatus),
+		TimeoutSeconds: 2, // FIXME - configurable?
+		Args:           jsonArgs,
+	})
+	if err != nil {
+		return false, err
+	} else if result.Error != "" {
+		return false, errors.New(result.Error)
+	}
+
+	return kube.ConvertStatus(result.Data)
 }

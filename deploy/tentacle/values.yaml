@@ -2,10 +2,10 @@
 config:
   bosnURL: "" # the base url of the bosn instance
   clusterUUID: "" # the uuid of this cluster
-  timeout: "" # the duration interval for the agent to get new actions, see https://golang.org/pkg/time/#ParseDuration for details
+  timeout: "1s" # the duration interval for the agent to get new actions, see https://golang.org/pkg/time/#ParseDuration for details
 
 image:
-  repository: docker.io/redsailtechnologies/bosn-kraken
+  repository: docker.io/redsailtechnologies/bosn-tentacle
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""

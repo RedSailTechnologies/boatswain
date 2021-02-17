@@ -13,6 +13,8 @@
     - [ResultReturned](#redsail.bosn.ResultReturned)
     - [ReturnResult](#redsail.bosn.ReturnResult)
   
+    - [ActionType](#redsail.bosn.ActionType)
+  
     - [Agent](#redsail.bosn.Agent)
     - [AgentAction](#redsail.bosn.AgentAction)
   
@@ -37,7 +39,11 @@ Agent is the service for external clusters to call into to register and receive 
 | ----- | ---- | ----- | ----------- |
 | uuid | [string](#string) |  |  |
 | cluster_uuid | [string](#string) |  |  |
-| cluster_token | [string](#string) |  | etc... |
+| cluster_token | [string](#string) |  |  |
+| action_type | [ActionType](#redsail.bosn.ActionType) |  |  |
+| action | [string](#string) |  |  |
+| timeout_seconds | [int64](#int64) |  |  |
+| args | [bytes](#bytes) |  |  |
 
 
 
@@ -108,7 +114,13 @@ Agent is the service for external clusters to call into to register and receive 
 <a name="redsail.bosn.Result"></a>
 
 ### Result
-etc ...
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| data | [bytes](#bytes) |  |  |
+| error | [string](#string) |  |  |
 
 
 
@@ -143,6 +155,18 @@ etc ...
 
 
  
+
+
+<a name="redsail.bosn.ActionType"></a>
+
+### ActionType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| HELM_ACTION | 0 |  |
+| KUBE_ACTION | 1 |  |
+
 
  
 
