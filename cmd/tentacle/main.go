@@ -73,6 +73,7 @@ func main() {
 		logger.Fatal("health check server failed", "error", http.ListenAndServe(":"+httpPort, mux))
 	}()
 
+	logger.Info("starting this kraken tentacle...together they shall rule the world!")
 	registered := false
 	success := 1
 	for !registered {
