@@ -5,6 +5,7 @@ routing:
   client: 
   services:
     kraken:
+      - Agent
       - Application
       - Cluster
     gyarados:

@@ -36,6 +36,11 @@ Cluster is the service managing external clusters.
 
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| uuid | [string](#string) |  | the uuid of the cluster, used when setting up the agent |
+
+
 
 
 
@@ -75,10 +80,7 @@ Cluster is the service managing external clusters.
 | ----- | ---- | ----- | ----------- |
 | uuid | [string](#string) |  | unique id of the cluster |
 | name | [string](#string) |  | name of the cluster |
-| endpoint | [string](#string) |  | api server endpoint |
-| token | [string](#string) |  | authentication token |
-| cert | [string](#string) |  | server certificate |
-| ready | [bool](#bool) |  | server ready status, based on node status |
+| ready | [bool](#bool) |  | server ready status, based on agent status |
 
 
 
@@ -119,9 +121,6 @@ Cluster is the service managing external clusters.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  | name of the cluster |
-| endpoint | [string](#string) |  | api server endpoint |
-| token | [string](#string) |  | authentication token |
-| cert | [string](#string) |  | server certificate |
 
 
 
@@ -193,9 +192,6 @@ Cluster is the service managing external clusters.
 | ----- | ---- | ----- | ----------- |
 | uuid | [string](#string) |  | unique id of the cluster |
 | name | [string](#string) |  | name of the cluster |
-| endpoint | [string](#string) |  | api server endpoint |
-| token | [string](#string) |  | authentication token |
-| cert | [string](#string) |  | server certificate |
 
 
 

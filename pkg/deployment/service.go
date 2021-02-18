@@ -13,12 +13,11 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/deployment/run"
 	"github.com/redsailtechnologies/boatswain/pkg/git"
-	"github.com/redsailtechnologies/boatswain/pkg/helm"
-	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/repo"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
+	"github.com/redsailtechnologies/boatswain/rpc/agent"
 	pb "github.com/redsailtechnologies/boatswain/rpc/deployment"
 )
 
@@ -28,6 +27,7 @@ var runCollection = "runs"
 // Service is the implementation for twirp to use
 type Service struct {
 	auth    auth.Agent
+	agent   agent.AgentAction
 	git     git.Agent
 	cluster *cluster.ReadRepository
 	repo    *repo.ReadRepository
@@ -39,9 +39,10 @@ type Service struct {
 }
 
 // NewService creates the service
-func NewService(a auth.Agent, g git.Agent, s storage.Storage) *Service {
+func NewService(ag agent.AgentAction, au auth.Agent, g git.Agent, s storage.Storage) *Service {
 	return &Service{
-		auth:    a,
+		agent:   ag,
+		auth:    au,
 		git:     g,
 		cluster: cluster.NewReadRepository(s),
 		repo:    repo.NewReadRepository(s),
@@ -235,13 +236,13 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 		return nil, tw.ToTwirpError(err, "error loading Deployment")
 	}
 
-	repo, err := s.repo.Load(d.RepoID())
+	rep, err := s.repo.Load(d.RepoID())
 	if err != nil {
 		logger.Error("error reading Repo for Deployment", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Repo for Deployment")
 	}
 
-	f := s.git.GetFile(repo.Endpoint(), repo.Token(), d.Branch(), d.FilePath())
+	f := s.git.GetFile(rep.Endpoint(), rep.Token(), d.Branch(), d.FilePath())
 	if f == nil {
 		logger.Error("could not get deployment file")
 		return nil, twirp.NotFoundError("deployment file not found")
@@ -273,7 +274,7 @@ func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.De
 	})
 
 	// start the engine in the background
-	eng, err := run.NewEngine(r, s.store, git.DefaultAgent{}, helm.DefaultAgent{}, kube.DefaultAgent{})
+	eng, err := run.NewEngine(r, s.store, s.agent, git.DefaultAgent{}, repo.DefaultAgent{})
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}

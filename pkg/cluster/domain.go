@@ -10,11 +10,9 @@ type Cluster struct {
 	version   int
 	destroyed bool
 
-	uuid     string
-	name     string
-	endpoint string
-	token    string
-	cert     string
+	uuid  string
+	name  string
+	token string
 }
 
 // Replay recreates the cluster from a series of events
@@ -27,12 +25,12 @@ func Replay(events []ddd.Event) ddd.Aggregate {
 }
 
 // Create handles create commands
-func Create(uuid, name, endpoint, token, cert string, timestamp int64) (*Cluster, error) {
+func Create(uuid, name, token string, timestamp int64) (*Cluster, error) {
 	if uuid == "" {
 		return nil, ddd.IDError{}
 	}
-	if err := validateFields(name, endpoint, token, cert); err != nil {
-		return nil, err
+	if name == "" {
+		return nil, ddd.RequiredArgumentError{Arg: "name"}
 	}
 
 	c := &Cluster{}
@@ -40,9 +38,7 @@ func Create(uuid, name, endpoint, token, cert string, timestamp int64) (*Cluster
 		Timestamp: timestamp,
 		UUID:      uuid,
 		Name:      name,
-		Endpoint:  endpoint,
 		Token:     token,
-		Cert:      cert,
 	})
 	return c, nil
 }
@@ -59,9 +55,9 @@ func (c *Cluster) Destroy(timestamp int64) error {
 }
 
 // Update handles update commands
-func (c *Cluster) Update(name, endpoint, token, cert string, timestamp int64) error {
-	if err := validateFields(name, endpoint, token, cert); err != nil {
-		return err
+func (c *Cluster) Update(name string, timestamp int64) error {
+	if name == "" {
+		return ddd.RequiredArgumentError{Arg: "name"}
 	}
 	if c.destroyed {
 		return ddd.DestroyedError{Entity: entityName}
@@ -70,9 +66,6 @@ func (c *Cluster) Update(name, endpoint, token, cert string, timestamp int64) er
 	c.on(&Updated{
 		Timestamp: timestamp,
 		Name:      name,
-		Endpoint:  endpoint,
-		Token:     token,
-		Cert:      cert,
 	})
 	return nil
 }
@@ -92,19 +85,9 @@ func (c *Cluster) Name() string {
 	return c.name
 }
 
-// Endpoint returns this cluster's endpoint
-func (c *Cluster) Endpoint() string {
-	return c.endpoint
-}
-
-// Token returns this cluster's access token
+// Token returns this cluster's agent token
 func (c *Cluster) Token() string {
 	return c.token
-}
-
-// Cert returns the cluster's cert info
-func (c *Cluster) Cert() string {
-	return c.cert
 }
 
 // Events returns this cluster's event history
@@ -126,31 +109,10 @@ func (c *Cluster) on(event ddd.Event) {
 	case *Created:
 		c.uuid = e.UUID
 		c.name = e.Name
-		c.endpoint = e.Endpoint
 		c.token = e.Token
-		c.cert = e.Cert
 	case *Destroyed:
 		c.destroyed = true
 	case *Updated:
 		c.name = e.Name
-		c.endpoint = e.Endpoint
-		c.token = e.Token
-		c.cert = e.Cert
 	}
-}
-
-func validateFields(name, endpoint, token, cert string) error {
-	if name == "" {
-		return ddd.RequiredArgumentError{Arg: "Name"}
-	}
-	if endpoint == "" {
-		return ddd.RequiredArgumentError{Arg: "Endpoint"}
-	}
-	if token == "" {
-		return ddd.RequiredArgumentError{Arg: "Token"}
-	}
-	if cert == "" {
-		return ddd.RequiredArgumentError{Arg: "Cert"}
-	}
-	return nil
 }

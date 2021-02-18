@@ -1,4 +1,4 @@
-.PHONY: client echo help kraken target version
+.PHONY: all clean changes docs echo help init gyarados kraken leviathan package poseidon proto push template tentacle test triton version versionprev
 
 # Build env
 DEBUG=false
@@ -14,14 +14,14 @@ HELM_OUT=bin/
 LEVI_CMD=cmd/leviathan/
 LEVI_OUT=bin/
 PROJECT_NAME=null
-SERVICE_LIST=gyarados kraken poseidon
+SERVICE_LIST=gyarados kraken poseidon tentacle
 TRITON_PATH=web/triton/
 TEST_OUT=
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
 ## all: builds the client and all services
-all: echo proto gyarados kraken poseidon triton
+all: echo proto gyarados leviathan kraken poseidon triton
 
 ## clean: removes binaries, images, etc
 clean:
@@ -79,11 +79,16 @@ kraken: echo
 
 ## leviathan: builds the leviathan binary
 leviathan: echo proto
-	@echo Building leviathan server to $(LEVI_OUT)
-	@ rm -rf $(LEVI_OUT)
-	@go build -o $(LEVI_OUT)leviathan $(LEVI_CMD)main.go
-	@cd $(WORKDIR)/$(TRITON_PATH); npm run build
-	@cp -r $(TRITON_PATH)dist/triton $(LEVI_OUT)
+	@-$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=leviathan template
+
+## package: generates helm packages
+package: echo
+	@echo Packaging charts to $(HELM_OUT)
+	@mkdir -p $(HELM_OUT)
+	@helm dependency update --skip-refresh deploy/boatswain
+	@for chart in $(CHART_LIST); do \
+		helm package deploy/$$chart --version $(shell make version) --app-version $(shell make version) --destination $(HELM_OUT); \
+	done
 
 ## poseidon: builds the poseidon image
 poseidon: echo
@@ -102,20 +107,12 @@ proto: echo
 	    $$service.proto; \
 	done
 
-## package: generates helm packages
-package: echo
-	@echo Packaging charts to $(HELM_OUT)
-	@mkdir -p $(HELM_OUT)
-	@helm dependency update deploy/boatswain
-	@for chart in $(CHART_LIST); do \
-		helm package deploy/$$chart --version $(shell make version) --app-version $(shell make version) --destination $(HELM_OUT); \
-	done
-
 ## push: pushes local images
 push:
 	@for service in $(SERVICE_LIST); do \
 	  docker push $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
 	done
+	docker push $(DOCKER_REPO)leviathan:$(DOCKER_TAG) $(DOCKER_OPTS)
 	docker push $(DOCKER_REPO)triton:$(DOCKER_TAG) $(DOCKER_OPTS)
 
 template:
@@ -127,6 +124,10 @@ else
 	@echo Building $(PROJECT_NAME) release container
 	@docker build $(WORKDIR) -f cmd/$(PROJECT_NAME)/Dockerfile --target=release --tag $(DOCKER_REPO)$(PROJECT_NAME):$(DOCKER_TAG) $(DOCKER_OPTS)
 endif
+
+## tentacle: builds the tentacle image
+tentacle: echo
+	@$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=tentacle template
 
 ## test: runs all unit tests, set TEST_OUT=html for html coverage report
 test: echo proto

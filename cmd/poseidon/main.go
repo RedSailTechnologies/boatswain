@@ -10,7 +10,6 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/git"
 	"github.com/redsailtechnologies/boatswain/pkg/health"
-	"github.com/redsailtechnologies/boatswain/pkg/helm"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/repo"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
@@ -36,7 +35,7 @@ func main() {
 
 	hooks := twirp.ChainHooks(tw.JWTHook(authAgent), tw.LoggingHooks())
 
-	r := repo.NewService(authAgent, git.DefaultAgent{}, helm.DefaultAgent{}, store)
+	r := repo.NewService(authAgent, git.DefaultAgent{}, repo.DefaultAgent{}, store)
 	repTwirp := rep.NewRepoServer(r, hooks, twirp.WithServerPathPrefix("/api"))
 
 	health := health.NewService(r)

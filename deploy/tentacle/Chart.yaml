@@ -1,0 +1,7 @@
+apiVersion: v2
+name: tentacle
+description: The tentacle component chart
+
+type: application
+version: 0.4.2
+appVersion: 0.4.2

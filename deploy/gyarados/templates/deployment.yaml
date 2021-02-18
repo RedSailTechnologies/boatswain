@@ -46,6 +46,8 @@ spec:
               value: {{ .Values.global.oidc.roles.editor }}
             - name: USER_READER_ROLE
               value: {{ .Values.global.oidc.roles.reader }}
+            - name: ACTION_ENDPOINT
+              value: {{ printf "%s%s:%s" "http://" "$(KRAKEN_SERVICE_HOST)" "$(KRAKEN_SERVICE_PORT)" }}
           ports:
             - name: http
               containerPort: 8080

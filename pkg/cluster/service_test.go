@@ -11,10 +11,18 @@ import (
 
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
-	"github.com/redsailtechnologies/boatswain/pkg/kube"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
+	"github.com/redsailtechnologies/boatswain/rpc/agent"
 	pb "github.com/redsailtechnologies/boatswain/rpc/cluster"
 )
+
+type mockAgentAction struct {
+	mock.Mock
+}
+
+func (maa *mockAgentAction) Run(context.Context, *agent.Action) (*agent.Result, error) {
+	return nil, nil
+}
 
 type mockAuth struct {
 	mock.Mock
@@ -98,20 +106,17 @@ func (ms *mockStorage) StoreEvent(collection, uuid, eventType, eventData string,
 }
 
 func TestNewService(t *testing.T) {
-	assert.NotNil(t, NewService(&mockAuth{}, kube.DefaultAgent{}, &mockStorage{}))
+	assert.NotNil(t, NewService(&mockAgentAction{}, &mockAuth{}, &mockStorage{}))
 }
 
 func TestCreateAuth(t *testing.T) {
 	a := &mockAuth{}
 	a.On("Authorize", mock.Anything, mock.Anything).Return(auth.NotAuthorizedError{})
 	store := &mockStorage{}
-	sut := NewService(a, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, a, store)
 
 	res, err := sut.Create(context.TODO(), &pb.CreateCluster{
-		Name:     "name",
-		Endpoint: "endpoint",
-		Token:    "token",
-		Cert:     "cert",
+		Name: "name",
 	})
 
 	assert.Nil(t, res)
@@ -124,16 +129,13 @@ func TestCreateValid(t *testing.T) {
 	store := &mockStorage{}
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(0)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	sut := NewService(auth, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, auth, store)
 
 	res, err := sut.Create(context.TODO(), &pb.CreateCluster{
-		Name:     "name",
-		Endpoint: "endpoint",
-		Token:    "token",
-		Cert:     "cert",
+		Name: "name",
 	})
 
-	assert.Equal(t, &pb.ClusterCreated{}, res)
+	assert.NotEqual(t, "", res.Uuid)
 	assert.Nil(t, err)
 }
 
@@ -143,13 +145,10 @@ func TestCreateInvalid(t *testing.T) {
 	store := &mockStorage{}
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(0)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	sut := NewService(auth, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, auth, store)
 
 	res, err := sut.Create(context.TODO(), &pb.CreateCluster{
-		Name:     "",
-		Endpoint: "endpoint",
-		Token:    "token",
-		Cert:     "cert",
+		Name: "",
 	})
 
 	assert.Nil(t, res)
@@ -162,13 +161,10 @@ func TestCreateSaveError(t *testing.T) {
 	store := &mockStorage{}
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(0)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(""))
-	sut := NewService(auth, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, auth, store)
 
 	res, err := sut.Create(context.TODO(), &pb.CreateCluster{
-		Name:     "name",
-		Endpoint: "endpoint",
-		Token:    "token",
-		Cert:     "cert",
+		Name: "name",
 	})
 
 	assert.Nil(t, res)
@@ -180,7 +176,7 @@ func TestUpdateAuth(t *testing.T) {
 	a.On("Authorize", mock.Anything, mock.Anything).Return(auth.NotAuthorizedError{})
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
-		&storage.StoredEvent{
+		{
 			UUID:      "a",
 			Version:   1,
 			Timestamp: ddd.NewTimestamp(),
@@ -190,14 +186,11 @@ func TestUpdateAuth(t *testing.T) {
 	}, nil)
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	sut := NewService(a, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, a, store)
 
 	res, err := sut.Update(context.TODO(), &pb.UpdateCluster{
-		Uuid:     "a",
-		Name:     "NEWname",
-		Endpoint: "NEWendpoint",
-		Token:    "NEWtoken",
-		Cert:     "NEWcert",
+		Uuid: "a",
+		Name: "NEWname",
 	})
 
 	assert.Nil(t, res)
@@ -209,7 +202,7 @@ func TestUpdateValid(t *testing.T) {
 	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
-		&storage.StoredEvent{
+		{
 			UUID:      "a",
 			Version:   1,
 			Timestamp: ddd.NewTimestamp(),
@@ -220,14 +213,11 @@ func TestUpdateValid(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(auth, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, auth, store)
 
 	res, err := sut.Update(context.TODO(), &pb.UpdateCluster{
-		Uuid:     "a",
-		Name:     "NEWname",
-		Endpoint: "NEWendpoint",
-		Token:    "NEWtoken",
-		Cert:     "NEWcert",
+		Uuid: "a",
+		Name: "NEWname",
 	})
 
 	assert.Equal(t, &pb.ClusterUpdated{}, res)
@@ -239,14 +229,14 @@ func TestUpdateValidMultiple(t *testing.T) {
 	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
-		&storage.StoredEvent{
+		{
 			UUID:      "a",
 			Version:   1,
 			Timestamp: ddd.NewTimestamp(),
 			Type:      "ClusterCreated",
 			Data:      `{"Timestamp":0,"UUID":"a","Name":"name","Endpoint":"endpoint","Token":"token","Cert":"cert"}`,
 		},
-		&storage.StoredEvent{
+		{
 			UUID:      "a",
 			Version:   2,
 			Timestamp: ddd.NewTimestamp(),
@@ -257,14 +247,11 @@ func TestUpdateValidMultiple(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(2)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(auth, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, auth, store)
 
 	res, err := sut.Update(context.TODO(), &pb.UpdateCluster{
-		Uuid:     "a",
-		Name:     "NEWERname",
-		Endpoint: "NEWERendpoint",
-		Token:    "NEWERtoken",
-		Cert:     "NEWERcert",
+		Uuid: "a",
+		Name: "NEWERname",
 	})
 
 	assert.Equal(t, &pb.ClusterUpdated{}, res)
@@ -279,14 +266,11 @@ func TestUpdateLoadError(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(auth, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, auth, store)
 
 	res, err := sut.Update(context.TODO(), &pb.UpdateCluster{
-		Uuid:     "a",
-		Name:     "NEWname",
-		Endpoint: "NEWendpoint",
-		Token:    "NEWtoken",
-		Cert:     "NEWcert",
+		Uuid: "a",
+		Name: "NEWname",
 	})
 
 	assert.Nil(t, res)
@@ -298,7 +282,7 @@ func TestUpdateInvalid(t *testing.T) {
 	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
-		&storage.StoredEvent{
+		{
 			UUID:      "a",
 			Version:   1,
 			Timestamp: ddd.NewTimestamp(),
@@ -309,14 +293,11 @@ func TestUpdateInvalid(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(auth, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, auth, store)
 
 	res, err := sut.Update(context.TODO(), &pb.UpdateCluster{
-		Uuid:     "a",
-		Name:     "",
-		Endpoint: "NEWendpoint",
-		Token:    "NEWtoken",
-		Cert:     "NEWcert",
+		Uuid: "a",
+		Name: "",
 	})
 
 	assert.Nil(t, res)
@@ -328,7 +309,7 @@ func TestUpdateStoreEventError(t *testing.T) {
 	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
-		&storage.StoredEvent{
+		{
 			UUID:      "a",
 			Version:   1,
 			Timestamp: ddd.NewTimestamp(),
@@ -339,14 +320,11 @@ func TestUpdateStoreEventError(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(""))
 
-	sut := NewService(auth, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, auth, store)
 
 	res, err := sut.Update(context.TODO(), &pb.UpdateCluster{
-		Uuid:     "a",
-		Name:     "NEWname",
-		Endpoint: "NEWendpoint",
-		Token:    "NEWtoken",
-		Cert:     "NEWcert",
+		Uuid: "a",
+		Name: "NEWname",
 	})
 
 	assert.Nil(t, res)
@@ -358,7 +336,7 @@ func TestDestroyAuth(t *testing.T) {
 	a.On("Authorize", mock.Anything, mock.Anything).Return(auth.NotAuthorizedError{})
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
-		&storage.StoredEvent{
+		{
 			UUID:      "a",
 			Version:   1,
 			Timestamp: ddd.NewTimestamp(),
@@ -369,7 +347,7 @@ func TestDestroyAuth(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(a, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, a, store)
 
 	res, err := sut.Destroy(context.TODO(), &pb.DestroyCluster{
 		Uuid: "a",
@@ -384,7 +362,7 @@ func TestDestroyValid(t *testing.T) {
 	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
-		&storage.StoredEvent{
+		{
 			UUID:      "a",
 			Version:   1,
 			Timestamp: ddd.NewTimestamp(),
@@ -395,7 +373,7 @@ func TestDestroyValid(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(auth, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, auth, store)
 
 	res, err := sut.Destroy(context.TODO(), &pb.DestroyCluster{
 		Uuid: "a",
@@ -413,7 +391,7 @@ func TestDestroyLoadError(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(auth, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, auth, store)
 
 	res, err := sut.Destroy(context.TODO(), &pb.DestroyCluster{
 		Uuid: "a",
@@ -428,14 +406,14 @@ func TestDestroyAlreadyDestroyed(t *testing.T) {
 	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
-		&storage.StoredEvent{
+		{
 			UUID:      "a",
 			Version:   1,
 			Timestamp: ddd.NewTimestamp(),
 			Type:      "ClusterCreated",
 			Data:      `{"Timestamp":0,"UUID":"a","Name":"name","Endpoint":"endpoint","Token":"token","Cert":"cert"}`,
 		},
-		&storage.StoredEvent{
+		{
 			UUID:      "a",
 			Version:   2,
 			Timestamp: ddd.NewTimestamp(),
@@ -446,7 +424,7 @@ func TestDestroyAlreadyDestroyed(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(2)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	sut := NewService(auth, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, auth, store)
 
 	res, err := sut.Destroy(context.TODO(), &pb.DestroyCluster{
 		Uuid: "a",
@@ -461,7 +439,7 @@ func TestDestroyStoreEventError(t *testing.T) {
 	auth.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	store := &mockStorage{}
 	store.On("GetEvents", mock.Anything, "a").Return([]*storage.StoredEvent{
-		&storage.StoredEvent{
+		{
 			UUID:      "a",
 			Version:   1,
 			Timestamp: ddd.NewTimestamp(),
@@ -472,7 +450,7 @@ func TestDestroyStoreEventError(t *testing.T) {
 	store.On("GetVersion", mock.Anything, mock.Anything).Return(1)
 	store.On("StoreEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(""))
 
-	sut := NewService(auth, kube.DefaultAgent{}, store)
+	sut := NewService(&mockAgentAction{}, auth, store)
 
 	res, err := sut.Destroy(context.TODO(), &pb.DestroyCluster{
 		Uuid: "a",
@@ -480,11 +458,4 @@ func TestDestroyStoreEventError(t *testing.T) {
 
 	assert.Nil(t, res)
 	assert.Error(t, err)
-}
-
-func TestToClientset(t *testing.T) {
-	sut, _ := Create(ddd.NewUUID(), "name", "endpoint", "token", "cert", ddd.NewTimestamp())
-	cs, err := sut.toClientset()
-	assert.Nil(t, err)
-	assert.NotNil(t, cs)
 }

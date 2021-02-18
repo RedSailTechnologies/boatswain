@@ -27,19 +27,15 @@ service Cluster {
 
 message CreateCluster {
     string name = 1; // name of the cluster
-    string endpoint = 2; // api server endpoint
-    string token = 3; // authentication token
-    string cert = 4; // server certificate
 }
 
-message ClusterCreated {}
+message ClusterCreated {
+    string uuid = 1; // the uuid of the cluster, used when setting up the agent
+}
 
 message UpdateCluster {
     string uuid = 1; // unique id of the cluster
     string name = 2; // name of the cluster
-    string endpoint = 3; // api server endpoint
-    string token = 4; // authentication token
-    string cert = 5; // server certificate
 }
 
 message ClusterUpdated {}
@@ -57,10 +53,7 @@ message ReadCluster {
 message ClusterRead {
     string uuid = 1; // unique id of the cluster
     string name = 2; // name of the cluster
-    string endpoint = 3; // api server endpoint
-    string token = 4; // authentication token
-    string cert = 5; // server certificate
-    bool ready = 6; // server ready status, based on node status
+    bool ready = 3; // server ready status, based on agent status
 }
 
 message FindCluster {

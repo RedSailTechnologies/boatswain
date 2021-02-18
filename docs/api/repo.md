@@ -247,8 +247,8 @@ Repo is the service managing external repositories, such as helm.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| HELM | 0 |  |
-| GIT | 1 |  |
+| HELM_REPO | 0 |  |
+| GIT_REPO | 1 |  |
 
 
  

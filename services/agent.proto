@@ -1,0 +1,67 @@
+/*
+Agent is the service for external clusters to call into to register and receive actions.
+*/
+syntax = "proto3";
+package redsail.bosn;
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/agent;agent";
+
+service Agent {
+    // registers this agent
+    rpc Register (RegisterAgent) returns (AgentRegistered);
+
+    // gets the next action for the agent or an empty list if there's nothing to do
+    rpc Actions (ReadActions) returns (ActionsRead);
+
+    // returns a result for this agent
+    rpc Results (ReturnResult) returns (ResultReturned);
+}
+
+service AgentAction {
+    rpc Run (Action) returns (Result);
+}
+
+message RegisterAgent {
+    string cluster_uuid = 1; // the uuid of the agent to register
+}
+
+message AgentRegistered {
+    string cluster_token = 1; // the unique token for the agent to used when calling for actions
+}
+
+message ReadActions {
+    string cluster_uuid = 1;
+    string cluster_token = 2;
+}
+
+message ActionsRead {
+    repeated Action actions = 1;
+}
+
+message ReturnResult {
+    string action_uuid = 1;
+    string cluster_uuid = 2;
+    string cluster_token = 3;
+    Result result = 4;
+}
+
+message ResultReturned {}
+
+message Action {
+    string uuid = 1;
+    string cluster_uuid = 2;
+    string cluster_token = 3;
+    ActionType action_type = 4;
+    string action = 5;
+    int64 timeout_seconds = 6;
+    bytes args = 7;
+}
+
+message Result {
+    bytes data = 1;
+    string error = 2;
+}
+
+enum ActionType{
+    HELM_ACTION = 0;
+    KUBE_ACTION = 1;
+}
