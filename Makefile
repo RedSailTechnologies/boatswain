@@ -79,9 +79,7 @@ kraken: echo
 
 ## leviathan: builds the leviathan binary
 leviathan: echo proto
-	@sed -i 's/^\*\*\/web\/$$/#**\/web\//g' .dockerignore
 	@-$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=leviathan template
-	@sed -i 's/^#\*\*\/web\/$$/**\/web\//g' .dockerignore
 
 ## package: generates helm packages
 package: echo

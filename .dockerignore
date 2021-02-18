@@ -1,14 +1,19 @@
 # docker/build support stuff
 **/Dockerfile
 **/.dockerignore
+**/docker-compose*
 **/Makefile
 **/.github
 **/.git
 **/.gitignore
 
 # ignore other repo stuff not needed
-#**/web/
+**/dist
+**/TestResults
 **/node_modules
+**/npm-debug.log
+**/proxy.conf.json
+**/config.dev.json
 deploy/
 services/
 test/
@@ -22,5 +27,6 @@ test/
 temp.yaml
 **/bin
 **/.vscode
+**/*.user
 **/docker-compose.yaml
 **/clients-config.json
