@@ -15,13 +15,14 @@ LEVI_CMD=cmd/leviathan/
 LEVI_OUT=bin/
 PROJECT_NAME=null
 SERVICE_LIST=gyarados kraken poseidon tentacle
+SHELL=/bin/bash
 TRITON_PATH=web/triton/
 TEST_OUT=
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # BASIC TARGETS
 ## all: builds the client and all services
-all: echo proto gyarados leviathan kraken poseidon triton
+all: echo proto gyarados leviathan kraken poseidon tentacle triton
 
 ## clean: removes binaries, images, etc
 clean:
@@ -42,10 +43,17 @@ clean:
 	  docker rmi -f $(DOCKER_REPO)$$service:$(DOCKER_TAG); \
 	done
 
-changes: 
-	@cat docs/installation.md
-	@echo \\n## Changes:
-	@git log $(shell make versionprev)..$(shell make version) --oneline --first-parent | xargs -i echo "*" "{}"
+## changes: regenerates the CHANGELOG from tags and commit entries
+changes:
+	@echo "# CHANGELOG" > CHANGELOG.md
+	@echo >> CHANGELOG.md
+	@for i in $$(git tag | sort -Vr); do \
+		[[ "$$i" == "v0.0.1" ]] && continue; \
+		echo "## $$i" >> CHANGELOG.md; \
+		git log $$(git describe --abbrev=0 --tags $$i^)..$$i --oneline --first-parent | xargs -i echo "*" "{}" >> CHANGELOG.md; \
+		echo >> CHANGELOG.md; \
+	done
+	@tail -n 1 "CHANGELOG.md" | wc -c | xargs -I {} truncate "CHANGELOG.md" -s -{}
 
 ## docs: builds the documentation into docs/
 docs: proto
