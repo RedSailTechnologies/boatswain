@@ -29,7 +29,7 @@
         <mat-form-field>
             <mat-select required placeholder="Type" formControlName="type">
                 <mat-option *ngFor="let type of repoTypes" [value]="type">
-                    {{type}}
+                    {{type.replace("_REPO", "")}}
                 </mat-option>
             </mat-select>
         </mat-form-field>

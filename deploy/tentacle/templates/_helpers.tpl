@@ -36,6 +36,9 @@ Common labels
 {{- define "tentacle.labels" -}}
 helm.sh/chart: {{ include "tentacle.chart" . }}
 {{ include "tentacle.selectorLabels" . }}
+{{- if .Values.global.partOf }}
+app.kubernetes.io/part-of: {{ .Values.global.partOf }}
+{{- end }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}

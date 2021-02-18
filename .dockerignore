@@ -7,7 +7,7 @@
 **/.gitignore
 
 # ignore other repo stuff not needed
-**/web/
+#**/web/
 **/node_modules
 deploy/
 services/
@@ -22,3 +22,5 @@ test/
 temp.yaml
 **/bin
 **/.vscode
+**/docker-compose.yaml
+**/clients-config.json

@@ -34,7 +34,11 @@ func performAction(action *agent.Action) {
 		response.Result.Error = "action type not found"
 		client.Results(context.Background(), response)
 	}
-	logger.Info("result sent", "id", action.Uuid, "error", response.Result.Error)
+	if response.Result.Error == "" {
+		logger.Info("result sent", "id", action.Uuid)
+	} else {
+		logger.Info("result sent", "id", action.Uuid, "error", response.Result.Error)
+	}
 }
 
 func runKubeAction(action *agent.Action, response *agent.ReturnResult) *agent.ReturnResult {

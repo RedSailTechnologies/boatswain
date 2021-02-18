@@ -7,11 +7,6 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bin/app ./cmd/leviathan
 
-FROM base as debug
-RUN go get github.com/go-delve/delve/cmd/dlv
-EXPOSE 40000
-ENTRYPOINT /go/bin/dlv --listen=:40000 --headless=true --api-version=2 --accept-multiclient exec --continue bin/app
-
 FROM node:${NODE_VERSION} as client
 ENV PATH /app/node_modules/.bin:$PATH
 WORKDIR /app
@@ -21,11 +16,14 @@ COPY web/triton/ .
 RUN npm run build
 
 FROM golang:1.15-alpine as release
-RUN addgroup -g 10001 -S leviathan && \
-    adduser -u 10001 -S leviathan -G leviathan
-USER leviathan
-WORKDIR /leviathan/triton
-COPY --from=client /app/dist/triton ./triton
 WORKDIR /leviathan
+COPY --from=client /app/dist/triton ./triton
 COPY --from=base /go/src/github.com/redsailtechnologies/boatswain/bin/app .
-ENTRYPOINT ./app
+ENV MONGO_CONNECTION_STRING=
+ENV OIDC_URL=
+ENV OIDC_CLIENT=
+ENV USER_SCOPE=
+ENV CLIENT_SCOPE=
+ENV CLIEND_ID=
+ENTRYPOINT echo "{\"oidc\": {\"authority\": \"$OIDC_CLIENT\",\"clientId\": \"$CLIEND_ID\",\"scope\": \"$CLIENT_SCOPE\"}}" > triton/assets/config/config.prod.json \
+    && ./app

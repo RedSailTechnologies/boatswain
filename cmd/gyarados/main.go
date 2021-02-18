@@ -20,7 +20,8 @@ import (
 )
 
 func main() {
-	var httpPort, mongoConn, mongoDB string
+	var actionEndpoint, httpPort, mongoConn, mongoDB string
+	flag.StringVar(&actionEndpoint, "action-endpoint", cfg.EnvOrDefaultString("ACTION_ENDPOINT", "http://localhost:8080"), "agent action service endpoint")
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
 	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
 	flag.StringVar(&mongoDB, "mongo-db", cfg.EnvOrDefaultString("MONGO_DB_NAME", "boatswain"), "mongodb database name")
@@ -33,12 +34,11 @@ func main() {
 	}
 
 	auth := auth.NewOIDCAgent(authCfg)
-
 	hooks := twirp.ChainHooks(tw.JWTHook(auth), tw.LoggingHooks())
 
-	agent := agent.NewAgentActionProtobufClient("http://localhost:8080", &http.Client{}, twirp.WithClientPathPrefix("/agents")) // FIXME
+	action := agent.NewAgentActionProtobufClient(actionEndpoint, &http.Client{}, twirp.WithClientPathPrefix("/agents"))
 
-	deploy := deployment.NewService(agent, auth, &git.DefaultAgent{}, store)
+	deploy := deployment.NewService(action, auth, &git.DefaultAgent{}, store)
 	dTwirp := dl.NewDeploymentServer(deploy, hooks, twirp.WithServerPathPrefix("/api"))
 
 	health := health.NewService(deploy)

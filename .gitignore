@@ -23,6 +23,8 @@ deploy/boatswain/Chart.lock
 temp.yaml
 **/__debug_bin
 .env
+**/docker-compose.yaml
+**/clients-config.json
 
 # Editor stuff
 **/.vscode/

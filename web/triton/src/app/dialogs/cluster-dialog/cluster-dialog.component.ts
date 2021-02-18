@@ -24,7 +24,7 @@ export class ClusterDialogComponent implements OnInit {
   constructor(public dialog: MatDialogRef<ClusterDialogComponent>, 
               @Inject(MAT_DIALOG_DATA) data,
               private spinner: MatDialog,
-              private error: MatDialog,
+              private message: MatDialog,
               private auth: AuthService) {
     this.title = data["title"];
     this.isAdd = data["type"] == "add";
@@ -66,12 +66,19 @@ export class ClusterDialogComponent implements OnInit {
       promise = this.client.update(cluster);
     }
 
-    promise.then(_ => {
+    promise.then(val => {
       spinnerRef.close()
+      this.message.open(MessageDialogComponent, {
+        panelClass: 'message-box',
+        data: {
+          "reason": "Info",
+          "message": "Cluster UUID: " + val.uuid
+        }
+      });
       this.dialog.close()
     }).catch(error => {
       spinnerRef.close();
-      this.error.open(MessageDialogComponent, {
+      this.message.open(MessageDialogComponent, {
         panelClass: 'message-box',
         data: {
           "reason": "Error",

@@ -8,9 +8,9 @@ global:
     clientScopes: ''
     apiScope: ''
     roles:
-      admin: ''
-      editor: ''
-      reader: ''
+      admin: Boatswain.Admin
+      editor: Boatswain.Editor
+      reader: Boatswain.Reader
 
 mongodb:
   auth:

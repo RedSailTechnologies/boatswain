@@ -22,7 +22,8 @@ import (
 )
 
 func main() {
-	var httpPort, mongoConn, mongoDB string
+	var actionEndpoint, httpPort, mongoConn, mongoDB string
+	flag.StringVar(&actionEndpoint, "action-endpoint", cfg.EnvOrDefaultString("ACTION_ENDPOINT", "http://localhost:8080"), "agent action service endpoint")
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
 	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
 	flag.StringVar(&mongoDB, "mongo-db", cfg.EnvOrDefaultString("MONGO_DB_NAME", "boatswain"), "mongodb database name")
@@ -33,21 +34,20 @@ func main() {
 	if err != nil {
 		logger.Fatal("mongo init failed")
 	}
-
 	auth := auth.NewOIDCAgent(authCfg)
-
 	hooks := twirp.ChainHooks(tw.JWTHook(auth), tw.LoggingHooks())
 
-	agentClient := ag.NewAgentActionProtobufClient("http://localhost:8080", &http.Client{}, twirp.WithClientPathPrefix("/agents")) // FIXME
+	actionClient := ag.NewAgentActionProtobufClient(actionEndpoint, &http.Client{}, twirp.WithClientPathPrefix("/agents"))
+
 	agent := agent.NewService(store)
 	agentException := tw.LoggingException{Method: "Actions", Service: "Agent"}
 	agTwirp := ag.NewAgentServer(agent, tw.LoggingHooksWithExceptions(agentException), twirp.WithServerPathPrefix("/agents"))
 	aaTwirp := ag.NewAgentActionServer(agent, tw.LoggingHooks(), twirp.WithServerPathPrefix("/agents"))
 
-	cluster := cluster.NewService(agentClient, auth, store)
+	cluster := cluster.NewService(actionClient, auth, store)
 	clTwirp := cl.NewClusterServer(cluster, hooks, twirp.WithServerPathPrefix("/api"))
 
-	application := application.NewService(agentClient, auth, store)
+	application := application.NewService(actionClient, auth, store)
 	appTwirp := app.NewApplicationServer(application, hooks, twirp.WithServerPathPrefix("/api"))
 
 	health := health.NewService(application, cluster)

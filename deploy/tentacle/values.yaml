@@ -1,3 +1,5 @@
+global:
+  partOf: boatswain
 
 config:
   bosnURL: "" # the base url of the bosn instance

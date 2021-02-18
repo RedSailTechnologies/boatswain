@@ -23,9 +23,9 @@ func Flags() *Config {
 	config := Config{}
 	flag.StringVar(&config.OIDC, "oidc-url", cfg.EnvOrDefaultString("OIDC_URL", ""), "openid connect configuration url")
 	flag.StringVar(&config.Scope, "user-scope", cfg.EnvOrDefaultString("USER_SCOPE", ""), "user scope")
-	flag.StringVar(&config.AdminRole, "user-admin-role", cfg.EnvOrDefaultString("USER_ADMIN_ROLE", ""), "user admin role")
-	flag.StringVar(&config.EditorRole, "user-editor-role", cfg.EnvOrDefaultString("USER_EDITOR_ROLE", ""), "user editor role")
-	flag.StringVar(&config.ReaderRole, "user-reader-role", cfg.EnvOrDefaultString("USER_READER_ROLE", ""), "user reader role")
+	flag.StringVar(&config.AdminRole, "user-admin-role", cfg.EnvOrDefaultString("USER_ADMIN_ROLE", "Boatswain.Admin"), "user admin role")
+	flag.StringVar(&config.EditorRole, "user-editor-role", cfg.EnvOrDefaultString("USER_EDITOR_ROLE", "Boatswain.Editor"), "user editor role")
+	flag.StringVar(&config.ReaderRole, "user-reader-role", cfg.EnvOrDefaultString("USER_READER_ROLE", "Boatswain.Reader"), "user reader role")
 	return &config
 }
 

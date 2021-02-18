@@ -4,7 +4,6 @@ import (
 	"flag"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/twitchtv/twirp"
 
@@ -29,7 +28,8 @@ import (
 )
 
 func main() {
-	var httpPort, mongoConn, mongoDB string
+	var actionEndpoint, httpPort, mongoConn, mongoDB string
+	flag.StringVar(&actionEndpoint, "action-endpoint", cfg.EnvOrDefaultString("ACTION_ENDPOINT", "http://localhost:8080"), "agent action service endpoint")
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
 	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
 	flag.StringVar(&mongoDB, "mongo-db", cfg.EnvOrDefaultString("MONGO_DB_NAME", "boatswain"), "mongodb database name")
@@ -46,7 +46,7 @@ func main() {
 	auth := auth.NewOIDCAgent(authCfg)
 
 	// Twirp Clients
-	agentClient := ag.NewAgentActionProtobufClient("http://localhost:8080", &http.Client{}, twirp.WithClientPathPrefix("/agents")) // FIXME
+	actionClient := ag.NewAgentActionProtobufClient("http://localhost:8080", &http.Client{}, twirp.WithClientPathPrefix("/agents"))
 
 	// Services
 	hooks := twirp.ChainHooks(tw.JWTHook(auth), tw.LoggingHooks())
@@ -56,27 +56,27 @@ func main() {
 	agTwirp := ag.NewAgentServer(agent, tw.LoggingHooksWithExceptions(agentException), twirp.WithServerPathPrefix("/agents"))
 	aaTwirp := ag.NewAgentActionServer(agent, tw.LoggingHooks(), twirp.WithServerPathPrefix("/agents"))
 
-	cluster := cluster.NewService(agentClient, auth, store)
+	cluster := cluster.NewService(actionClient, auth, store)
 	clTwirp := cl.NewClusterServer(cluster, hooks, twirp.WithServerPathPrefix("/api"))
 
-	application := application.NewService(agentClient, auth, store)
+	application := application.NewService(actionClient, auth, store)
 	appTwirp := app.NewApplicationServer(application, hooks, twirp.WithServerPathPrefix("/api"))
 
 	repo := repo.NewService(auth, git.DefaultAgent{}, repo.DefaultAgent{}, store)
 	repTwirp := rep.NewRepoServer(repo, hooks, twirp.WithServerPathPrefix("/api"))
 
-	deploy := deployment.NewService(agentClient, auth, &git.DefaultAgent{}, store)
+	deploy := deployment.NewService(actionClient, auth, &git.DefaultAgent{}, store)
 	depTwirp := dl.NewDeploymentServer(deploy, hooks, twirp.WithServerPathPrefix("/api"))
 
 	health := health.NewService(agent, application, cluster, deploy, repo)
 	healthTwirp := hl.NewHealthServer(health, twirp.WithServerPathPrefix("/health"))
 
-	// Browser Client
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		logger.Fatal("could not get current directory")
-	}
-	tritonServer := http.FileServer(http.Dir(dir + "/triton"))
+	// // Browser Client
+	// dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	// if err != nil {
+	// 	logger.Fatal("could not get current directory")
+	// }
+	// tritonServer := http.FileServer(http.Dir(dir + "/triton"))
 
 	// Muxing...please stand by...
 	mux := http.NewServeMux()
@@ -87,7 +87,12 @@ func main() {
 	mux.Handle(depTwirp.PathPrefix(), auth.Wrap(depTwirp))
 	mux.Handle(repTwirp.PathPrefix(), auth.Wrap(repTwirp))
 	mux.Handle(healthTwirp.PathPrefix(), healthTwirp)
-	mux.Handle("/", tritonServer) // TODO AdamP - fix multiplexer
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if _, err := os.Stat("triton/" + r.RequestURI); os.IsNotExist(err) {
+			http.ServeFile(w, r, "triton/index.html")
+		}
+		http.ServeFile(w, r, "triton/"+r.RequestURI)
+	}) // TODO AdamP - fix multiplexer
 
 	logger.Info("starting leviathan server...ITS HUUUUUUUUUUGE!")
 	logger.Fatal("server exited", "error", http.ListenAndServe(":"+httpPort, mux))
