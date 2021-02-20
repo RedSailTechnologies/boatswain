@@ -13,6 +13,7 @@ type Created struct {
 	Timestamp int64
 	UUID      string
 	Name      string
+	Token     string
 	RepoID    string
 	Branch    string
 	FilePath  string

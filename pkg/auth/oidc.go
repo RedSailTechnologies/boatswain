@@ -154,6 +154,24 @@ func (o *OIDCAgent) User(ctx context.Context) User {
 	return *o.userFromContext(ctx)
 }
 
+// Roles gets the roles for this user
+func (o *OIDCAgent) Roles(u User) []Role {
+	ret := make([]Role, 0)
+	for _, role := range u.Roles {
+		switch role {
+		case o.cfg.AdminRole:
+			ret = append(ret, Admin)
+		case o.cfg.EditorRole:
+			ret = append(ret, Editor)
+		case o.cfg.ReaderRole:
+			ret = append(ret, Reader)
+		default:
+			continue
+		}
+	}
+	return ret
+}
+
 // Wrap wraps an existing http hander to store the auth JWT
 func (o *OIDCAgent) Wrap(base http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

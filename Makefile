@@ -20,9 +20,14 @@ TRITON_PATH=web/triton/
 TEST_OUT=
 WORKDIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
 # BASIC TARGETS
 ## all: builds the client and all services
-all: echo proto gyarados leviathan kraken poseidon tentacle triton
+all: docs echo proto gyarados leviathan kraken poseidon tentacle triton
 
 ## clean: removes binaries, images, etc
 clean:

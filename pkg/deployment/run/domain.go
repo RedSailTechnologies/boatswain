@@ -37,12 +37,9 @@ func Replay(events []ddd.Event) ddd.Aggregate {
 }
 
 // Create handles create commands for runs
-func Create(uuid, depUUID string, tpl *template.Template, trig *trigger.Trigger) (*Run, error) {
+func Create(uuid string, tpl *template.Template, trig *trigger.Trigger) (*Run, error) {
 	if uuid == "" {
 		return nil, ddd.IDError{}
-	}
-	if depUUID == "" {
-		return nil, RuntimeError{m: "deployment uuid cannot be empty"}
 	}
 	if tpl == nil {
 		return nil, RuntimeError{m: "template cannot be nil"}
@@ -50,10 +47,9 @@ func Create(uuid, depUUID string, tpl *template.Template, trig *trigger.Trigger)
 
 	r := &Run{}
 	r.on(&Created{
-		UUID:           uuid,
-		DeploymentUUID: depUUID,
-		Template:       tpl,
-		Trigger:        trig,
+		UUID:     uuid,
+		Template: tpl,
+		Trigger:  trig,
 	})
 	return r, nil
 }
@@ -212,7 +208,7 @@ func (r *Run) on(event ddd.Event) {
 	switch e := event.(type) {
 	case *Created:
 		r.uuid = e.UUID
-		r.deployID = e.DeploymentUUID
+		r.deployID = e.Trigger.UUID
 		r.trigger = e.Trigger
 		r.template = e.Template
 		r.status = NotStarted

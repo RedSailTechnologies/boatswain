@@ -24,18 +24,7 @@ type Template struct {
 		} `yaml:"helm,omitempty"`
 	} `yaml:"tests,omitempty"`
 
-	Triggers *[]struct {
-		Deployment *struct {
-			Name string `yaml:"name"`
-		} `yaml:"deployment,omitempty"`
-		Web *struct {
-			Name string `yaml:"name"`
-		} `yaml:"web,omitempty"`
-		Manual *struct {
-			Groups []string `yaml:"groups"`
-			Users  []string `yaml:"users"`
-		} `yaml:"manual,omitempty"`
-	} `yaml:"triggers,omitempty"`
+	Triggers *[]Trigger `yaml:"triggers,omitempty"`
 
 	Strategy *[]Step `yaml:"strategy,omitempty"`
 }
@@ -48,6 +37,21 @@ type App struct {
 		Repo    string `yaml:"repo"`
 		Version string `yaml:"version"`
 	} `yaml:"helm,omitempty"`
+}
+
+// A Trigger is a way of validating how this deployment is run
+type Trigger struct {
+	Deployment *struct {
+		Name string `yaml:"name"`
+	} `yaml:"deployment,omitempty"`
+	Web *struct {
+		Name string `yaml:"name"`
+	} `yaml:"web,omitempty"`
+	Manual *struct {
+		Name  string   `yaml:"name"`
+		Role  string   `yaml:"role"`
+		Users []string `yaml:"users"`
+	} `yaml:"manual,omitempty"`
 }
 
 // A Step is an individual step within a Strategy

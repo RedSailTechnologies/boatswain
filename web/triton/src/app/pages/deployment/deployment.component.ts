@@ -3,7 +3,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BusyComponent } from 'src/app/dialogs/busy/busy.component';
-import { DefaultDeployment, Deployment, DeploymentRead, DeploymentTriggered, ReadDeployment, ReadRuns, RunReadSummary, TemplateDeployment, TriggerDeployment } from 'src/app/services/deployment/deployment';
+import { DefaultDeployment, Deployment, DeploymentRead, ReadDeployment, ReadRuns, RunReadSummary, TemplateDeployment } from 'src/app/services/deployment/deployment';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 
 @Component({
@@ -64,21 +64,21 @@ export class DeploymentComponent implements OnInit {
   }
 
   run() {
-    var runTrigger = this.client.trigger(<TriggerDeployment>{
-      uuid: this.deployment.uuid,
-      type: "MANUAL",
-      // TODO - args
-    });
-    var spinnerRef: MatDialogRef<BusyComponent> = this.spinner.open(BusyComponent, {
-      panelClass: 'transparent',
-      disableClose: true
-    });
-    runTrigger.then((val: DeploymentTriggered) => {
-      this.router.navigate(['/run/' + val.runUuid]);
-    })
-    runTrigger.finally(() => {
-      spinnerRef.close();
-    });
+    // var runTrigger = this.client.trigger(<TriggerDeployment>{
+    //   uuid: this.deployment.uuid,
+    //   type: "MANUAL",
+    //   // TODO - args
+    // });
+    // var spinnerRef: MatDialogRef<BusyComponent> = this.spinner.open(BusyComponent, {
+    //   panelClass: 'transparent',
+    //   disableClose: true
+    // });
+    // runTrigger.then((val: DeploymentTriggered) => {
+    //   this.router.navigate(['/run/' + val.runUuid]);
+    // })
+    // runTrigger.finally(() => {
+    //   spinnerRef.close();
+    // });
   }
 
   redirect(run: RunReadSummary) {

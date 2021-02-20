@@ -117,12 +117,14 @@ func (e *Engine) executeStep(step *template.Step) Status {
 	if step.App != nil {
 		return e.executeActionStep(step)
 	} else if step.Test != nil {
+		// FIXME
 		e.run.AppendLog("step type not implemented", Error, ddd.NewTimestamp())
 		return Skipped
 	} else if step.Approval != nil {
 		e.run.AppendLog("step type not implemented", Error, ddd.NewTimestamp())
 		return Skipped
 	} else if step.Trigger != nil {
+		// FIXME
 		e.run.AppendLog("step type not implemented", Error, ddd.NewTimestamp())
 		return Skipped
 	}

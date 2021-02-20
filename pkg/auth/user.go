@@ -11,9 +11,9 @@ type User struct {
 	Name         string   `json:"name"`
 	Email        string   `json:"email"`
 	Subject      string   `json:"sub"`
+	IssuedAt     int64    `json:"iat"`
 	NotBefore    int64    `json:"nbf"`
 	NotOnOrAfter int64    `json:"exp"`
-	IssuedAt     int64    `json:"iat"`
 	Scope        string   `json:"scp"`
 	Roles        []string `json:"roles"`
 }

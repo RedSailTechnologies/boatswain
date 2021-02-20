@@ -22,8 +22,8 @@ Documentation published with github pages [here](https://redsailtechnologies.git
   * Testing steps
   * Deployment trigger improvement
 * 0.8
-  * Azure Devops service hook helper plugin
   * Mongo security
+  * Security upgrades for cluster/triggers
 * 0.9
   * Approval steps
   * External links

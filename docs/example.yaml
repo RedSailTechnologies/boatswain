@@ -70,10 +70,13 @@ triggers:
   - web:
       name: mywebtrigger
         
-  # trigger a deployment manually
+  # trigger a deployment manually, note roles and users are optional but one or the other must be set
+  # and they are ORed together, meaning anyone from the role or anyone in the user list can be used
   - manual:
-      groups:
-        - fun.squad
+      name: somemanualtrigger
+      # one of the three bosn roles: Admin, Editor, Reader 
+      # these cascade downward from Admin -> Editor -> Reader
+      role: Editor
       users:
         - some.body
         - i.used
