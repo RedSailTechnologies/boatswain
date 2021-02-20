@@ -36,10 +36,12 @@ type Engine struct {
 	agent agent.AgentAction
 	git   git.Agent
 	repo  repo.Agent
+
+	trigger func(string, []byte) (string, error)
 }
 
 // NewEngine initializes the engine with required dependencies
-func NewEngine(r *Run, s storage.Storage, a agent.AgentAction, g git.Agent, ra repo.Agent) (*Engine, error) {
+func NewEngine(r *Run, s storage.Storage, a agent.AgentAction, g git.Agent, ra repo.Agent, t func(string, []byte) (string, error)) (*Engine, error) {
 	w := newWriteRepository(s)
 	if err := w.save(r); err != nil {
 		logger.Error("could not save created run", "error", err)
@@ -53,6 +55,7 @@ func NewEngine(r *Run, s storage.Storage, a agent.AgentAction, g git.Agent, ra r
 		agent:    a,
 		git:      g,
 		repo:     ra,
+		trigger:  t,
 	}
 	return engine, nil
 }

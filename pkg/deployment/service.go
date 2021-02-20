@@ -2,6 +2,7 @@ package deployment
 
 import (
 	"context"
+	"errors"
 
 	"github.com/twitchtv/twirp"
 
@@ -367,6 +368,31 @@ func (s Service) Ready() error {
 	return s.ready()
 }
 
+func (s Service) deploymentTrigger(name string, args []byte) (string, error) {
+	deps, err := s.read.All()
+	if err != nil {
+		logger.Error("error reading Deployment", "error", err)
+		return "", err
+	}
+
+	var d *Deployment
+	for _, dep := range deps {
+		if name == d.Name() {
+			d = dep
+			break
+		}
+	}
+	if d == nil {
+		return "", errors.New("deployment not found")
+	}
+
+	return s.trigger(&trigger.Trigger{
+		UUID:      d.UUID(),
+		Name:      name,
+		Arguments: args,
+	})
+}
+
 func (s Service) trigger(trig *trigger.Trigger) (string, error) {
 	// template/validate the deployment
 	d, err := s.read.Load(trig.UUID)
@@ -407,7 +433,7 @@ func (s Service) trigger(trig *trigger.Trigger) (string, error) {
 	r, err := run.Create(ddd.NewUUID(), temp, trig)
 
 	// start the engine in the background
-	eng, err := run.NewEngine(r, s.store, s.agent, git.DefaultAgent{}, repo.DefaultAgent{})
+	eng, err := run.NewEngine(r, s.store, s.agent, git.DefaultAgent{}, repo.DefaultAgent{}, s.deploymentTrigger)
 	if err != nil {
 		return "", err
 	}
