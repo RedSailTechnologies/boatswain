@@ -64,3 +64,11 @@ strategy:
       helm:
         command: uninstall
         wait: true
+  - name: trigger-another-deployment
+    condition: succeeded
+    trigger:
+      name: simple-deploy-trigger
+      deployment: simple
+      arguments:
+        version: ${{ .Parameters.version }}
+        
