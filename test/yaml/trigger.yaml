@@ -1,3 +1,4 @@
+name: trigger something
 version: ${{ .Parameters.version }}
 clusters:
   - test

@@ -38,6 +38,7 @@ func init() {
 	var bosnURL, timeoutString string
 	flag.StringVar(&bosnURL, "bosn-url", cfg.EnvOrDefaultString("BOSN_URL", "http://localhost/"), "boatswain base url")
 	flag.StringVar(&clusterUUID, "cluster-uuid", cfg.EnvOrDefaultString("CLUSTER_UUID", ""), "cluster unique id")
+	flag.StringVar(&clusterToken, "cluster-token", cfg.EnvOrDefaultString("CLUSTER_TOKEN", ""), "cluster access token")
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
 	flag.StringVar(&timeoutString, "timeout", cfg.EnvOrDefaultString("TIMEOUT", "1s"), "callback timeout to boatswain")
 	flag.Parse()
@@ -74,24 +75,7 @@ func main() {
 	}()
 
 	logger.Info("starting this kraken tentacle...together they shall rule the world!")
-	registered := false
 	success := 1
-	for !registered {
-		result, err := client.Register(context.TODO(), &agent.RegisterAgent{
-			ClusterUuid: clusterUUID,
-		})
-		if err != nil {
-			logger.Warn("could not register cluster", "error", err)
-			time.Sleep(time.Duration(success) * time.Second)
-			success++
-		} else {
-			registered = true
-			clusterToken = result.ClusterToken
-			logger.Info("cluster registered")
-		}
-	}
-
-	success = 1
 	for {
 		time.Sleep(timeout * time.Duration(success))
 		actions, err := client.Actions(context.Background(), &agent.ReadActions{

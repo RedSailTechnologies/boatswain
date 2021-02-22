@@ -10,6 +10,7 @@ type Substitution struct {
 
 // A Template is the go type representing yaml for a cd object
 type Template struct {
+	Name    string `yaml:"name"`
 	Version string `yaml:"version"`
 
 	Clusters []string `yaml:"clusters"`

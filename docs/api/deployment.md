@@ -252,6 +252,7 @@ Deployment is the service for creation and management of application installs/up
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | uuid | [string](#string) |  |  |
+| name | [string](#string) |  |  |
 | version | [string](#string) |  |  |
 | status | [Status](#redsail.bosn.Status) |  |  |
 | start_time | [int64](#int64) |  |  |
@@ -272,6 +273,7 @@ Deployment is the service for creation and management of application installs/up
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | uuid | [string](#string) |  |  |
+| name | [string](#string) |  |  |
 | version | [string](#string) |  |  |
 | status | [Status](#redsail.bosn.Status) |  |  |
 | start_time | [int64](#int64) |  |  |

@@ -1,3 +1,4 @@
+name: ${{ .Parameters.name }}
 version: ${{ .Parameters.version }}
 clusters:
   - test

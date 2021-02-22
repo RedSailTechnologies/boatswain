@@ -36,6 +36,8 @@ spec:
               value: {{ .Values.config.bosnURL }}
             - name: CLUSTER_UUID
               value: {{ .Values.config.clusterUUID }}
+            - name: CLUSTER_TOKEN
+              value: {{ .Values.config.clusterToken }}
             - name: TIMEOUT
               value: {{ .Values.config.timeout }}
           ports:

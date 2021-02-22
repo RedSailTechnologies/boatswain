@@ -386,6 +386,7 @@ const JSONToStepRead = (m: StepRead | StepReadJSON): StepRead => {
 
 export interface RunRead {
     uuid: string;
+    name: string;
     version: string;
     status: string;
     startTime: number;
@@ -396,6 +397,7 @@ export interface RunRead {
 
 interface RunReadJSON {
     uuid: string;
+    name: string;
     version: string;
     status: string;
     start_time: number;
@@ -409,6 +411,7 @@ const JSONToRunRead = (m: RunRead | RunReadJSON): RunRead => {
     
     return {
         uuid: m.uuid,
+        name: m.name,
         version: m.version,
         status: m.status,
         startTime: (((m as RunRead).startTime) ? (m as RunRead).startTime : (m as RunReadJSON).start_time),
@@ -438,6 +441,7 @@ const ReadRunsToJSON = (m: ReadRuns): ReadRunsJSON => {
 
 export interface RunReadSummary {
     uuid: string;
+    name: string;
     version: string;
     status: string;
     startTime: number;
@@ -447,6 +451,7 @@ export interface RunReadSummary {
 
 interface RunReadSummaryJSON {
     uuid: string;
+    name: string;
     version: string;
     status: string;
     start_time: number;
@@ -459,6 +464,7 @@ const JSONToRunReadSummary = (m: RunReadSummary | RunReadSummaryJSON): RunReadSu
     
     return {
         uuid: m.uuid,
+        name: m.name,
         version: m.version,
         status: m.status,
         startTime: (((m as RunReadSummary).startTime) ? (m as RunReadSummary).startTime : (m as RunReadSummaryJSON).start_time),

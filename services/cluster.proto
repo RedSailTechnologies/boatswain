@@ -23,6 +23,9 @@ service Cluster {
     
     // gets all clusters currently configured and their status
     rpc All (ReadClusters) returns (ClustersRead);
+
+    // gets the cluster's access token
+    rpc Token (ReadToken) returns (TokenRead);
 }
 
 message CreateCluster {
@@ -68,4 +71,12 @@ message ReadClusters {}
 
 message ClustersRead {
     repeated ClusterRead clusters = 1; // clusters read
+}
+
+message ReadToken {
+    string uuid = 1; //unique id of the cluster
+}
+
+message TokenRead {
+    string token = 1; // the token for this cluster
 }

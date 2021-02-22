@@ -148,6 +148,11 @@ func (r *Run) CurrentTemplate() *template.Step {
 	return &(*r.template.Strategy)[r.current]
 }
 
+// Name gets the name specified in the template for the run
+func (r *Run) Name() string {
+	return r.template.Name
+}
+
 // RunVersion gets the version specified in the template for the run (NOTE: not the entity version)
 func (r *Run) RunVersion() string {
 	return r.template.Version

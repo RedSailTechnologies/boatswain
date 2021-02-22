@@ -1,3 +1,4 @@
+name: simple-wordpress
 version: ${{ .Parameters.version }}
 clusters:
   - test

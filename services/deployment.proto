@@ -120,12 +120,13 @@ message StepRead {
 
 message RunRead {
     string uuid = 1;
-    string version = 2;
-    Status status = 3;
-    int64 start_time = 4;
-    int64 stop_time = 5;
+    string name = 2;
+    string version = 3;
+    Status status = 4;
+    int64 start_time = 5;
+    int64 stop_time = 6;
     
-    repeated StepRead steps = 6;
+    repeated StepRead steps = 7;
 }
 
 message ReadRuns {
@@ -134,10 +135,11 @@ message ReadRuns {
 
 message RunReadSummary {
     string uuid = 1;
-    string version = 2;
-    Status status = 3;
-    int64 start_time = 4;
-    int64 stop_time = 5;
+    string name = 2;
+    string version = 3;
+    Status status = 4;
+    int64 start_time = 5;
+    int64 stop_time = 6;
 }
 
 message RunsRead {

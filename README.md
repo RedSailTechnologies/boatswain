@@ -21,12 +21,13 @@ Documentation published with github pages [here](https://redsailtechnologies.git
   * Trigger service (move out of deployments)
   * Testing steps
   * Deployment trigger improvement
+  * Security fixes for cluster/triggers
 * 0.8
   * Mongo security
-  * Security upgrades for cluster/triggers
-* 0.9
-  * Approval steps
   * External links
+* 0.8
+  * Approval steps
   * Outstanding bug fixes
 * 1.0
+  * Web Homepage and Getting Started docs
   * Clean up Helm charts for public deployment (istio compatibility, etc.)

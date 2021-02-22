@@ -18,6 +18,9 @@
 ### METADATA ###
 ################
 
+# the name for this deployment, mostly just for display
+name: ${{ .Parameters.name }}
+
 # the version of this deployment, note this won't impact parts of the deployment
 # unless they use it but it should probably be unique for each deployment
 version: ${{ .Parameters.version }}

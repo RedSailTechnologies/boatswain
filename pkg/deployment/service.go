@@ -266,6 +266,7 @@ func (s Service) Run(ctx context.Context, req *pb.ReadRun) (*pb.RunRead, error) 
 
 	return &pb.RunRead{
 		Uuid:      r.UUID(),
+		Name:      r.Name(),
 		Version:   r.RunVersion(),
 		Status:    convertStatus(r.Status()),
 		StartTime: r.StartTime(),
@@ -294,6 +295,7 @@ func (s Service) Runs(ctx context.Context, req *pb.ReadRuns) (*pb.RunsRead, erro
 		if r.DeploymentUUID() == req.DeploymentUuid {
 			resp.Runs = append(resp.Runs, &pb.RunReadSummary{
 				Uuid:      r.UUID(),
+				Name:      r.Name(),
 				Version:   r.RunVersion(),
 				Status:    convertStatus(r.Status()),
 				StartTime: r.StartTime(),

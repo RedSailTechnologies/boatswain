@@ -180,7 +180,6 @@ Agent is the service for external clusters to call into to register and receive 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Register | [RegisterAgent](#redsail.bosn.RegisterAgent) | [AgentRegistered](#redsail.bosn.AgentRegistered) | registers this agent |
 | Actions | [ReadActions](#redsail.bosn.ReadActions) | [ActionsRead](#redsail.bosn.ActionsRead) | gets the next action for the agent or an empty list if there&#39;s nothing to do |
 | Results | [ReturnResult](#redsail.bosn.ReturnResult) | [ResultReturned](#redsail.bosn.ResultReturned) | returns a result for this agent |
 
