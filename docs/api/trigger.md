@@ -47,7 +47,7 @@ Trigger is the service for creating triggers to start deployments.
 | ----- | ---- | ----- | ----------- |
 | uuid | [string](#string) |  |  |
 | name | [string](#string) |  |  |
-| args | [bytes](#bytes) |  |  |
+| args | [string](#string) |  |  |
 
 
 
@@ -65,7 +65,7 @@ Trigger is the service for creating triggers to start deployments.
 | uuid | [string](#string) |  |  |
 | name | [string](#string) |  |  |
 | token | [string](#string) |  |  |
-| args | [bytes](#bytes) |  |  |
+| args | [string](#string) |  |  |
 
 
 

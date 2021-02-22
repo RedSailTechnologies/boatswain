@@ -284,6 +284,13 @@ interface ReadTokenJSON {
 }
 
 
+const ReadTokenToJSON = (m: ReadToken): ReadTokenJSON => {
+    return {
+        uuid: m.uuid,
+        
+    };
+};
+
 export interface TokenRead {
     token: string;
     
@@ -294,6 +301,14 @@ interface TokenReadJSON {
     
 }
 
+
+const JSONToTokenRead = (m: TokenRead | TokenReadJSON): TokenRead => {
+    
+    return {
+        token: m.token,
+        
+    };
+};
 
 export interface ReadRun {
     deploymentUuid: string;
@@ -484,6 +499,8 @@ export interface Deployment {
     
     template: (templateDeployment: TemplateDeployment) => Promise<DeploymentTemplated>;
     
+    token: (readToken: ReadToken) => Promise<TokenRead>;
+    
     run: (readRun: ReadRun) => Promise<RunRead>;
     
     runs: (readRuns: ReadRuns) => Promise<RunsRead>;
@@ -588,6 +605,21 @@ export class DefaultDeployment implements Deployment {
             }
 
             return resp.json().then(JSONToDeploymentTemplated);
+        });
+    }
+    
+    token(readToken: ReadToken): Promise<TokenRead> {
+        const url = this.hostname + this.pathPrefix + "Token";
+        let body: ReadToken | ReadTokenJSON = readToken;
+        if (!this.writeCamelCase) {
+            body = ReadTokenToJSON(readToken);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToTokenRead);
         });
     }
     

@@ -430,6 +430,7 @@ Deployment is the service for creation and management of application installs/up
 | Read | [ReadDeployment](#redsail.bosn.ReadDeployment) | [DeploymentRead](#redsail.bosn.DeploymentRead) | reads out a deployment |
 | All | [ReadDeployments](#redsail.bosn.ReadDeployments) | [DeploymentsRead](#redsail.bosn.DeploymentsRead) | gets all deployments currently configured and their status |
 | Template | [TemplateDeployment](#redsail.bosn.TemplateDeployment) | [DeploymentTemplated](#redsail.bosn.DeploymentTemplated) | get the templated version of this deployment |
+| Token | [ReadToken](#redsail.bosn.ReadToken) | [TokenRead](#redsail.bosn.TokenRead) | gets the token for this deployment, for use with web calls |
 | Run | [ReadRun](#redsail.bosn.ReadRun) | [RunRead](#redsail.bosn.RunRead) | read all the information about a particular run |
 | Runs | [ReadRuns](#redsail.bosn.ReadRuns) | [RunsRead](#redsail.bosn.RunsRead) | read summaries of all runs for a particular deployment |
 

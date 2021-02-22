@@ -324,12 +324,12 @@ func (s Service) Manual(ctx context.Context, cmd *tr.TriggerManual) (*tr.ManualT
 			Roles:   s.auth.Roles(user),
 			Subject: user.Subject,
 		},
-		Arguments: cmd.Args,
+		Arguments: []byte(cmd.Args),
 	})
-
 	if err != nil {
 		return nil, tw.ToTwirpError(err, "deployment trigger failed")
 	}
+
 	return &tr.ManualTriggered{
 		RunUuid: runUUID,
 	}, nil
@@ -352,7 +352,7 @@ func (s Service) Web(ctx context.Context, cmd *tr.TriggerWeb) (*tr.WebTriggered,
 		Name:      cmd.Name,
 		Type:      trigger.WebTrigger,
 		Token:     &cmd.Token,
-		Arguments: cmd.Args,
+		Arguments: []byte(cmd.Args),
 	})
 
 	if err != nil {
@@ -368,7 +368,7 @@ func (s Service) Ready() error {
 	return s.ready()
 }
 
-func (s Service) deploymentTrigger(name string, args []byte) (string, error) {
+func (s Service) deploymentTrigger(name, deployment string, args []byte) (string, error) {
 	deps, err := s.read.All()
 	if err != nil {
 		logger.Error("error reading Deployment", "error", err)
@@ -377,7 +377,7 @@ func (s Service) deploymentTrigger(name string, args []byte) (string, error) {
 
 	var d *Deployment
 	for _, dep := range deps {
-		if name == d.Name() {
+		if deployment == dep.Name() {
 			d = dep
 			break
 		}
@@ -389,6 +389,7 @@ func (s Service) deploymentTrigger(name string, args []byte) (string, error) {
 	return s.trigger(&trigger.Trigger{
 		UUID:      d.UUID(),
 		Name:      name,
+		Type:      trigger.DeploymentTrigger,
 		Arguments: args,
 	})
 }

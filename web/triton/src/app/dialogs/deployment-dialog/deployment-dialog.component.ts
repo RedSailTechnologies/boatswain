@@ -13,7 +13,7 @@ import {
   ReadDeployment,
   UpdateDeployment,
 } from 'src/app/services/deployment/deployment';
-import { DefaultRepo, Repo, RepoRead } from 'src/app/services/repo/repo';
+import { DefaultRepo, RepoRead } from 'src/app/services/repo/repo';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 import { BusyComponent } from '../busy/busy.component';
 import { MessageDialogComponent } from '../message-dialog/message-dialog.component';

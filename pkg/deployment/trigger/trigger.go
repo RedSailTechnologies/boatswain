@@ -45,15 +45,15 @@ func (t Trigger) Validate(temp *template.Template) error {
 	for _, trigger := range *temp.Triggers {
 		switch t.Type {
 		case DeploymentTrigger:
-			if t.Name == trigger.Deployment.Name {
+			if trigger.Deployment != nil && t.Name == trigger.Deployment.Name {
 				return t.validateDeploymentTrigger(trigger)
 			}
 		case ManualTrigger:
-			if t.Name == trigger.Manual.Name {
+			if trigger.Manual != nil && t.Name == trigger.Manual.Name {
 				return t.validateManualTrigger(trigger)
 			}
 		case WebTrigger:
-			if t.Name == trigger.Web.Name {
+			if trigger.Web != nil && t.Name == trigger.Web.Name {
 				return t.validateWebTrigger(trigger)
 			}
 		default:
@@ -88,24 +88,23 @@ func (t Trigger) validateManualTrigger(temp template.Trigger) error {
 
 	// first check roles as its a bit more inclusive
 	role, err := auth.ToRole(temp.Manual.Role)
-	if err != nil {
-		return err
-	}
-	for _, userRole := range t.User.Roles {
-		switch role {
-		case auth.Reader:
-			if userRole == auth.Reader {
-				return nil
-			}
-			fallthrough
-		case auth.Editor:
-			if userRole == auth.Editor {
-				return nil
-			}
-			fallthrough
-		case auth.Admin:
-			if userRole == auth.Admin {
-				return nil
+	if err == nil {
+		for _, userRole := range t.User.Roles {
+			switch role {
+			case auth.Reader:
+				if userRole == auth.Reader {
+					return nil
+				}
+				fallthrough
+			case auth.Editor:
+				if userRole == auth.Editor {
+					return nil
+				}
+				fallthrough
+			case auth.Admin:
+				if userRole == auth.Admin {
+					return nil
+				}
 			}
 		}
 	}

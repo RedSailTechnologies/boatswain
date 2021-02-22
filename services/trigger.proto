@@ -16,7 +16,7 @@ service Trigger {
 message TriggerManual {
     string uuid = 1;
     string name = 2;
-    bytes args = 3;
+    string args = 3;
 }
 
 message ManualTriggered {
@@ -27,7 +27,7 @@ message TriggerWeb {
     string uuid = 1;
     string name = 2;
     string token = 3;
-    bytes args = 4;
+    string args = 4;
 }
 
 message WebTriggered {

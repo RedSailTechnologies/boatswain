@@ -2,8 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Observable } from 'rxjs';
 import { BusyComponent } from 'src/app/dialogs/busy/busy.component';
+import { TriggerDialogComponent } from 'src/app/dialogs/trigger-dialog/trigger-dialog.component';
 import { DefaultDeployment, Deployment, DeploymentRead, ReadDeployment, ReadRuns, RunReadSummary, TemplateDeployment } from 'src/app/services/deployment/deployment';
+import { DefaultTrigger, ManualTriggered, TriggerManual } from 'src/app/services/trigger/trigger';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 
 @Component({
@@ -20,7 +23,7 @@ export class DeploymentComponent implements OnInit {
 
   constructor(private route: ActivatedRoute,
               private router: Router,
-              private spinner: MatDialog,
+              private dialog: MatDialog,
               auth: AuthService) {
     this.client = new DefaultDeployment(`${location.protocol}//${location.host}/api`, auth.fetch());
   }
@@ -64,21 +67,18 @@ export class DeploymentComponent implements OnInit {
   }
 
   run() {
-    // var runTrigger = this.client.trigger(<TriggerDeployment>{
-    //   uuid: this.deployment.uuid,
-    //   type: "MANUAL",
-    //   // TODO - args
-    // });
-    // var spinnerRef: MatDialogRef<BusyComponent> = this.spinner.open(BusyComponent, {
-    //   panelClass: 'transparent',
-    //   disableClose: true
-    // });
-    // runTrigger.then((val: DeploymentTriggered) => {
-    //   this.router.navigate(['/run/' + val.runUuid]);
-    // })
-    // runTrigger.finally(() => {
-    //   spinnerRef.close();
-    // });
+    this.dialog.open(TriggerDialogComponent, {
+      minWidth: '33%',
+      panelClass: 'custom-dialog-container',
+      data: {
+        title: "Trigger Deployment",
+        uuid: this.deployment.uuid
+      }
+    })
+    .afterClosed()
+    .subscribe(val => {
+      this.router.navigate(['/run/' + val]);
+    });
   }
 
   redirect(run: RunReadSummary) {
