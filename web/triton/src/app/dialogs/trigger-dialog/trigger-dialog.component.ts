@@ -46,12 +46,6 @@ export class TriggerDialogComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  enter($event): void {
-    if ($event.keyCode == 13 && this.form.valid) {
-      this.submit();
-    }
-  }
-
   submit(): void {
     var spinnerRef: MatDialogRef<BusyComponent> = this.spinner.open(
       BusyComponent,

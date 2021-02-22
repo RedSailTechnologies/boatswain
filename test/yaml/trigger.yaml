@@ -21,4 +21,3 @@ strategy:
       deployment: simple
       arguments:
         version: ${{ .Parameters.version }}
-        
