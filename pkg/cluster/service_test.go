@@ -56,6 +56,11 @@ func (ma *mockAuth) User(ctx context.Context) auth.User {
 	return auth.User{}
 }
 
+func (ma *mockAuth) Roles(u auth.User) []auth.Role {
+	ma.Called(u)
+	return []auth.Role{}
+}
+
 func (ma *mockAuth) Wrap(h http.Handler) http.Handler {
 	ma.Called(h)
 	return h
