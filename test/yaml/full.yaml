@@ -1,4 +1,4 @@
-version: '1.0.0'
+version: ${{ .Parameters.version }}
 clusters:
   - test
 apps:
@@ -11,6 +11,7 @@ triggers:
   - web:
       name: grafana-trigger
   - manual:
+      name: user-trigger
       users:
         - "Adam Page"
 strategy:
