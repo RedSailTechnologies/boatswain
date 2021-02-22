@@ -4,8 +4,9 @@ import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { BusyComponent } from 'src/app/dialogs/busy/busy.component';
+import { MessageDialogComponent } from 'src/app/dialogs/message-dialog/message-dialog.component';
 import { TriggerDialogComponent } from 'src/app/dialogs/trigger-dialog/trigger-dialog.component';
-import { DefaultDeployment, Deployment, DeploymentRead, ReadDeployment, ReadRuns, RunReadSummary, TemplateDeployment } from 'src/app/services/deployment/deployment';
+import { DefaultDeployment, Deployment, DeploymentRead, ReadDeployment, ReadRuns, ReadToken, RunReadSummary, TemplateDeployment } from 'src/app/services/deployment/deployment';
 import { DefaultTrigger, ManualTriggered, TriggerManual } from 'src/app/services/trigger/trigger';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 
@@ -83,5 +84,27 @@ export class DeploymentComponent implements OnInit {
 
   redirect(run: RunReadSummary) {
     this.router.navigate(['/run/' + run.uuid]);
+  }
+
+  token() {
+    this.client.token(<ReadToken>{
+      uuid: this.deployment.uuid
+    }).then(val => {
+      this.dialog.open(MessageDialogComponent, {
+        panelClass: 'message-box',
+        data: {
+          "reason": "Token",
+          "message": "Deployment UUID: " + this.deployment.uuid + "\nDeployment Token: " + val.token
+        }
+      });
+    }).catch(error => {
+      this.dialog.open(MessageDialogComponent, {
+        panelClass: 'message-box',
+        data: {
+          "reason": "Error",
+          "message": "An error occured.\n" + error
+        }
+      });
+    })
   }
 }
