@@ -62,8 +62,8 @@
             </mat-accordion>
         </mat-card-content>
         <mat-card-actions style="text-align:right;">
-            <button mat-raised-button color="primary" (click)="token()">Web Token</button>
-            <button mat-raised-button color="accent" (click)="run()">Trigger Manually</button>
+            <button mat-raised-button [disabled]="!auth.isAdmin()" color="primary" (click)="token()">Web Token</button>
+            <button mat-raised-button [disabled]="!auth.isEditor()" color="accent" (click)="run()">Trigger Manually</button>
         </mat-card-actions>
     </mat-card>
 </div>

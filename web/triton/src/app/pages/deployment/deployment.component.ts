@@ -25,7 +25,7 @@ export class DeploymentComponent implements OnInit {
   constructor(private route: ActivatedRoute,
               private router: Router,
               private dialog: MatDialog,
-              auth: AuthService) {
+              public auth: AuthService) {
     this.client = new DefaultDeployment(`${location.protocol}//${location.host}/api`, auth.fetch());
   }
 
