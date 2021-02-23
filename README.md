@@ -25,7 +25,7 @@ Documentation published with github pages [here](https://redsailtechnologies.git
 * 0.8
   * Mongo security
   * External links
-* 0.8
+* 0.9
   * Approval steps
   * Outstanding bug fixes
 * 1.0
