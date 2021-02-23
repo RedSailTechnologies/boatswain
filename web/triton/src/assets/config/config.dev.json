@@ -1,7 +1,7 @@
 {
     "oidc": {
-        "authority": "https://login.microsoftonline.com/8c91e3f4-7f37-4334-9f70-fae3f5235c18/v2.0",
-        "clientId": "81156dc8-7d56-49a6-a69b-69d08ea0b759",
-        "scope": "openid profile api://81156dc8-7d56-49a6-a69b-69d08ea0b759/boatswain-dev"
+        "authority": "http://localhost:4011",
+        "clientId": "implicit-mock-client",
+        "scope": "openid profile boatswain roles"
     }
 }
