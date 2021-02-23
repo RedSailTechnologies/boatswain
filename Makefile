@@ -6,7 +6,7 @@ CHART_LIST=boatswain mate triton $(SERVICE_LIST)
 DOCKER_BUILDKIT=1
 DOCKER_OPTS=
 DOCKER_REPO=
-DOCKER_TAG=latest
+DOCKER_TAG=$$(git describe --tags --abbrev=0 | cut -d'v' -f2)
 GEN_DOC=docs/api/
 GEN_GO=rpc/
 GEN_TS=$(TRITON_PATH)src/app/services/
@@ -62,7 +62,8 @@ changes:
 
 ## docs: builds the documentation into docs/
 docs: proto
-	@echo "# Boatswain Api\nClick below for each service's documentation.\n" > docs/api.md
+	@echo "# Boatswain Api" > docs/api.md
+	@echo "Click below for each service's documentation." >> docs/api.md
 	@for doc in $$(ls docs/api); do \
 	  echo "* [$$(echo $$doc | cut -d '.' -f1)](https://redsailtechnologies.github.io/boatswain/api/$$(echo $$doc | cut -d '.' -f1).html)" >> docs/api.md; \
 	done

@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## v0.7.0
+* 80848b1 feature/enhanced triggers (#60)
+
 ## v0.6.0
 * 44ccd58 feature/cluster agent (#59)
 
