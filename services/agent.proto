@@ -6,9 +6,6 @@ package redsail.bosn;
 option go_package = "github.com/redsailtechnologies/boatswain/rpc/agent;agent";
 
 service Agent {
-    // registers this agent
-    rpc Register (RegisterAgent) returns (AgentRegistered);
-
     // gets the next action for the agent or an empty list if there's nothing to do
     rpc Actions (ReadActions) returns (ActionsRead);
 

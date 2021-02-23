@@ -3,10 +3,10 @@ Deployment is the service for creation and management of application installs/up
 */
 syntax = "proto3";
 package redsail.bosn;
-option go_package = "github.com/redsailtechnologies/boatswain/rpc/delivery;delivery";
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/deployment;deployment";
 
 service Deployment {
-    // creates a new delivery
+    // creates a new deployment
     rpc Create (CreateDeployment) returns (DeploymentCreated);
 
     // edits an already existing deployment
@@ -24,8 +24,8 @@ service Deployment {
     // get the templated version of this deployment
     rpc Template (TemplateDeployment) returns (DeploymentTemplated);
 
-    // trigger a deployment
-    rpc Trigger (TriggerDeployment) returns (DeploymentTriggered);
+    // gets the token for this deployment, for use with web calls
+    rpc Token (ReadToken) returns (TokenRead);
 
     // read all the information about a particular run
     rpc Run (ReadRun) returns (RunRead);
@@ -92,19 +92,12 @@ message DeploymentTemplated {
     string yaml = 2; // the templated yaml for this deployment
 }
 
-message TriggerDeployment {
-    enum TriggerType {
-        WEB = 0;
-        MANUAL = 1;
-    }
+message ReadToken {
     string uuid = 1; // unique id of the deployment
-    string name = 2; // name of the trigger within this deployment
-    TriggerType type = 3; // the type of trigger
-    bytes arguments = 4; // args for this run
 }
 
-message DeploymentTriggered {
-    string run_uuid = 1; // unique id of the resulting run
+message TokenRead {
+    string token = 1; // deployment token for web calls
 }
 
 message ReadRun {
@@ -127,12 +120,13 @@ message StepRead {
 
 message RunRead {
     string uuid = 1;
-    string version = 2;
-    Status status = 3;
-    int64 start_time = 4;
-    int64 stop_time = 5;
+    string name = 2;
+    string version = 3;
+    Status status = 4;
+    int64 start_time = 5;
+    int64 stop_time = 6;
     
-    repeated StepRead steps = 6;
+    repeated StepRead steps = 7;
 }
 
 message ReadRuns {
@@ -141,10 +135,11 @@ message ReadRuns {
 
 message RunReadSummary {
     string uuid = 1;
-    string version = 2;
-    Status status = 3;
-    int64 start_time = 4;
-    int64 stop_time = 5;
+    string name = 2;
+    string version = 3;
+    Status status = 4;
+    int64 start_time = 5;
+    int64 stop_time = 6;
 }
 
 message RunsRead {

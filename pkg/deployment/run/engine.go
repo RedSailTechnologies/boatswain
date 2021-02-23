@@ -5,9 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
-	// TODO AdamP - we could consider factoring this into helm.DefaultAgent
+	"gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/chartutil"
@@ -36,10 +37,12 @@ type Engine struct {
 	agent agent.AgentAction
 	git   git.Agent
 	repo  repo.Agent
+
+	trigger func(string, string, []byte) (string, error)
 }
 
 // NewEngine initializes the engine with required dependencies
-func NewEngine(r *Run, s storage.Storage, a agent.AgentAction, g git.Agent, ra repo.Agent) (*Engine, error) {
+func NewEngine(r *Run, s storage.Storage, a agent.AgentAction, g git.Agent, ra repo.Agent, t func(string, string, []byte) (string, error)) (*Engine, error) {
 	w := newWriteRepository(s)
 	if err := w.save(r); err != nil {
 		logger.Error("could not save created run", "error", err)
@@ -53,6 +56,7 @@ func NewEngine(r *Run, s storage.Storage, a agent.AgentAction, g git.Agent, ra r
 		agent:    a,
 		git:      g,
 		repo:     ra,
+		trigger:  t,
 	}
 	return engine, nil
 }
@@ -114,17 +118,13 @@ func (e *Engine) Run() {
 }
 
 func (e *Engine) executeStep(step *template.Step) Status {
-	if step.App != nil {
+	if step.App != nil || step.Test != nil {
 		return e.executeActionStep(step)
-	} else if step.Test != nil {
-		e.run.AppendLog("step type not implemented", Error, ddd.NewTimestamp())
-		return Skipped
 	} else if step.Approval != nil {
 		e.run.AppendLog("step type not implemented", Error, ddd.NewTimestamp())
 		return Skipped
 	} else if step.Trigger != nil {
-		e.run.AppendLog("step type not implemented", Error, ddd.NewTimestamp())
-		return Skipped
+		return e.executeTriggerStep(step)
 	}
 	e.run.AppendLog("step has nothing to execute", Error, ddd.NewTimestamp())
 	return Failed
@@ -224,6 +224,8 @@ func (e *Engine) executeActionStep(step *template.Step) Status {
 			action.Action = string(helm.Install)
 		case "rollback":
 			action.Action = string(helm.Rollback)
+		case "test":
+			action.Action = string(helm.Test)
 		case "uninstall":
 			action.Action = string(helm.Uninstall)
 		case "upgrade":
@@ -275,6 +277,22 @@ func (e *Engine) executeActionStep(step *template.Step) Status {
 
 	e.run.AppendLog("only helm apps are currently supported", Error, ddd.NewTimestamp())
 	return Failed
+}
+
+func (e *Engine) executeTriggerStep(step *template.Step) Status {
+	b, err := yaml.Marshal(step.Trigger.Arguments)
+	if err != nil {
+		e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+		return Failed
+	}
+
+	res, err := e.trigger(step.Trigger.Name, step.Trigger.Deployment, b)
+	if err != nil {
+		e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+		return Failed
+	}
+	e.run.AppendLog(fmt.Sprintf("triggered run with uuid %s", res), Info, ddd.NewTimestamp())
+	return Succeeded
 }
 
 func (e *Engine) finalize(status Status) {

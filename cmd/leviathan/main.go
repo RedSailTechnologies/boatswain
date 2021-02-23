@@ -25,6 +25,7 @@ import (
 	dl "github.com/redsailtechnologies/boatswain/rpc/deployment"
 	hl "github.com/redsailtechnologies/boatswain/rpc/health"
 	rep "github.com/redsailtechnologies/boatswain/rpc/repo"
+	tr "github.com/redsailtechnologies/boatswain/rpc/trigger"
 )
 
 func main() {
@@ -50,6 +51,7 @@ func main() {
 
 	// Services
 	hooks := twirp.ChainHooks(tw.JWTHook(auth), tw.LoggingHooks())
+	opts := twirp.WithServerPathPrefix("/api")
 
 	agent := agent.NewService(store)
 	agentException := tw.LoggingException{Method: "Actions", Service: "Agent"}
@@ -57,26 +59,20 @@ func main() {
 	aaTwirp := ag.NewAgentActionServer(agent, tw.LoggingHooks(), twirp.WithServerPathPrefix("/agents"))
 
 	cluster := cluster.NewService(actionClient, auth, store)
-	clTwirp := cl.NewClusterServer(cluster, hooks, twirp.WithServerPathPrefix("/api"))
+	clTwirp := cl.NewClusterServer(cluster, hooks, opts)
 
 	application := application.NewService(actionClient, auth, store)
-	appTwirp := app.NewApplicationServer(application, hooks, twirp.WithServerPathPrefix("/api"))
+	appTwirp := app.NewApplicationServer(application, hooks, opts)
 
 	repo := repo.NewService(auth, git.DefaultAgent{}, repo.DefaultAgent{}, store)
-	repTwirp := rep.NewRepoServer(repo, hooks, twirp.WithServerPathPrefix("/api"))
+	repTwirp := rep.NewRepoServer(repo, hooks, opts)
 
 	deploy := deployment.NewService(actionClient, auth, &git.DefaultAgent{}, store)
-	depTwirp := dl.NewDeploymentServer(deploy, hooks, twirp.WithServerPathPrefix("/api"))
+	depTwirp := dl.NewDeploymentServer(deploy, hooks, opts)
+	trigTwirp := tr.NewTriggerServer(deploy, tw.LoggingHooks(), opts)
 
 	health := health.NewService(agent, application, cluster, deploy, repo)
 	healthTwirp := hl.NewHealthServer(health, twirp.WithServerPathPrefix("/health"))
-
-	// // Browser Client
-	// dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	// if err != nil {
-	// 	logger.Fatal("could not get current directory")
-	// }
-	// tritonServer := http.FileServer(http.Dir(dir + "/triton"))
 
 	// Muxing...please stand by...
 	mux := http.NewServeMux()
@@ -86,6 +82,7 @@ func main() {
 	mux.Handle(clTwirp.PathPrefix(), auth.Wrap(clTwirp))
 	mux.Handle(depTwirp.PathPrefix(), auth.Wrap(depTwirp))
 	mux.Handle(repTwirp.PathPrefix(), auth.Wrap(repTwirp))
+	mux.Handle(trigTwirp.PathPrefix(), auth.Wrap(trigTwirp))
 	mux.Handle(healthTwirp.PathPrefix(), healthTwirp)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if _, err := os.Stat("triton/" + r.RequestURI); os.IsNotExist(err) {

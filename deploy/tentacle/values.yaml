@@ -4,6 +4,7 @@ global:
 config:
   bosnURL: "" # the base url of the bosn instance
   clusterUUID: "" # the uuid of this cluster
+  clusterToken: "" # the access token for this cluster
   timeout: "1s" # the duration interval for the agent to get new actions, see https://golang.org/pkg/time/#ParseDuration for details
 
 image:

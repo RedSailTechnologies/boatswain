@@ -17,6 +17,7 @@ import (
 	"github.com/redsailtechnologies/boatswain/rpc/agent"
 	dl "github.com/redsailtechnologies/boatswain/rpc/deployment"
 	hl "github.com/redsailtechnologies/boatswain/rpc/health"
+	tr "github.com/redsailtechnologies/boatswain/rpc/trigger"
 )
 
 func main() {
@@ -40,12 +41,14 @@ func main() {
 
 	deploy := deployment.NewService(action, auth, &git.DefaultAgent{}, store)
 	dTwirp := dl.NewDeploymentServer(deploy, hooks, twirp.WithServerPathPrefix("/api"))
+	trigTwirp := tr.NewTriggerServer(deploy, tw.LoggingHooks(), twirp.WithServerPathPrefix("/api"))
 
 	health := health.NewService(deploy)
 	healthTwirp := hl.NewHealthServer(health, twirp.WithServerPathPrefix("/health"))
 
 	mux := http.NewServeMux()
 	mux.Handle(dTwirp.PathPrefix(), auth.Wrap(dTwirp))
+	mux.Handle(trigTwirp.PathPrefix(), trigTwirp)
 	mux.Handle(healthTwirp.PathPrefix(), healthTwirp)
 
 	logger.Info("What? MAGIKARP is evolving?")

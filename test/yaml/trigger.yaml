@@ -1,0 +1,23 @@
+name: trigger something
+version: ${{ .Parameters.version }}
+clusters:
+  - test
+apps:
+  - name: grafana
+    helm:
+      chart: grafana
+      repo: bitnami
+      version: '4.2.5'
+triggers:
+  - manual:
+      name: user-trigger
+      users:
+        - "Adam Page"
+strategy:
+  - name: trigger-another-deployment
+    condition: succeeded
+    trigger:
+      name: simple-deploy-trigger
+      deployment: simple
+      arguments:
+        version: ${{ .Parameters.version }}

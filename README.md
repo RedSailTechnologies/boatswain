@@ -21,12 +21,13 @@ Documentation published with github pages [here](https://redsailtechnologies.git
   * Trigger service (move out of deployments)
   * Testing steps
   * Deployment trigger improvement
+  * Security fixes for cluster/triggers
 * 0.8
-  * Azure Devops service hook helper plugin
   * Mongo security
+  * External links
 * 0.9
   * Approval steps
-  * External links
   * Outstanding bug fixes
 * 1.0
+  * Web Homepage and Getting Started docs
   * Clean up Helm charts for public deployment (istio compatibility, etc.)

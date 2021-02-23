@@ -3,152 +3,84 @@
 
 ## Table of Contents
 
-- [agent.proto](#agent.proto)
-    - [Action](#redsail.bosn.Action)
-    - [ActionsRead](#redsail.bosn.ActionsRead)
-    - [AgentRegistered](#redsail.bosn.AgentRegistered)
-    - [ReadActions](#redsail.bosn.ReadActions)
-    - [RegisterAgent](#redsail.bosn.RegisterAgent)
-    - [Result](#redsail.bosn.Result)
-    - [ResultReturned](#redsail.bosn.ResultReturned)
-    - [ReturnResult](#redsail.bosn.ReturnResult)
+- [trigger.proto](#trigger.proto)
+    - [ManualTriggered](#redsail.bosn.ManualTriggered)
+    - [TriggerManual](#redsail.bosn.TriggerManual)
+    - [TriggerWeb](#redsail.bosn.TriggerWeb)
+    - [WebTriggered](#redsail.bosn.WebTriggered)
   
-    - [ActionType](#redsail.bosn.ActionType)
-  
-    - [Agent](#redsail.bosn.Agent)
-    - [AgentAction](#redsail.bosn.AgentAction)
+    - [Trigger](#redsail.bosn.Trigger)
   
 - [Scalar Value Types](#scalar-value-types)
 
 
 
-<a name="agent.proto"></a>
+<a name="trigger.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## agent.proto
-Agent is the service for external clusters to call into to register and receive actions.
+## trigger.proto
+Trigger is the service for creating triggers to start deployments.
 
 
-<a name="redsail.bosn.Action"></a>
+<a name="redsail.bosn.ManualTriggered"></a>
 
-### Action
+### ManualTriggered
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| run_uuid | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="redsail.bosn.TriggerManual"></a>
+
+### TriggerManual
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | uuid | [string](#string) |  |  |
-| cluster_uuid | [string](#string) |  |  |
-| cluster_token | [string](#string) |  |  |
-| action_type | [ActionType](#redsail.bosn.ActionType) |  |  |
-| action | [string](#string) |  |  |
-| timeout_seconds | [int64](#int64) |  |  |
-| args | [bytes](#bytes) |  |  |
+| name | [string](#string) |  |  |
+| args | [string](#string) |  |  |
 
 
 
 
 
 
-<a name="redsail.bosn.ActionsRead"></a>
+<a name="redsail.bosn.TriggerWeb"></a>
 
-### ActionsRead
+### TriggerWeb
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| actions | [Action](#redsail.bosn.Action) | repeated |  |
+| uuid | [string](#string) |  |  |
+| name | [string](#string) |  |  |
+| token | [string](#string) |  |  |
+| args | [string](#string) |  |  |
 
 
 
 
 
 
-<a name="redsail.bosn.AgentRegistered"></a>
+<a name="redsail.bosn.WebTriggered"></a>
 
-### AgentRegistered
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| cluster_token | [string](#string) |  | the unique token for the agent to used when calling for actions |
-
-
-
-
-
-
-<a name="redsail.bosn.ReadActions"></a>
-
-### ReadActions
+### WebTriggered
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| cluster_uuid | [string](#string) |  |  |
-| cluster_token | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="redsail.bosn.RegisterAgent"></a>
-
-### RegisterAgent
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| cluster_uuid | [string](#string) |  | the uuid of the agent to register |
-
-
-
-
-
-
-<a name="redsail.bosn.Result"></a>
-
-### Result
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| data | [bytes](#bytes) |  |  |
-| error | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="redsail.bosn.ResultReturned"></a>
-
-### ResultReturned
-
-
-
-
-
-
-
-<a name="redsail.bosn.ReturnResult"></a>
-
-### ReturnResult
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| action_uuid | [string](#string) |  |  |
-| cluster_uuid | [string](#string) |  |  |
-| cluster_token | [string](#string) |  |  |
-| result | [Result](#redsail.bosn.Result) |  |  |
+| run_uuid | [string](#string) |  |  |
 
 
 
@@ -156,42 +88,20 @@ Agent is the service for external clusters to call into to register and receive 
 
  
 
-
-<a name="redsail.bosn.ActionType"></a>
-
-### ActionType
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| HELM_ACTION | 0 |  |
-| KUBE_ACTION | 1 |  |
-
-
  
 
  
 
 
-<a name="redsail.bosn.Agent"></a>
+<a name="redsail.bosn.Trigger"></a>
 
-### Agent
+### Trigger
 
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Actions | [ReadActions](#redsail.bosn.ReadActions) | [ActionsRead](#redsail.bosn.ActionsRead) | gets the next action for the agent or an empty list if there&#39;s nothing to do |
-| Results | [ReturnResult](#redsail.bosn.ReturnResult) | [ResultReturned](#redsail.bosn.ResultReturned) | returns a result for this agent |
-
-
-<a name="redsail.bosn.AgentAction"></a>
-
-### AgentAction
-
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| Run | [Action](#redsail.bosn.Action) | [Result](#redsail.bosn.Result) |  |
+| Manual | [TriggerManual](#redsail.bosn.TriggerManual) | [ManualTriggered](#redsail.bosn.ManualTriggered) | triggers a deployment manually |
+| Web | [TriggerWeb](#redsail.bosn.TriggerWeb) | [WebTriggered](#redsail.bosn.WebTriggered) | triggers a deployment from a web call |
 
  
 

@@ -1,4 +1,5 @@
-version: '1.0.0'
+name: ${{ .Parameters.name }}
+version: ${{ .Parameters.version }}
 clusters:
   - test
 apps:
@@ -11,6 +12,7 @@ triggers:
   - web:
       name: grafana-trigger
   - manual:
+      name: user-trigger
       users:
         - "Adam Page"
 strategy:
@@ -63,3 +65,11 @@ strategy:
       helm:
         command: uninstall
         wait: true
+  - name: trigger-another-deployment
+    condition: succeeded
+    trigger:
+      name: simple-deploy-trigger
+      deployment: simple
+      arguments:
+        version: ${{ .Parameters.version }}
+        

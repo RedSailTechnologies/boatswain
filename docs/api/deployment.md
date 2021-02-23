@@ -10,7 +10,6 @@
     - [DeploymentRead](#redsail.bosn.DeploymentRead)
     - [DeploymentReadSummary](#redsail.bosn.DeploymentReadSummary)
     - [DeploymentTemplated](#redsail.bosn.DeploymentTemplated)
-    - [DeploymentTriggered](#redsail.bosn.DeploymentTriggered)
     - [DeploymentUpdated](#redsail.bosn.DeploymentUpdated)
     - [DeploymentsRead](#redsail.bosn.DeploymentsRead)
     - [DestroyDeployment](#redsail.bosn.DestroyDeployment)
@@ -18,18 +17,18 @@
     - [ReadDeployments](#redsail.bosn.ReadDeployments)
     - [ReadRun](#redsail.bosn.ReadRun)
     - [ReadRuns](#redsail.bosn.ReadRuns)
+    - [ReadToken](#redsail.bosn.ReadToken)
     - [RunRead](#redsail.bosn.RunRead)
     - [RunReadSummary](#redsail.bosn.RunReadSummary)
     - [RunsRead](#redsail.bosn.RunsRead)
     - [StepLog](#redsail.bosn.StepLog)
     - [StepRead](#redsail.bosn.StepRead)
     - [TemplateDeployment](#redsail.bosn.TemplateDeployment)
-    - [TriggerDeployment](#redsail.bosn.TriggerDeployment)
+    - [TokenRead](#redsail.bosn.TokenRead)
     - [UpdateDeployment](#redsail.bosn.UpdateDeployment)
   
     - [LogLevel](#redsail.bosn.LogLevel)
     - [Status](#redsail.bosn.Status)
-    - [TriggerDeployment.TriggerType](#redsail.bosn.TriggerDeployment.TriggerType)
   
     - [Deployment](#redsail.bosn.Deployment)
   
@@ -134,21 +133,6 @@ Deployment is the service for creation and management of application installs/up
 
 
 
-<a name="redsail.bosn.DeploymentTriggered"></a>
-
-### DeploymentTriggered
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| run_uuid | [string](#string) |  | unique id of the resulting run |
-
-
-
-
-
-
 <a name="redsail.bosn.DeploymentUpdated"></a>
 
 ### DeploymentUpdated
@@ -244,6 +228,21 @@ Deployment is the service for creation and management of application installs/up
 
 
 
+<a name="redsail.bosn.ReadToken"></a>
+
+### ReadToken
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| uuid | [string](#string) |  | unique id of the deployment |
+
+
+
+
+
+
 <a name="redsail.bosn.RunRead"></a>
 
 ### RunRead
@@ -253,6 +252,7 @@ Deployment is the service for creation and management of application installs/up
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | uuid | [string](#string) |  |  |
+| name | [string](#string) |  |  |
 | version | [string](#string) |  |  |
 | status | [Status](#redsail.bosn.Status) |  |  |
 | start_time | [int64](#int64) |  |  |
@@ -273,6 +273,7 @@ Deployment is the service for creation and management of application installs/up
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | uuid | [string](#string) |  |  |
+| name | [string](#string) |  |  |
 | version | [string](#string) |  |  |
 | status | [Status](#redsail.bosn.Status) |  |  |
 | start_time | [int64](#int64) |  |  |
@@ -349,18 +350,15 @@ Deployment is the service for creation and management of application installs/up
 
 
 
-<a name="redsail.bosn.TriggerDeployment"></a>
+<a name="redsail.bosn.TokenRead"></a>
 
-### TriggerDeployment
+### TokenRead
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| uuid | [string](#string) |  | unique id of the deployment |
-| name | [string](#string) |  | name of the trigger within this deployment |
-| type | [TriggerDeployment.TriggerType](#redsail.bosn.TriggerDeployment.TriggerType) |  | the type of trigger |
-| arguments | [bytes](#bytes) |  | args for this run |
+| token | [string](#string) |  | deployment token for web calls |
 
 
 
@@ -416,18 +414,6 @@ Deployment is the service for creation and management of application installs/up
 | SKIPPED | 4 |  |
 
 
-
-<a name="redsail.bosn.TriggerDeployment.TriggerType"></a>
-
-### TriggerDeployment.TriggerType
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| WEB | 0 |  |
-| MANUAL | 1 |  |
-
-
  
 
  
@@ -440,13 +426,13 @@ Deployment is the service for creation and management of application installs/up
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Create | [CreateDeployment](#redsail.bosn.CreateDeployment) | [DeploymentCreated](#redsail.bosn.DeploymentCreated) | creates a new delivery |
+| Create | [CreateDeployment](#redsail.bosn.CreateDeployment) | [DeploymentCreated](#redsail.bosn.DeploymentCreated) | creates a new deployment |
 | Update | [UpdateDeployment](#redsail.bosn.UpdateDeployment) | [DeploymentUpdated](#redsail.bosn.DeploymentUpdated) | edits an already existing deployment |
 | Destroy | [DestroyDeployment](#redsail.bosn.DestroyDeployment) | [DeploymentDestroyed](#redsail.bosn.DeploymentDestroyed) | removes a deployment from the list of configurations |
 | Read | [ReadDeployment](#redsail.bosn.ReadDeployment) | [DeploymentRead](#redsail.bosn.DeploymentRead) | reads out a deployment |
 | All | [ReadDeployments](#redsail.bosn.ReadDeployments) | [DeploymentsRead](#redsail.bosn.DeploymentsRead) | gets all deployments currently configured and their status |
 | Template | [TemplateDeployment](#redsail.bosn.TemplateDeployment) | [DeploymentTemplated](#redsail.bosn.DeploymentTemplated) | get the templated version of this deployment |
-| Trigger | [TriggerDeployment](#redsail.bosn.TriggerDeployment) | [DeploymentTriggered](#redsail.bosn.DeploymentTriggered) | trigger a deployment |
+| Token | [ReadToken](#redsail.bosn.ReadToken) | [TokenRead](#redsail.bosn.TokenRead) | gets the token for this deployment, for use with web calls |
 | Run | [ReadRun](#redsail.bosn.ReadRun) | [RunRead](#redsail.bosn.RunRead) | read all the information about a particular run |
 | Runs | [ReadRuns](#redsail.bosn.ReadRuns) | [RunsRead](#redsail.bosn.RunsRead) | read summaries of all runs for a particular deployment |
 

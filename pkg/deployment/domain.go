@@ -12,6 +12,7 @@ type Deployment struct {
 
 	uuid     string
 	name     string
+	token    string
 	repoID   string
 	branch   string
 	filePath string
@@ -27,7 +28,7 @@ func Replay(events []ddd.Event) ddd.Aggregate {
 }
 
 // Create handles create commands
-func Create(uuid, name, repoID, branch, filePath string, timestamp int64) (*Deployment, error) {
+func Create(uuid, name, token, repoID, branch, filePath string, timestamp int64) (*Deployment, error) {
 	if uuid == "" {
 		return nil, ddd.IDError{}
 	}
@@ -40,6 +41,7 @@ func Create(uuid, name, repoID, branch, filePath string, timestamp int64) (*Depl
 		Timestamp: timestamp,
 		UUID:      uuid,
 		Name:      name,
+		Token:     token,
 		RepoID:    repoID,
 		Branch:    branch,
 		FilePath:  filePath,
@@ -92,6 +94,11 @@ func (d *Deployment) Name() string {
 	return d.name
 }
 
+// Token gets this deployment's token
+func (d *Deployment) Token() string {
+	return d.token
+}
+
 // RepoID returns the uuid of the repo for this deployment's yaml file
 func (d *Deployment) RepoID() string {
 	return d.repoID
@@ -126,6 +133,7 @@ func (d *Deployment) on(event ddd.Event) {
 	case *Created:
 		d.uuid = e.UUID
 		d.name = e.Name
+		d.token = e.Token
 		d.repoID = e.RepoID
 		d.branch = e.Branch
 		d.filePath = e.FilePath

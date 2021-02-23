@@ -273,48 +273,39 @@ const JSONToDeploymentTemplated = (m: DeploymentTemplated | DeploymentTemplatedJ
     };
 };
 
-export interface TriggerDeployment {
+export interface ReadToken {
     uuid: string;
-    name: string;
-    type: string;
-    arguments: string;
     
 }
 
-interface TriggerDeploymentJSON {
+interface ReadTokenJSON {
     uuid: string;
-    name: string;
-    type: string;
-    arguments: string;
     
 }
 
 
-const TriggerDeploymentToJSON = (m: TriggerDeployment): TriggerDeploymentJSON => {
+const ReadTokenToJSON = (m: ReadToken): ReadTokenJSON => {
     return {
         uuid: m.uuid,
-        name: m.name,
-        type: m.type,
-        arguments: m.arguments,
         
     };
 };
 
-export interface DeploymentTriggered {
-    runUuid: string;
+export interface TokenRead {
+    token: string;
     
 }
 
-interface DeploymentTriggeredJSON {
-    run_uuid: string;
+interface TokenReadJSON {
+    token: string;
     
 }
 
 
-const JSONToDeploymentTriggered = (m: DeploymentTriggered | DeploymentTriggeredJSON): DeploymentTriggered => {
+const JSONToTokenRead = (m: TokenRead | TokenReadJSON): TokenRead => {
     
     return {
-        runUuid: (((m as DeploymentTriggered).runUuid) ? (m as DeploymentTriggered).runUuid : (m as DeploymentTriggeredJSON).run_uuid),
+        token: m.token,
         
     };
 };
@@ -395,6 +386,7 @@ const JSONToStepRead = (m: StepRead | StepReadJSON): StepRead => {
 
 export interface RunRead {
     uuid: string;
+    name: string;
     version: string;
     status: string;
     startTime: number;
@@ -405,6 +397,7 @@ export interface RunRead {
 
 interface RunReadJSON {
     uuid: string;
+    name: string;
     version: string;
     status: string;
     start_time: number;
@@ -418,6 +411,7 @@ const JSONToRunRead = (m: RunRead | RunReadJSON): RunRead => {
     
     return {
         uuid: m.uuid,
+        name: m.name,
         version: m.version,
         status: m.status,
         startTime: (((m as RunRead).startTime) ? (m as RunRead).startTime : (m as RunReadJSON).start_time),
@@ -447,6 +441,7 @@ const ReadRunsToJSON = (m: ReadRuns): ReadRunsJSON => {
 
 export interface RunReadSummary {
     uuid: string;
+    name: string;
     version: string;
     status: string;
     startTime: number;
@@ -456,6 +451,7 @@ export interface RunReadSummary {
 
 interface RunReadSummaryJSON {
     uuid: string;
+    name: string;
     version: string;
     status: string;
     start_time: number;
@@ -468,6 +464,7 @@ const JSONToRunReadSummary = (m: RunReadSummary | RunReadSummaryJSON): RunReadSu
     
     return {
         uuid: m.uuid,
+        name: m.name,
         version: m.version,
         status: m.status,
         startTime: (((m as RunReadSummary).startTime) ? (m as RunReadSummary).startTime : (m as RunReadSummaryJSON).start_time),
@@ -508,7 +505,7 @@ export interface Deployment {
     
     template: (templateDeployment: TemplateDeployment) => Promise<DeploymentTemplated>;
     
-    trigger: (triggerDeployment: TriggerDeployment) => Promise<DeploymentTriggered>;
+    token: (readToken: ReadToken) => Promise<TokenRead>;
     
     run: (readRun: ReadRun) => Promise<RunRead>;
     
@@ -617,18 +614,18 @@ export class DefaultDeployment implements Deployment {
         });
     }
     
-    trigger(triggerDeployment: TriggerDeployment): Promise<DeploymentTriggered> {
-        const url = this.hostname + this.pathPrefix + "Trigger";
-        let body: TriggerDeployment | TriggerDeploymentJSON = triggerDeployment;
+    token(readToken: ReadToken): Promise<TokenRead> {
+        const url = this.hostname + this.pathPrefix + "Token";
+        let body: ReadToken | ReadTokenJSON = readToken;
         if (!this.writeCamelCase) {
-            body = TriggerDeploymentToJSON(triggerDeployment);
+            body = ReadTokenToJSON(readToken);
         }
         return this.fetch(createTwirpRequest(url, body)).then((resp) => {
             if (!resp.ok) {
                 return throwTwirpError(resp);
             }
 
-            return resp.json().then(JSONToDeploymentTriggered);
+            return resp.json().then(JSONToTokenRead);
         });
     }
     

@@ -1,0 +1,35 @@
+/*
+Trigger is the service for creating triggers to start deployments.
+*/
+syntax = "proto3";
+package redsail.bosn;
+option go_package = "github.com/redsailtechnologies/boatswain/rpc/trigger;trigger";
+
+service Trigger {
+    // triggers a deployment manually
+    rpc Manual (TriggerManual) returns (ManualTriggered);
+
+    // triggers a deployment from a web call
+    rpc Web (TriggerWeb) returns (WebTriggered);
+}
+
+message TriggerManual {
+    string uuid = 1;
+    string name = 2;
+    string args = 3;
+}
+
+message ManualTriggered {
+    string run_uuid = 1;
+}
+
+message TriggerWeb {
+    string uuid = 1;
+    string name = 2;
+    string token = 3;
+    string args = 4;
+}
+
+message WebTriggered {
+    string run_uuid = 1;
+}

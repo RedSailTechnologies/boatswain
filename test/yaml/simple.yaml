@@ -1,4 +1,5 @@
-version: '1.0.0'
+name: simple-wordpress
+version: ${{ .Parameters.version }}
 clusters:
   - test
 apps:
@@ -8,9 +9,12 @@ apps:
       repo: bitnami
       version: 10.6.5
 triggers:
+  - deployment:
+      name: simple-deploy-trigger
   - web:
       name: wordpress-trigger
   - manual:
+      name: user-trigger
       users:
         - "Adam Page"
 strategy:

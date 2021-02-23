@@ -57,6 +57,9 @@ type Cluster interface {
 
 	// gets all clusters currently configured and their status
 	All(context.Context, *ReadClusters) (*ClustersRead, error)
+
+	// gets the cluster's access token
+	Token(context.Context, *ReadToken) (*TokenRead, error)
 }
 
 // =======================
@@ -65,7 +68,7 @@ type Cluster interface {
 
 type clusterProtobufClient struct {
 	client      HTTPClient
-	urls        [6]string
+	urls        [7]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -85,13 +88,14 @@ func NewClusterProtobufClient(baseURL string, client HTTPClient, opts ...twirp.C
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Cluster")
-	urls := [6]string{
+	urls := [7]string{
 		serviceURL + "Create",
 		serviceURL + "Update",
 		serviceURL + "Destroy",
 		serviceURL + "Read",
 		serviceURL + "Find",
 		serviceURL + "All",
+		serviceURL + "Token",
 	}
 
 	return &clusterProtobufClient{
@@ -378,13 +382,59 @@ func (c *clusterProtobufClient) callAll(ctx context.Context, in *ReadClusters) (
 	return out, nil
 }
 
+func (c *clusterProtobufClient) Token(ctx context.Context, in *ReadToken) (*TokenRead, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Cluster")
+	ctx = ctxsetters.WithMethodName(ctx, "Token")
+	caller := c.callToken
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *ReadToken) (*TokenRead, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ReadToken)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ReadToken) when calling interceptor")
+					}
+					return c.callToken(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*TokenRead)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*TokenRead) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *clusterProtobufClient) callToken(ctx context.Context, in *ReadToken) (*TokenRead, error) {
+	out := new(TokenRead)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[6], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 // ===================
 // Cluster JSON Client
 // ===================
 
 type clusterJSONClient struct {
 	client      HTTPClient
-	urls        [6]string
+	urls        [7]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -404,13 +454,14 @@ func NewClusterJSONClient(baseURL string, client HTTPClient, opts ...twirp.Clien
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Cluster")
-	urls := [6]string{
+	urls := [7]string{
 		serviceURL + "Create",
 		serviceURL + "Update",
 		serviceURL + "Destroy",
 		serviceURL + "Read",
 		serviceURL + "Find",
 		serviceURL + "All",
+		serviceURL + "Token",
 	}
 
 	return &clusterJSONClient{
@@ -697,6 +748,52 @@ func (c *clusterJSONClient) callAll(ctx context.Context, in *ReadClusters) (*Clu
 	return out, nil
 }
 
+func (c *clusterJSONClient) Token(ctx context.Context, in *ReadToken) (*TokenRead, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Cluster")
+	ctx = ctxsetters.WithMethodName(ctx, "Token")
+	caller := c.callToken
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *ReadToken) (*TokenRead, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ReadToken)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ReadToken) when calling interceptor")
+					}
+					return c.callToken(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*TokenRead)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*TokenRead) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *clusterJSONClient) callToken(ctx context.Context, in *ReadToken) (*TokenRead, error) {
+	out := new(TokenRead)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[6], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 // ======================
 // Cluster Server Handler
 // ======================
@@ -798,6 +895,9 @@ func (s *clusterServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		return
 	case "All":
 		s.serveAll(ctx, resp, req)
+		return
+	case "Token":
+		s.serveToken(ctx, resp, req)
 		return
 	default:
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
@@ -1856,6 +1956,181 @@ func (s *clusterServer) serveAllProtobuf(ctx context.Context, resp http.Response
 	callResponseSent(ctx, s.hooks)
 }
 
+func (s *clusterServer) serveToken(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveTokenJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveTokenProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *clusterServer) serveTokenJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Token")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(ReadToken)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Cluster.Token
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *ReadToken) (*TokenRead, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ReadToken)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ReadToken) when calling interceptor")
+					}
+					return s.Cluster.Token(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*TokenRead)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*TokenRead) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *TokenRead
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *TokenRead and nil error while calling Token. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *clusterServer) serveTokenProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Token")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(ReadToken)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Cluster.Token
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *ReadToken) (*TokenRead, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ReadToken)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ReadToken) when calling interceptor")
+					}
+					return s.Cluster.Token(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*TokenRead)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*TokenRead) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *TokenRead
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *TokenRead and nil error while calling Token. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
 func (s *clusterServer) ServiceDescriptor() ([]byte, int) {
 	return twirpFileDescriptor0, 0
 }
@@ -2418,29 +2693,32 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 383 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x93, 0x4f, 0x4b, 0xc3, 0x30,
-	0x18, 0xc6, 0xa9, 0x9d, 0xdb, 0x7c, 0xf7, 0x87, 0x11, 0x3c, 0xcc, 0x2a, 0x32, 0xab, 0x87, 0x9d,
-	0x5a, 0x98, 0x88, 0x07, 0x37, 0x41, 0xab, 0xf3, 0xe0, 0xad, 0xe0, 0xc5, 0x5b, 0xdb, 0x84, 0xad,
-	0xd0, 0x35, 0x23, 0x49, 0x91, 0x7d, 0x13, 0x3f, 0xae, 0xb4, 0xc9, 0x4a, 0x56, 0xda, 0xe1, 0xa9,
-	0x29, 0xef, 0xf3, 0x3c, 0x79, 0xfb, 0xfc, 0x28, 0x0c, 0xa2, 0x24, 0xe3, 0x82, 0x30, 0x67, 0xcb,
-	0xa8, 0xa0, 0xa8, 0xcf, 0x08, 0xe6, 0x41, 0x9c, 0x38, 0x21, 0xe5, 0xa9, 0x7d, 0x0b, 0x03, 0x8f,
-	0x91, 0x40, 0x10, 0x4f, 0x8a, 0x10, 0x82, 0x56, 0x1a, 0x6c, 0xc8, 0xd8, 0x98, 0x18, 0xd3, 0x33,
-	0xbf, 0x38, 0xdb, 0x77, 0x30, 0x54, 0x63, 0xa9, 0xc5, 0xb9, 0x2a, 0xcb, 0x62, 0xbc, 0x57, 0xe5,
-	0x67, 0xfb, 0x11, 0x06, 0x5f, 0x5b, 0x7c, 0x18, 0x55, 0x15, 0x95, 0xf1, 0x27, 0x5a, 0xfc, 0xa8,
-	0x8c, 0x97, 0x7e, 0x9c, 0x5f, 0xf8, 0x46, 0xb8, 0x60, 0x74, 0x77, 0x24, 0xcb, 0x46, 0x30, 0x52,
-	0x63, 0x25, 0x26, 0xd8, 0xbe, 0x81, 0x9e, 0x4f, 0x02, 0x7c, 0xcc, 0xf6, 0x09, 0x3d, 0x35, 0xce,
-	0x95, 0xff, 0xdd, 0x12, 0x9d, 0xc3, 0x29, 0x23, 0x01, 0xde, 0x8d, 0xcd, 0x89, 0x31, 0xed, 0xfa,
-	0xf2, 0x25, 0xbf, 0x6f, 0x19, 0xa7, 0xf8, 0x58, 0x7b, 0x36, 0xf4, 0xd5, 0x78, 0x49, 0xb3, 0xb4,
-	0xbe, 0xbb, 0x21, 0xf4, 0xb5, 0xb5, 0xb9, 0xfd, 0x5e, 0x7a, 0x78, 0xb1, 0xe4, 0x03, 0x74, 0x15,
-	0x45, 0x3e, 0x36, 0x26, 0xe6, 0xb4, 0x37, 0xbb, 0x70, 0x74, 0x8e, 0x8e, 0xf6, 0x45, 0x7e, 0x29,
-	0x9d, 0xfd, 0x9a, 0xd0, 0xd9, 0xaf, 0xe6, 0x41, 0x5b, 0xd2, 0x43, 0x97, 0x15, 0xab, 0xce, 0xdf,
-	0xba, 0xaa, 0xcd, 0xdd, 0x73, 0xf7, 0xa0, 0x2d, 0x19, 0x55, 0x43, 0x0e, 0xc8, 0x37, 0x84, 0x28,
-	0xba, 0xe8, 0x03, 0x3a, 0x0a, 0x18, 0xaa, 0x08, 0x0f, 0xa1, 0x5b, 0xd7, 0xb5, 0x31, 0x25, 0x6c,
-	0x34, 0x87, 0x56, 0xd1, 0x4e, 0xa5, 0x0b, 0xad, 0x49, 0xab, 0xb9, 0x26, 0xb4, 0x80, 0x56, 0x8e,
-	0xae, 0xea, 0xd6, 0x70, 0x5a, 0x56, 0xad, 0x5b, 0x62, 0x5c, 0x80, 0xf9, 0x92, 0x24, 0xc8, 0x6a,
-	0xbc, 0x9b, 0x37, 0xd8, 0x0b, 0xa2, 0xaf, 0xcf, 0xdf, 0xf3, 0x55, 0x2c, 0xd6, 0x59, 0xe8, 0x44,
-	0x74, 0xe3, 0x2a, 0x9d, 0x20, 0xd1, 0x3a, 0xa5, 0x09, 0x5d, 0xc5, 0x84, 0xbb, 0x21, 0x0d, 0x04,
-	0xff, 0x09, 0xe2, 0xd4, 0x65, 0xdb, 0xc8, 0x55, 0x4c, 0x9f, 0xd4, 0x33, 0x6c, 0x17, 0x7f, 0xf3,
-	0xfd, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xe1, 0x14, 0x60, 0xf3, 0xde, 0x03, 0x00, 0x00,
+	// 429 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0x4d, 0x8b, 0xdb, 0x30,
+	0x10, 0xc5, 0x75, 0x3e, 0x27, 0x1f, 0x04, 0x11, 0x68, 0xea, 0x96, 0x36, 0x51, 0x7b, 0xc8, 0xc9,
+	0x86, 0x94, 0x52, 0x4a, 0x93, 0x42, 0xeb, 0x36, 0x3d, 0xec, 0xcd, 0xec, 0x5e, 0xf6, 0x66, 0x5b,
+	0x22, 0x31, 0xeb, 0x58, 0xc1, 0x92, 0x59, 0xf2, 0x3b, 0xf7, 0x0f, 0x2d, 0xb2, 0x14, 0xe3, 0x78,
+	0xed, 0xb0, 0xa7, 0x48, 0x79, 0x6f, 0xde, 0x8c, 0xe6, 0x3d, 0x0c, 0xa3, 0x30, 0xce, 0xb8, 0xa0,
+	0xa9, 0x7d, 0x4c, 0x99, 0x60, 0x68, 0x98, 0x52, 0xc2, 0xfd, 0x28, 0xb6, 0x03, 0xc6, 0x13, 0xfc,
+	0x19, 0x46, 0x6e, 0x4a, 0x7d, 0x41, 0x5d, 0x45, 0x42, 0x08, 0x5a, 0x89, 0x7f, 0xa0, 0x33, 0x63,
+	0x6e, 0x2c, 0xfb, 0x5e, 0x7e, 0xc6, 0x5f, 0x60, 0xac, 0x61, 0xc5, 0x25, 0x92, 0x95, 0x65, 0x11,
+	0x39, 0xb3, 0xe4, 0x19, 0x7f, 0x87, 0xd1, 0xdd, 0x91, 0x5c, 0x4a, 0x55, 0x49, 0x85, 0xfc, 0x9b,
+	0x92, 0xfc, 0xa4, 0x90, 0x57, 0xf5, 0x44, 0x36, 0xfc, 0x4b, 0xb9, 0x48, 0xd9, 0xe9, 0x8a, 0x16,
+	0x46, 0x30, 0xd1, 0xb0, 0x26, 0x53, 0x82, 0x17, 0x30, 0xf0, 0xa8, 0x4f, 0xae, 0x95, 0xdd, 0xc0,
+	0x40, 0xc3, 0x92, 0xf9, 0xda, 0x29, 0xd1, 0x14, 0xda, 0x29, 0xf5, 0xc9, 0x69, 0x66, 0xce, 0x8d,
+	0x65, 0xcf, 0x53, 0x17, 0xd9, 0x6f, 0x1b, 0x25, 0xe4, 0xda, 0xf6, 0x30, 0x0c, 0x35, 0xbc, 0x65,
+	0x59, 0x52, 0xbf, 0xbb, 0x31, 0x0c, 0x4b, 0x63, 0x73, 0xfc, 0xaf, 0xa8, 0xe1, 0xf9, 0x90, 0xdf,
+	0xa0, 0xa7, 0x5d, 0xe4, 0x33, 0x63, 0x6e, 0x2e, 0x07, 0xab, 0x77, 0x76, 0xd9, 0x47, 0xbb, 0xf4,
+	0x22, 0xaf, 0xa0, 0xe2, 0x4f, 0xd0, 0x97, 0xff, 0xdc, 0xb2, 0x07, 0x9a, 0xd4, 0xf6, 0x5d, 0x40,
+	0x3f, 0x07, 0xf3, 0x26, 0x53, 0x68, 0x0b, 0x79, 0xd1, 0x0c, 0x75, 0x59, 0x3d, 0x99, 0xd0, 0x3d,
+	0x3f, 0xcf, 0x85, 0x8e, 0x4a, 0x00, 0x7a, 0x5f, 0x69, 0x5f, 0xce, 0x90, 0xf5, 0xa1, 0x76, 0xb6,
+	0x73, 0x76, 0x5c, 0xe8, 0x28, 0x9f, 0xab, 0x22, 0x17, 0xe9, 0x69, 0x10, 0xd1, 0x09, 0x41, 0xff,
+	0xa1, 0xab, 0x4d, 0x47, 0x15, 0xe2, 0x65, 0x70, 0xac, 0x8f, 0xb5, 0x32, 0x45, 0x60, 0xd0, 0x1a,
+	0x5a, 0xf9, 0xe3, 0x2b, 0xfb, 0x2c, 0xb9, 0x61, 0x35, 0xaf, 0x1a, 0x6d, 0xa0, 0x25, 0xed, 0xaf,
+	0x56, 0x97, 0x22, 0x61, 0x59, 0xb5, 0xd5, 0x2a, 0x0a, 0x1b, 0x30, 0x7f, 0xc7, 0x31, 0xb2, 0x1a,
+	0x7b, 0xf3, 0x86, 0x72, 0x95, 0x8a, 0x1f, 0xd0, 0x56, 0xd6, 0xbe, 0x7d, 0x29, 0x90, 0x03, 0x56,
+	0x05, 0x28, 0xbc, 0xfe, 0xf3, 0xeb, 0x7e, 0xbd, 0x8b, 0xc4, 0x3e, 0x0b, 0xec, 0x90, 0x1d, 0x1c,
+	0x4d, 0x12, 0x34, 0xdc, 0x27, 0x2c, 0x66, 0xbb, 0x88, 0x72, 0x27, 0x60, 0xbe, 0xe0, 0x8f, 0x7e,
+	0x94, 0x38, 0xe9, 0x31, 0x74, 0x74, 0xa4, 0x7e, 0xea, 0xdf, 0xa0, 0x93, 0x7f, 0x4c, 0xbe, 0x3e,
+	0x07, 0x00, 0x00, 0xff, 0xff, 0x57, 0x73, 0xec, 0x53, 0x5d, 0x04, 0x00, 0x00,
 }

@@ -36,7 +36,7 @@
                         <table mat-table [dataSource]="runs.slice(0, 10)" style="width: 100%;">
                             <ng-container matColumnDef="name">
                                 <th mat-header-cell *matHeaderCellDef>Name</th>
-                                <td mat-cell *matCellDef="let run"> {{deployment.name}} v{{run.version}} </td>
+                                <td mat-cell *matCellDef="let run"> {{run.name}} v{{run.version}} </td>
                             </ng-container>
                             <ng-container matColumnDef="status">
                                 <th mat-header-cell *matHeaderCellDef>Status</th>
@@ -62,7 +62,8 @@
             </mat-accordion>
         </mat-card-content>
         <mat-card-actions style="text-align:right;">
-            <button mat-raised-button color="accent" (click)="run()">Run</button>
+            <button mat-raised-button [disabled]="!auth.isAdmin()" color="primary" (click)="token()">Web Token</button>
+            <button mat-raised-button color="accent" (click)="run()">Trigger Manually</button>
         </mat-card-actions>
     </mat-card>
 </div>

@@ -224,6 +224,43 @@ const JSONToClustersRead = (m: ClustersRead | ClustersReadJSON): ClustersRead =>
     };
 };
 
+export interface ReadToken {
+    uuid: string;
+    
+}
+
+interface ReadTokenJSON {
+    uuid: string;
+    
+}
+
+
+const ReadTokenToJSON = (m: ReadToken): ReadTokenJSON => {
+    return {
+        uuid: m.uuid,
+        
+    };
+};
+
+export interface TokenRead {
+    token: string;
+    
+}
+
+interface TokenReadJSON {
+    token: string;
+    
+}
+
+
+const JSONToTokenRead = (m: TokenRead | TokenReadJSON): TokenRead => {
+    
+    return {
+        token: m.token,
+        
+    };
+};
+
 export interface Cluster {
     create: (createCluster: CreateCluster) => Promise<ClusterCreated>;
     
@@ -236,6 +273,8 @@ export interface Cluster {
     find: (findCluster: FindCluster) => Promise<ClusterFound>;
     
     all: (readClusters: ReadClusters) => Promise<ClustersRead>;
+    
+    token: (readToken: ReadToken) => Promise<TokenRead>;
     
 }
 
@@ -337,6 +376,21 @@ export class DefaultCluster implements Cluster {
             }
 
             return resp.json().then(JSONToClustersRead);
+        });
+    }
+    
+    token(readToken: ReadToken): Promise<TokenRead> {
+        const url = this.hostname + this.pathPrefix + "Token";
+        let body: ReadToken | ReadTokenJSON = readToken;
+        if (!this.writeCamelCase) {
+            body = ReadTokenToJSON(readToken);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToTokenRead);
         });
     }
     

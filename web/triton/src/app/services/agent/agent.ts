@@ -13,13 +13,6 @@ interface RegisterAgentJSON {
 }
 
 
-const RegisterAgentToJSON = (m: RegisterAgent): RegisterAgentJSON => {
-    return {
-        cluster_uuid: m.clusterUuid,
-        
-    };
-};
-
 export interface AgentRegistered {
     clusterToken: string;
     
@@ -30,14 +23,6 @@ interface AgentRegisteredJSON {
     
 }
 
-
-const JSONToAgentRegistered = (m: AgentRegistered | AgentRegisteredJSON): AgentRegistered => {
-    
-    return {
-        clusterToken: (((m as AgentRegistered).clusterToken) ? (m as AgentRegistered).clusterToken : (m as AgentRegisteredJSON).cluster_token),
-        
-    };
-};
 
 export interface ReadActions {
     clusterUuid: string;
@@ -203,8 +188,6 @@ const JSONToResult = (m: Result | ResultJSON): Result => {
 };
 
 export interface Agent {
-    register: (registerAgent: RegisterAgent) => Promise<AgentRegistered>;
-    
     actions: (readActions: ReadActions) => Promise<ActionsRead>;
     
     results: (returnResult: ReturnResult) => Promise<ResultReturned>;
@@ -222,21 +205,6 @@ export class DefaultAgent implements Agent {
         this.fetch = fetch;
         this.writeCamelCase = writeCamelCase;
     }
-    register(registerAgent: RegisterAgent): Promise<AgentRegistered> {
-        const url = this.hostname + this.pathPrefix + "Register";
-        let body: RegisterAgent | RegisterAgentJSON = registerAgent;
-        if (!this.writeCamelCase) {
-            body = RegisterAgentToJSON(registerAgent);
-        }
-        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
-            if (!resp.ok) {
-                return throwTwirpError(resp);
-            }
-
-            return resp.json().then(JSONToAgentRegistered);
-        });
-    }
-    
     actions(readActions: ReadActions): Promise<ActionsRead> {
         const url = this.hostname + this.pathPrefix + "Actions";
         let body: ReadActions | ReadActionsJSON = readActions;

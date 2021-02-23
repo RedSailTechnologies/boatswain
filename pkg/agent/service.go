@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
-	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/storage"
 	pb "github.com/redsailtechnologies/boatswain/rpc/agent"
 	"github.com/twitchtv/twirp"
@@ -32,19 +31,6 @@ func NewService(s storage.Storage) *Service {
 		resultsLock: &sync.Mutex{},
 		ready:       s.CheckReady,
 	}
-}
-
-// Register registers this agent
-func (s Service) Register(ctx context.Context, cmd *pb.RegisterAgent) (*pb.AgentRegistered, error) {
-	cl, err := s.cluster.Load(cmd.ClusterUuid)
-	if err != nil {
-		logger.Error("error reading Cluster", "error", err)
-		return nil, twirp.InternalError("error loading Cluster")
-	}
-
-	return &pb.AgentRegistered{
-		ClusterToken: cl.Token(),
-	}, nil
 }
 
 // Actions gets the next action for the agent or an empty list if there's nothing to do

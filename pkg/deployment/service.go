@@ -2,9 +2,7 @@ package deployment
 
 import (
 	"context"
-
-	"github.com/redsailtechnologies/boatswain/pkg/deployment/template"
-	"github.com/redsailtechnologies/boatswain/pkg/deployment/trigger"
+	"errors"
 
 	"github.com/twitchtv/twirp"
 
@@ -12,6 +10,8 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
 	"github.com/redsailtechnologies/boatswain/pkg/deployment/run"
+	"github.com/redsailtechnologies/boatswain/pkg/deployment/template"
+	"github.com/redsailtechnologies/boatswain/pkg/deployment/trigger"
 	"github.com/redsailtechnologies/boatswain/pkg/git"
 	"github.com/redsailtechnologies/boatswain/pkg/logger"
 	"github.com/redsailtechnologies/boatswain/pkg/repo"
@@ -19,6 +19,7 @@ import (
 	tw "github.com/redsailtechnologies/boatswain/pkg/twirp"
 	"github.com/redsailtechnologies/boatswain/rpc/agent"
 	pb "github.com/redsailtechnologies/boatswain/rpc/deployment"
+	tr "github.com/redsailtechnologies/boatswain/rpc/trigger"
 )
 
 var collection = "deployments"
@@ -60,7 +61,7 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateDeployment) (*pb.Depl
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	d, err := Create(ddd.NewUUID(), cmd.Name, cmd.RepoId, cmd.Branch, cmd.FilePath, ddd.NewTimestamp())
+	d, err := Create(ddd.NewUUID(), cmd.Name, ddd.NewUUID(), cmd.RepoId, cmd.Branch, cmd.FilePath, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Deployment", "error", err)
 		return nil, tw.ToTwirpError(err, "could not create Deployment")
@@ -223,67 +224,20 @@ func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.
 	}, nil
 }
 
-// Trigger a deployment
-func (s Service) Trigger(ctx context.Context, cmd *pb.TriggerDeployment) (*pb.DeploymentTriggered, error) {
-	if err := s.auth.Authorize(ctx, auth.Editor); err != nil {
+// Token gets the token for this deployment, for use with web calls
+func (s Service) Token(ctx context.Context, req *pb.ReadToken) (*pb.TokenRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	// template/validate the deployment
-	d, err := s.read.Load(cmd.Uuid)
+	d, err := s.read.Load(req.Uuid)
 	if err != nil {
 		logger.Error("error reading Deployment", "error", err)
 		return nil, tw.ToTwirpError(err, "error loading Deployment")
 	}
 
-	rep, err := s.repo.Load(d.RepoID())
-	if err != nil {
-		logger.Error("error reading Repo for Deployment", "error", err)
-		return nil, tw.ToTwirpError(err, "error loading Repo for Deployment")
-	}
-
-	f := s.git.GetFile(rep.Endpoint(), rep.Token(), d.Branch(), d.FilePath())
-	if f == nil {
-		logger.Error("could not get deployment file")
-		return nil, twirp.NotFoundError("deployment file not found")
-	}
-
-	te := template.NewEngine(&git.DefaultAgent{}, s.repo)
-	t, err := te.Run(f, cmd.Arguments)
-	if err != nil {
-		logger.Error("yaml file could not be templated", "error", err)
-		return nil, twirp.InternalErrorWith(err)
-	}
-	if err = t.Validate(); err != nil {
-		logger.Error("could not validate template", "error", err)
-		return nil, twirp.InternalErrorWith(err)
-	}
-
-	// validate the trigger
-	user := s.auth.User(ctx)
-	if err = trigger.Validate(&user, cmd, *t); err != nil {
-		logger.Error("invalid trigger", "error", err)
-		return nil, twirp.InternalErrorWith(err)
-	}
-
-	// create the run
-	r, err := run.Create(ddd.NewUUID(), cmd.Uuid, t, &trigger.Trigger{
-		Name: cmd.Name,
-		Type: getTriggerType(cmd.Type),
-		User: user,
-	})
-
-	// start the engine in the background
-	eng, err := run.NewEngine(r, s.store, s.agent, git.DefaultAgent{}, repo.DefaultAgent{})
-	if err != nil {
-		return nil, twirp.InternalErrorWith(err)
-	}
-
-	go eng.Run()
-
-	// return the run id
-	return &pb.DeploymentTriggered{
-		RunUuid: r.UUID(),
+	return &pb.TokenRead{
+		Token: d.Token(),
 	}, nil
 }
 
@@ -312,6 +266,7 @@ func (s Service) Run(ctx context.Context, req *pb.ReadRun) (*pb.RunRead, error) 
 
 	return &pb.RunRead{
 		Uuid:      r.UUID(),
+		Name:      r.Name(),
 		Version:   r.RunVersion(),
 		Status:    convertStatus(r.Status()),
 		StartTime: r.StartTime(),
@@ -340,6 +295,7 @@ func (s Service) Runs(ctx context.Context, req *pb.ReadRuns) (*pb.RunsRead, erro
 		if r.DeploymentUUID() == req.DeploymentUuid {
 			resp.Runs = append(resp.Runs, &pb.RunReadSummary{
 				Uuid:      r.UUID(),
+				Name:      r.Name(),
 				Version:   r.RunVersion(),
 				Status:    convertStatus(r.Status()),
 				StartTime: r.StartTime(),
@@ -348,12 +304,147 @@ func (s Service) Runs(ctx context.Context, req *pb.ReadRuns) (*pb.RunsRead, erro
 		}
 	}
 	return resp, nil
+}
 
+// Manual triggers a deployment manually
+func (s Service) Manual(ctx context.Context, cmd *tr.TriggerManual) (*tr.ManualTriggered, error) {
+	ctx, err := s.auth.Authenticate(ctx)
+	if err != nil {
+		logger.Error("error authenticating for manual trigger", "error", err)
+		return nil, twirp.NewError(twirp.Unauthenticated, "could not authenticate user")
+	}
+
+	user := s.auth.User(ctx)
+
+	runUUID, err := s.trigger(&trigger.Trigger{
+		UUID: cmd.Uuid,
+		Name: cmd.Name,
+		Type: trigger.ManualTrigger,
+		User: &trigger.User{
+			Name:    user.Name,
+			Email:   user.Email,
+			Roles:   s.auth.Roles(user),
+			Subject: user.Subject,
+		},
+		Arguments: []byte(cmd.Args),
+	})
+	if err != nil {
+		return nil, tw.ToTwirpError(err, "deployment trigger failed")
+	}
+
+	return &tr.ManualTriggered{
+		RunUuid: runUUID,
+	}, nil
+}
+
+// Web triggers a deployment from a web call
+func (s Service) Web(ctx context.Context, cmd *tr.TriggerWeb) (*tr.WebTriggered, error) {
+	d, err := s.read.Load(cmd.Uuid)
+	if err != nil {
+		logger.Error("error reading Deployment", "error", err)
+		return nil, tw.ToTwirpError(err, "couldn't read deployment to trigger")
+	}
+
+	if cmd.Token != d.Token() {
+		return nil, twirp.NewError(twirp.Unauthenticated, "invalid token")
+	}
+
+	runUUID, err := s.trigger(&trigger.Trigger{
+		UUID:      cmd.Uuid,
+		Name:      cmd.Name,
+		Type:      trigger.WebTrigger,
+		Token:     &cmd.Token,
+		Arguments: []byte(cmd.Args),
+	})
+
+	if err != nil {
+		return nil, tw.ToTwirpError(err, "deployment trigger failed")
+	}
+	return &tr.WebTriggered{
+		RunUuid: runUUID,
+	}, nil
 }
 
 // Ready implements the ReadyService method so this service can be part of a health check routine
 func (s Service) Ready() error {
 	return s.ready()
+}
+
+func (s Service) deploymentTrigger(name, deployment string, args []byte) (string, error) {
+	deps, err := s.read.All()
+	if err != nil {
+		logger.Error("error reading Deployment", "error", err)
+		return "", err
+	}
+
+	var d *Deployment
+	for _, dep := range deps {
+		if deployment == dep.Name() {
+			d = dep
+			break
+		}
+	}
+	if d == nil {
+		return "", errors.New("deployment not found")
+	}
+
+	return s.trigger(&trigger.Trigger{
+		UUID:      d.UUID(),
+		Name:      name,
+		Type:      trigger.DeploymentTrigger,
+		Arguments: args,
+	})
+}
+
+func (s Service) trigger(trig *trigger.Trigger) (string, error) {
+	// template/validate the deployment
+	d, err := s.read.Load(trig.UUID)
+	if err != nil {
+		logger.Error("error reading Deployment", "error", err)
+		return "", err
+	}
+
+	rep, err := s.repo.Load(d.RepoID())
+	if err != nil {
+		logger.Error("error reading Repo for Deployment", "error", err)
+		return "", err
+	}
+
+	f := s.git.GetFile(rep.Endpoint(), rep.Token(), d.Branch(), d.FilePath())
+	if f == nil {
+		logger.Error("could not get deployment file")
+		return "", err
+	}
+
+	te := template.NewEngine(&git.DefaultAgent{}, s.repo)
+	temp, err := te.Run(f, trig.Arguments)
+	if err != nil {
+		logger.Error("yaml file could not be templated", "error", err)
+		return "", err
+	}
+	if err = temp.Validate(); err != nil {
+		logger.Error("could not validate template", "error", err)
+		return "", err
+	}
+
+	if err = trig.Validate(temp); err != nil {
+		logger.Error("invalid trigger", "error", err)
+		return "", err
+	}
+
+	// create the run
+	r, err := run.Create(ddd.NewUUID(), temp, trig)
+
+	// start the engine in the background
+	eng, err := run.NewEngine(r, s.store, s.agent, git.DefaultAgent{}, repo.DefaultAgent{}, s.deploymentTrigger)
+	if err != nil {
+		return "", err
+	}
+
+	go eng.Run()
+
+	// return the run id
+	return r.UUID(), nil
 }
 
 func convertLogs(logs []run.Log) []*pb.StepLog {
@@ -397,16 +488,5 @@ func convertStatus(s run.Status) pb.Status {
 		return pb.Status_SKIPPED
 	default:
 		return -1
-	}
-}
-
-func getTriggerType(t pb.TriggerDeployment_TriggerType) trigger.Type {
-	switch t {
-	case pb.TriggerDeployment_WEB:
-		return trigger.WebTrigger
-	case pb.TriggerDeployment_MANUAL:
-		return trigger.ManualTrigger
-	default:
-		return trigger.DeploymentTrigger
 	}
 }

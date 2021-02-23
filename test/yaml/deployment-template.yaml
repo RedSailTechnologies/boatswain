@@ -1,3 +1,4 @@
+name: ${{ .Inputs.appName }}
 version: '1.0.0'
 clusters:
   - test

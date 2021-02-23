@@ -15,6 +15,8 @@
     - [FindCluster](#redsail.bosn.FindCluster)
     - [ReadCluster](#redsail.bosn.ReadCluster)
     - [ReadClusters](#redsail.bosn.ReadClusters)
+    - [ReadToken](#redsail.bosn.ReadToken)
+    - [TokenRead](#redsail.bosn.TokenRead)
     - [UpdateCluster](#redsail.bosn.UpdateCluster)
   
     - [Cluster](#redsail.bosn.Cluster)
@@ -182,6 +184,36 @@ Cluster is the service managing external clusters.
 
 
 
+<a name="redsail.bosn.ReadToken"></a>
+
+### ReadToken
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| uuid | [string](#string) |  | unique id of the cluster |
+
+
+
+
+
+
+<a name="redsail.bosn.TokenRead"></a>
+
+### TokenRead
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| token | [string](#string) |  | the token for this cluster |
+
+
+
+
+
+
 <a name="redsail.bosn.UpdateCluster"></a>
 
 ### UpdateCluster
@@ -217,6 +249,7 @@ Cluster is the service managing external clusters.
 | Read | [ReadCluster](#redsail.bosn.ReadCluster) | [ClusterRead](#redsail.bosn.ClusterRead) | reads out a cluster |
 | Find | [FindCluster](#redsail.bosn.FindCluster) | [ClusterFound](#redsail.bosn.ClusterFound) | finds the cluster uuid by name |
 | All | [ReadClusters](#redsail.bosn.ReadClusters) | [ClustersRead](#redsail.bosn.ClustersRead) | gets all clusters currently configured and their status |
+| Token | [ReadToken](#redsail.bosn.ReadToken) | [TokenRead](#redsail.bosn.TokenRead) | gets the cluster&#39;s access token |
 
  
 

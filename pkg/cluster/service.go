@@ -198,6 +198,23 @@ func (s Service) All(ctx context.Context, req *pb.ReadClusters) (*pb.ClustersRea
 	return resp, nil
 }
 
+// Token gets the cluster's access token
+func (s Service) Token(ctx context.Context, cmd *pb.ReadToken) (*pb.TokenRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+
+	c, err := s.read.Load(cmd.Uuid)
+	if err != nil {
+		logger.Error("error getting Cluster", "error", err)
+		return nil, twirp.NotFoundError("cluster not found")
+	}
+
+	return &pb.TokenRead{
+		Token: c.Token(),
+	}, nil
+}
+
 // Ready implements the ReadyService method so this service can be part of a health check routine
 func (s Service) Ready() error {
 	return s.ready()

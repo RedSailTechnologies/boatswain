@@ -1,6 +1,6 @@
 <div class="page" *ngIf="run; else noData">
     <mat-card style="margin:50px 25% 50px 25%;">
-        <mat-card-title>v{{run.version}}</mat-card-title>
+        <mat-card-title>{{run.name}} v{{run.version}}</mat-card-title>
         <mat-card-subtitle style="flex:0 0 auto;">
             Status: <a [style]="run.status == 'FAILED' ? 'color:lightcoral;' : ''">{{run.status}}</a>
             <br />

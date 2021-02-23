@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BusyComponent } from 'src/app/dialogs/busy/busy.component';
-import { DefaultDeployment, Deployment, DeploymentRead, DeploymentTriggered, ReadDeployment, ReadRuns, RunReadSummary, TemplateDeployment, TriggerDeployment } from 'src/app/services/deployment/deployment';
+import { MessageDialogComponent } from 'src/app/dialogs/message-dialog/message-dialog.component';
+import { TriggerDialogComponent } from 'src/app/dialogs/trigger-dialog/trigger-dialog.component';
+import { DefaultDeployment, Deployment, DeploymentRead, ReadDeployment, ReadRuns, ReadToken, RunReadSummary, TemplateDeployment } from 'src/app/services/deployment/deployment';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 
 @Component({
@@ -20,8 +20,8 @@ export class DeploymentComponent implements OnInit {
 
   constructor(private route: ActivatedRoute,
               private router: Router,
-              private spinner: MatDialog,
-              auth: AuthService) {
+              private dialog: MatDialog,
+              public auth: AuthService) {
     this.client = new DefaultDeployment(`${location.protocol}//${location.host}/api`, auth.fetch());
   }
 
@@ -64,24 +64,43 @@ export class DeploymentComponent implements OnInit {
   }
 
   run() {
-    var runTrigger = this.client.trigger(<TriggerDeployment>{
-      uuid: this.deployment.uuid,
-      type: "MANUAL",
-      // TODO - args
-    });
-    var spinnerRef: MatDialogRef<BusyComponent> = this.spinner.open(BusyComponent, {
-      panelClass: 'transparent',
-      disableClose: true
-    });
-    runTrigger.then((val: DeploymentTriggered) => {
-      this.router.navigate(['/run/' + val.runUuid]);
+    this.dialog.open(TriggerDialogComponent, {
+      minWidth: '33%',
+      panelClass: 'custom-dialog-container',
+      data: {
+        title: "Trigger Deployment",
+        uuid: this.deployment.uuid
+      }
     })
-    runTrigger.finally(() => {
-      spinnerRef.close();
+    .afterClosed()
+    .subscribe(val => {
+      this.router.navigate(['/run/' + val]);
     });
   }
 
   redirect(run: RunReadSummary) {
     this.router.navigate(['/run/' + run.uuid]);
+  }
+
+  token() {
+    this.client.token(<ReadToken>{
+      uuid: this.deployment.uuid
+    }).then(val => {
+      this.dialog.open(MessageDialogComponent, {
+        panelClass: 'message-box',
+        data: {
+          "reason": "Token",
+          "message": "Deployment UUID: " + this.deployment.uuid + "\nDeployment Token: " + val.token
+        }
+      });
+    }).catch(error => {
+      this.dialog.open(MessageDialogComponent, {
+        panelClass: 'message-box',
+        data: {
+          "reason": "Error",
+          "message": "An error occured.\n" + error
+        }
+      });
+    })
   }
 }

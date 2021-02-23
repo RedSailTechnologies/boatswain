@@ -85,6 +85,18 @@ export class AuthService {
     return false;
   }
 
+  isEditor(): boolean {
+    if (this.user == null) {
+      return false;
+    }
+    for (var i = 0; i < this.user.profile.roles.length; i++) {
+      if (this.user.profile.roles[i] == "Boatswain.Editor") {
+        return true;
+      }
+    }
+    return this.isAdmin();
+  }
+
   loggedIn(): boolean {
     return this.user != null && !this.user.expired;
   }

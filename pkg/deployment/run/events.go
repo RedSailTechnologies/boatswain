@@ -18,10 +18,9 @@ var eventTypes = map[string]func() ddd.Event{
 
 // Created is the event for when a new run is started
 type Created struct {
-	UUID           string
-	DeploymentUUID string
-	Template       *template.Template
-	Trigger        *trigger.Trigger
+	UUID     string
+	Template *template.Template
+	Trigger  *trigger.Trigger
 }
 
 // EventType marks this as an event

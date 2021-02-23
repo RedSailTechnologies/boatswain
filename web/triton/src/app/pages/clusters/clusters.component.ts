@@ -3,6 +3,7 @@ import {
   ClusterRead,
   Cluster,
   DefaultCluster,
+  ReadToken,
 } from 'src/app/services/cluster/cluster';
 import { MatDialog } from '@angular/material/dialog';
 import { ClusterDialogComponent } from 'src/app/dialogs/cluster-dialog/cluster-dialog.component';
@@ -10,6 +11,7 @@ import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-d
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TwirpError } from 'src/app/services/cluster/twirp';
 import { AuthService } from 'src/app/utils/auth/auth.service';
+import { MessageDialogComponent } from 'src/app/dialogs/message-dialog/message-dialog.component';
 
 @Component({
   selector: 'app-clusters',
@@ -129,5 +131,27 @@ export class ClustersComponent implements OnInit {
         panelClass: ['warn-snack'],
       });
     }
+  }
+
+  token(cluster: ClusterRead) {
+    this.client.token(<ReadToken>{
+      uuid: cluster.uuid
+    }).then(val => {
+      this.dialog.open(MessageDialogComponent, {
+        panelClass: 'message-box',
+        data: {
+          "reason": "Token",
+          "message": "Cluster UUID: " + cluster.uuid + "\nCluster Token: " + val.token
+        }
+      });
+    }).catch(error => {
+      this.dialog.open(MessageDialogComponent, {
+        panelClass: 'message-box',
+        data: {
+          "reason": "Error",
+          "message": "An error occured.\n" + error
+        }
+      });
+    })
   }
 }

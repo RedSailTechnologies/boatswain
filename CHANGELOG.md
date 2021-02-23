@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v0.6.0
+* 44ccd58 feature/cluster agent (#59)
+
+## v0.5.0
+* 16a56a0 Hotfix/minor fixes (#57)
+* 25d4555 Hotfix/repo read slow (#55)
+* ff53354 feature/repo authentication (#56)
+* 18d15d6 feature/planning (#51)
+* 7764083 v0.4.2 changes (#50)
+
 ## v0.4.2
 * 28c78bc always defer a disconnect once we know we have a client (#49)
 * a609aa5 Feature/values (#48)
@@ -13,7 +23,7 @@
 * 9b350c7 hotfix/gyaradox command and add gyarados to develop action (#40)
 * a3b3bed update the inter svc comms, split repos into read/write and fix tests (#39)
 * 43107ec Feature/Delivery Execution (#33)
-* 
+
 ## v0.3.2
 * 8a9c3bd Hotfix/Fix helm calls for ready (#31)
 * 71503db Feature/Service Health Checks (#30)
@@ -21,12 +31,12 @@
 * 461b3e8 Feature/gh pages (#22)
 
 ## v0.3.1
-* 98e9a0e update the hooks for the application service
 * 50189bf Hotfix/Update feature template (#20)
 * 4eaae81 Hotfix/Update issue templates (#19)
 
 ## v0.3.0
 * 0574d7d Feature/init authentication (#18)
+* 1361c1b Set theme jekyll-theme-modernist
 * f41d073 Update all version numbers and make minor Makefile tweaks (#17)
 
 ## v0.2.0
