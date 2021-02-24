@@ -16,6 +16,16 @@ triggers:
       users:
         - "Adam Page"
 strategy:
+  - name: approve-install
+    condition: any
+    approval:
+      users: 
+        - 'Adam Page'
+  - name: approve-install-admin
+    condition: any
+    approval:
+      roles:
+        - Admin
   - name: deploy-grafana
     condition: always
     app:
