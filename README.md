@@ -13,11 +13,11 @@ Documentation published with github pages [here](https://redsailtechnologies.git
 
 ## Roadmap
 * 0.8
-  * Mongo security
   * External links
 * 0.9
   * Approval steps
   * Web Homepage and Getting Started docs
 * 1.0
   * Outstanding bug fixes
+  * Mongo security (in Helm)
   * Clean up Helm charts for public deployment (istio compatibility, etc.)
