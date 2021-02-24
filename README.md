@@ -17,7 +17,7 @@ Documentation published with github pages [here](https://redsailtechnologies.git
   * External links
 * 0.9
   * Approval steps
-  * Outstanding bug fixes
-* 1.0
   * Web Homepage and Getting Started docs
+* 1.0
+  * Outstanding bug fixes
   * Clean up Helm charts for public deployment (istio compatibility, etc.)

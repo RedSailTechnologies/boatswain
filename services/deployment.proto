@@ -118,15 +118,21 @@ message StepRead {
     repeated StepLog logs = 5;
 }
 
+message LinkRead {
+    string name = 1;
+    string url = 2;
+}
+
 message RunRead {
     string uuid = 1;
     string name = 2;
     string version = 3;
     Status status = 4;
     int64 start_time = 5;
-    int64 stop_time = 6;
     
-    repeated StepRead steps = 7;
+    int64 stop_time = 6;
+    repeated LinkRead links = 7;
+    repeated StepRead steps = 8;
 }
 
 message ReadRuns {

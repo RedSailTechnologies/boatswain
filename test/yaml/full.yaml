@@ -1,5 +1,8 @@
 name: ${{ .Parameters.name }}
 version: ${{ .Parameters.version }}
+links:
+  - http://${{ .Parameters.name }}.fake
+  - http://www.google.com
 clusters:
   - test
 apps:

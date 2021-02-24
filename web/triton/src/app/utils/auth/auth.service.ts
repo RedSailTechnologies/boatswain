@@ -70,6 +70,7 @@ export class AuthService {
     if (this.user == null) {
       return null;
     }
+    console.log(this.user)
     return this.user.profile;
   }
 

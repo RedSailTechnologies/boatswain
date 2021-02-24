@@ -158,6 +158,18 @@ func (r *Run) RunVersion() string {
 	return r.template.Version
 }
 
+// Links gets the links for this run
+func (r *Run) Links() []*Link {
+	links := make([]*Link, len(r.template.Links))
+	for i := range r.template.Links {
+		links[i] = &Link{
+			Name: r.template.Links[i].Name,
+			URL:  r.template.Links[i].URL,
+		}
+	}
+	return links
+}
+
 // StartTime gets the time this run started
 func (r *Run) StartTime() int64 {
 	return r.start
