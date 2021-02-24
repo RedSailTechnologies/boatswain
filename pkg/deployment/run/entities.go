@@ -17,6 +17,12 @@ func (s *Step) log(m string, l LogLevel, t int64) {
 	})
 }
 
+// A Link is a reference attached to a run
+type Link struct {
+	Name string
+	URL  string
+}
+
 // A Log is part of a step's result
 type Log struct {
 	Timestamp int64
