@@ -27,7 +27,7 @@ strategy:
       roles:
         - Admin
   - name: deploy-grafana
-    condition: always
+    condition: succeeded
     app:
       name: grafana
       cluster: test
