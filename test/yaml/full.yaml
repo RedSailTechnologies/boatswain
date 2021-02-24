@@ -2,9 +2,9 @@ name: ${{ .Parameters.name }}
 version: ${{ .Parameters.version }}
 links:
   - name: FakeURL
-    link: http://${{ .Parameters.name }}.fake
+    url: http://${{ .Parameters.name }}.fake
   - name: Google
-    link: http://www.google.com
+    url: http://www.google.com
 clusters:
   - test
 apps:
