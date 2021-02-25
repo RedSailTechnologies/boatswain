@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## v0.8.1
+* 38fa302 0.8.0 changes and hotfix for action endpoint (#66)
+
 ## v0.8.0
 * 24c72b2 Feature/approvals (#64)
 * 3091ad9 Feature/links (#61)
