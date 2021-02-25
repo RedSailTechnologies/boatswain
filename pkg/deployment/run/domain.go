@@ -91,7 +91,7 @@ func (r *Run) AppendLog(message string, level LogLevel, timestamp int64) error {
 	return nil
 }
 
-// SetStatus pauses the current step
+// SetStatus sets the status for the current step
 func (r *Run) SetStatus(s Status) error {
 	r.on(&StatusSet{Status: s})
 	return nil
