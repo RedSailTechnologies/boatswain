@@ -1460,7 +1460,7 @@ type ApproveStep struct {
 func (x *ApproveStep) Reset() {
 	*x = ApproveStep{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_deployment_proto_msgTypes[22]
+		mi := &file_deployment_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1473,7 +1473,7 @@ func (x *ApproveStep) String() string {
 func (*ApproveStep) ProtoMessage() {}
 
 func (x *ApproveStep) ProtoReflect() protoreflect.Message {
-	mi := &file_deployment_proto_msgTypes[22]
+	mi := &file_deployment_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1486,7 +1486,7 @@ func (x *ApproveStep) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApproveStep.ProtoReflect.Descriptor instead.
 func (*ApproveStep) Descriptor() ([]byte, []int) {
-	return file_deployment_proto_rawDescGZIP(), []int{22}
+	return file_deployment_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ApproveStep) GetRunUuid() string {
@@ -1519,7 +1519,7 @@ type StepApproved struct {
 func (x *StepApproved) Reset() {
 	*x = StepApproved{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_deployment_proto_msgTypes[23]
+		mi := &file_deployment_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1532,7 +1532,7 @@ func (x *StepApproved) String() string {
 func (*StepApproved) ProtoMessage() {}
 
 func (x *StepApproved) ProtoReflect() protoreflect.Message {
-	mi := &file_deployment_proto_msgTypes[23]
+	mi := &file_deployment_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1545,7 +1545,7 @@ func (x *StepApproved) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StepApproved.ProtoReflect.Descriptor instead.
 func (*StepApproved) Descriptor() ([]byte, []int) {
-	return file_deployment_proto_rawDescGZIP(), []int{23}
+	return file_deployment_proto_rawDescGZIP(), []int{24}
 }
 
 type ReadApprovals struct {
@@ -1557,7 +1557,7 @@ type ReadApprovals struct {
 func (x *ReadApprovals) Reset() {
 	*x = ReadApprovals{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_deployment_proto_msgTypes[24]
+		mi := &file_deployment_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1570,7 +1570,7 @@ func (x *ReadApprovals) String() string {
 func (*ReadApprovals) ProtoMessage() {}
 
 func (x *ReadApprovals) ProtoReflect() protoreflect.Message {
-	mi := &file_deployment_proto_msgTypes[24]
+	mi := &file_deployment_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1583,7 +1583,7 @@ func (x *ReadApprovals) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReadApprovals.ProtoReflect.Descriptor instead.
 func (*ReadApprovals) Descriptor() ([]byte, []int) {
-	return file_deployment_proto_rawDescGZIP(), []int{24}
+	return file_deployment_proto_rawDescGZIP(), []int{25}
 }
 
 type ApprovalRead struct {
@@ -1601,7 +1601,7 @@ type ApprovalRead struct {
 func (x *ApprovalRead) Reset() {
 	*x = ApprovalRead{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_deployment_proto_msgTypes[25]
+		mi := &file_deployment_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1614,7 +1614,7 @@ func (x *ApprovalRead) String() string {
 func (*ApprovalRead) ProtoMessage() {}
 
 func (x *ApprovalRead) ProtoReflect() protoreflect.Message {
-	mi := &file_deployment_proto_msgTypes[25]
+	mi := &file_deployment_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1627,7 +1627,7 @@ func (x *ApprovalRead) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApprovalRead.ProtoReflect.Descriptor instead.
 func (*ApprovalRead) Descriptor() ([]byte, []int) {
-	return file_deployment_proto_rawDescGZIP(), []int{25}
+	return file_deployment_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *ApprovalRead) GetUuid() string {
@@ -1676,7 +1676,7 @@ type ApprovalsRead struct {
 func (x *ApprovalsRead) Reset() {
 	*x = ApprovalsRead{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_deployment_proto_msgTypes[26]
+		mi := &file_deployment_proto_msgTypes[27]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1689,7 +1689,7 @@ func (x *ApprovalsRead) String() string {
 func (*ApprovalsRead) ProtoMessage() {}
 
 func (x *ApprovalsRead) ProtoReflect() protoreflect.Message {
-	mi := &file_deployment_proto_msgTypes[26]
+	mi := &file_deployment_proto_msgTypes[27]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1702,7 +1702,7 @@ func (x *ApprovalsRead) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApprovalsRead.ProtoReflect.Descriptor instead.
 func (*ApprovalsRead) Descriptor() ([]byte, []int) {
-	return file_deployment_proto_rawDescGZIP(), []int{26}
+	return file_deployment_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *ApprovalsRead) GetApprovals() []*ApprovalRead {
@@ -1936,7 +1936,7 @@ func file_deployment_proto_rawDescGZIP() []byte {
 }
 
 var file_deployment_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_deployment_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_deployment_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_deployment_proto_goTypes = []interface{}{
 	(LogLevel)(0),                 // 0: redsail.bosn.LogLevel
 	(Status)(0),                   // 1: redsail.bosn.Status
@@ -1963,6 +1963,11 @@ var file_deployment_proto_goTypes = []interface{}{
 	(*ReadRuns)(nil),              // 22: redsail.bosn.ReadRuns
 	(*RunReadSummary)(nil),        // 23: redsail.bosn.RunReadSummary
 	(*RunsRead)(nil),              // 24: redsail.bosn.RunsRead
+	(*ApproveStep)(nil),           // 25: redsail.bosn.ApproveStep
+	(*StepApproved)(nil),          // 26: redsail.bosn.StepApproved
+	(*ReadApprovals)(nil),         // 27: redsail.bosn.ReadApprovals
+	(*ApprovalRead)(nil),          // 28: redsail.bosn.ApprovalRead
+	(*ApprovalsRead)(nil),         // 29: redsail.bosn.ApprovalsRead
 }
 var file_deployment_proto_depIdxs = []int32{
 	11, // 0: redsail.bosn.DeploymentsRead.deployments:type_name -> redsail.bosn.DeploymentReadSummary
@@ -1970,32 +1975,38 @@ var file_deployment_proto_depIdxs = []int32{
 	1,  // 2: redsail.bosn.StepRead.status:type_name -> redsail.bosn.Status
 	18, // 3: redsail.bosn.StepRead.logs:type_name -> redsail.bosn.StepLog
 	1,  // 4: redsail.bosn.RunRead.status:type_name -> redsail.bosn.Status
-	19, // 5: redsail.bosn.RunRead.steps:type_name -> redsail.bosn.StepRead
-	1,  // 6: redsail.bosn.RunReadSummary.status:type_name -> redsail.bosn.Status
-	22, // 7: redsail.bosn.RunsRead.runs:type_name -> redsail.bosn.RunReadSummary
-	2,  // 8: redsail.bosn.Deployment.Create:input_type -> redsail.bosn.CreateDeployment
-	4,  // 9: redsail.bosn.Deployment.Update:input_type -> redsail.bosn.UpdateDeployment
-	6,  // 10: redsail.bosn.Deployment.Destroy:input_type -> redsail.bosn.DestroyDeployment
-	8,  // 11: redsail.bosn.Deployment.Read:input_type -> redsail.bosn.ReadDeployment
-	10, // 12: redsail.bosn.Deployment.All:input_type -> redsail.bosn.ReadDeployments
-	13, // 13: redsail.bosn.Deployment.Template:input_type -> redsail.bosn.TemplateDeployment
-	15, // 14: redsail.bosn.Deployment.Token:input_type -> redsail.bosn.ReadToken
-	17, // 15: redsail.bosn.Deployment.Run:input_type -> redsail.bosn.ReadRun
-	21, // 16: redsail.bosn.Deployment.Runs:input_type -> redsail.bosn.ReadRuns
-	3,  // 17: redsail.bosn.Deployment.Create:output_type -> redsail.bosn.DeploymentCreated
-	5,  // 18: redsail.bosn.Deployment.Update:output_type -> redsail.bosn.DeploymentUpdated
-	7,  // 19: redsail.bosn.Deployment.Destroy:output_type -> redsail.bosn.DeploymentDestroyed
-	9,  // 20: redsail.bosn.Deployment.Read:output_type -> redsail.bosn.DeploymentRead
-	12, // 21: redsail.bosn.Deployment.All:output_type -> redsail.bosn.DeploymentsRead
-	14, // 22: redsail.bosn.Deployment.Template:output_type -> redsail.bosn.DeploymentTemplated
-	16, // 23: redsail.bosn.Deployment.Token:output_type -> redsail.bosn.TokenRead
-	20, // 24: redsail.bosn.Deployment.Run:output_type -> redsail.bosn.RunRead
-	23, // 25: redsail.bosn.Deployment.Runs:output_type -> redsail.bosn.RunsRead
-	17, // [17:26] is the sub-list for method output_type
-	8,  // [8:17] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	20, // 5: redsail.bosn.RunRead.links:type_name -> redsail.bosn.LinkRead
+	19, // 6: redsail.bosn.RunRead.steps:type_name -> redsail.bosn.StepRead
+	1,  // 7: redsail.bosn.RunReadSummary.status:type_name -> redsail.bosn.Status
+	23, // 8: redsail.bosn.RunsRead.runs:type_name -> redsail.bosn.RunReadSummary
+	28, // 9: redsail.bosn.ApprovalsRead.approvals:type_name -> redsail.bosn.ApprovalRead
+	2,  // 10: redsail.bosn.Deployment.Create:input_type -> redsail.bosn.CreateDeployment
+	4,  // 11: redsail.bosn.Deployment.Update:input_type -> redsail.bosn.UpdateDeployment
+	6,  // 12: redsail.bosn.Deployment.Destroy:input_type -> redsail.bosn.DestroyDeployment
+	8,  // 13: redsail.bosn.Deployment.Read:input_type -> redsail.bosn.ReadDeployment
+	10, // 14: redsail.bosn.Deployment.All:input_type -> redsail.bosn.ReadDeployments
+	13, // 15: redsail.bosn.Deployment.Template:input_type -> redsail.bosn.TemplateDeployment
+	15, // 16: redsail.bosn.Deployment.Token:input_type -> redsail.bosn.ReadToken
+	17, // 17: redsail.bosn.Deployment.Run:input_type -> redsail.bosn.ReadRun
+	22, // 18: redsail.bosn.Deployment.Runs:input_type -> redsail.bosn.ReadRuns
+	25, // 19: redsail.bosn.Deployment.Approve:input_type -> redsail.bosn.ApproveStep
+	27, // 20: redsail.bosn.Deployment.Approvals:input_type -> redsail.bosn.ReadApprovals
+	3,  // 21: redsail.bosn.Deployment.Create:output_type -> redsail.bosn.DeploymentCreated
+	5,  // 22: redsail.bosn.Deployment.Update:output_type -> redsail.bosn.DeploymentUpdated
+	7,  // 23: redsail.bosn.Deployment.Destroy:output_type -> redsail.bosn.DeploymentDestroyed
+	9,  // 24: redsail.bosn.Deployment.Read:output_type -> redsail.bosn.DeploymentRead
+	12, // 25: redsail.bosn.Deployment.All:output_type -> redsail.bosn.DeploymentsRead
+	14, // 26: redsail.bosn.Deployment.Template:output_type -> redsail.bosn.DeploymentTemplated
+	16, // 27: redsail.bosn.Deployment.Token:output_type -> redsail.bosn.TokenRead
+	21, // 28: redsail.bosn.Deployment.Run:output_type -> redsail.bosn.RunRead
+	24, // 29: redsail.bosn.Deployment.Runs:output_type -> redsail.bosn.RunsRead
+	26, // 30: redsail.bosn.Deployment.Approve:output_type -> redsail.bosn.StepApproved
+	29, // 31: redsail.bosn.Deployment.Approvals:output_type -> redsail.bosn.ApprovalsRead
+	21, // [21:32] is the sub-list for method output_type
+	10, // [10:21] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_deployment_proto_init() }
@@ -2280,7 +2291,7 @@ func file_deployment_proto_init() {
 				return nil
 			}
 		}
-		file_deployment_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+		file_deployment_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ApproveStep); i {
 			case 0:
 				return &v.state
@@ -2292,7 +2303,7 @@ func file_deployment_proto_init() {
 				return nil
 			}
 		}
-		file_deployment_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+		file_deployment_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*StepApproved); i {
 			case 0:
 				return &v.state
@@ -2304,7 +2315,7 @@ func file_deployment_proto_init() {
 				return nil
 			}
 		}
-		file_deployment_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+		file_deployment_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ReadApprovals); i {
 			case 0:
 				return &v.state
@@ -2316,7 +2327,7 @@ func file_deployment_proto_init() {
 				return nil
 			}
 		}
-		file_deployment_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+		file_deployment_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ApprovalRead); i {
 			case 0:
 				return &v.state
@@ -2328,7 +2339,7 @@ func file_deployment_proto_init() {
 				return nil
 			}
 		}
-		file_deployment_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+		file_deployment_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ApprovalsRead); i {
 			case 0:
 				return &v.state
@@ -2347,7 +2358,7 @@ func file_deployment_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_deployment_proto_rawDesc,
 			NumEnums:      2,
-			NumMessages:   23,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
