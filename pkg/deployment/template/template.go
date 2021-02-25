@@ -94,8 +94,8 @@ type Step struct {
 	} `yaml:"test,omitempty"`
 
 	Approval *struct {
-		Groups []string `yaml:"groups"`
-		Users  []string `yaml:"users"`
+		Roles []string `yaml:"roles"`
+		Users []string `yaml:"users"`
 	} `yaml:"approval,omitempty"`
 
 	Trigger *struct {

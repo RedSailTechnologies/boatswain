@@ -11,6 +11,7 @@ var eventTypes = map[string]func() ddd.Event{
 	Started{}.EventType():       func() ddd.Event { return &Started{} },
 	StepStarted{}.EventType():   func() ddd.Event { return &StepStarted{} },
 	AppendLog{}.EventType():     func() ddd.Event { return &AppendLog{} },
+	StatusSet{}.EventType():     func() ddd.Event { return &StatusSet{} },
 	StepCompleted{}.EventType(): func() ddd.Event { return &StepCompleted{} },
 	StepSkipped{}.EventType():   func() ddd.Event { return &StepSkipped{} },
 	Completed{}.EventType():     func() ddd.Event { return &Completed{} },
@@ -56,6 +57,16 @@ type AppendLog struct {
 	Message   string
 }
 
+// StatusSet is the event for when a step's status changes
+type StatusSet struct {
+	Status Status
+}
+
+// EventType marks this as an event
+func (e StatusSet) EventType() string {
+	return entityName + "StatusSet"
+}
+
 // EventType marks this as an event
 func (e AppendLog) EventType() string {
 	return entityName + "AppendLog"
@@ -64,7 +75,6 @@ func (e AppendLog) EventType() string {
 // StepCompleted is the event for when a particular step is completed
 type StepCompleted struct {
 	Timestamp int64
-	Status    Status
 }
 
 // EventType marks this as an event

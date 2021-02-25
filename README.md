@@ -12,9 +12,6 @@ A kubernetes-native CD tool with first-class support for Helm v3.
 Documentation published with github pages [here](https://redsailtechnologies.github.io/boatswain/).
 
 ## Roadmap
-* 0.8
-  * External links
-  * Approval steps
 * 0.9
   * Web Homepage and Getting Started docs
   * Mongo security (in Helm)

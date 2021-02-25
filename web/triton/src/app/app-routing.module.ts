@@ -11,6 +11,7 @@ import { LogoutComponent } from './pages/logout/logout.component';
 import { DeploymentsComponent } from './pages/deployments/deployments.component';
 import { DeploymentComponent } from './pages/deployment/deployment.component';
 import { RunComponent } from './pages/run/run.component';
+import { ApprovalsComponent } from './pages/approvals/approvals.component';
 
 const routes: Routes = [
   {path: '', component: HomeComponent},
@@ -22,7 +23,8 @@ const routes: Routes = [
   {path: 'applications', component: ApplicationsComponent, canActivate: [CheckService]},
   {path: 'deployments', component: DeploymentsComponent, canActivate: [CheckService]},
   {path: 'deployment/:uuid', component: DeploymentComponent, canActivate: [CheckService]},
-  {path: 'run/:uuid', component: RunComponent, canActivate: [CheckService]}
+  {path: 'run/:uuid', component: RunComponent, canActivate: [CheckService]},
+  {path: 'approvals', component: ApprovalsComponent, canActivate: [CheckService]}
 ];
 
 @NgModule({

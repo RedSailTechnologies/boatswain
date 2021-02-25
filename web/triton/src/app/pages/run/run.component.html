@@ -24,7 +24,7 @@
             </span>
         </mat-card-subtitle>
         <mat-card-content>
-            <mat-vertical-stepper [selectedIndex]="run.status == 'IN_PROGRESS' ? run.steps.length : run.steps.length - 1" #stepper> 
+            <mat-vertical-stepper> 
                 <div *ngFor="let step of run.steps">
                     <mat-step [completed]="true" [hasError]="stepError(step.status)" [state]="stepError(step.status) ? 'error' : 'number'">
                         <ng-template matStepperIcon="edit">
@@ -40,8 +40,17 @@
                             <mat-icon>keyboard_arrow_down</mat-icon>
                         </ng-template>
                         <ng-template matStepLabel>
-                            <div *ngIf="step.status == 'IN_PROGRESS' && run.status == 'IN_PROGRESS'; else finished">
-                                <mat-spinner color="accent" [diameter]="40"></mat-spinner>
+                            <div *ngIf="(step.status == 'IN_PROGRESS' || step.status == 'AWAITING_APPROVAL') && run.status == 'IN_PROGRESS'; else finished">
+                                <div *ngIf="step.status == 'IN_PROGRESS'">
+                                    {{step.name}}
+                                    <mat-spinner color="accent" [diameter]="40" style="margin-left: 10px;"></mat-spinner>
+                                </div>
+                                <div *ngIf="step.status == 'AWAITING_APPROVAL'">
+                                    Awaiting Approval for {{step.name}}
+                                    <button mat-button color="accent" style="margin-left: 5px;" (click)="approval(step, true, false)">Approve</button>
+                                    <button mat-button color="warn" style="margin-left: 5px;" (click)="approval(step, false, false)">Reject</button>
+                                    <button *ngIf="auth.isAdmin()" mat-button color="primary" style="margin-left: 5px;" (click)="approval(step, true, true)">Override</button>
+                                </div>
                             </div>
                             <ng-template #finished>
                                 <a [style]="statusColor(step.status)">{{step.name}}</a>
@@ -53,7 +62,7 @@
                         </a>
                     </mat-step>
                 </div>
-                <div *ngIf="run.steps[run.steps.length-1].status != 'IN_PROGRESS' && run.status == 'IN_PROGRESS'; else runFinished">
+                <div *ngIf="run.steps[run.steps.length-1].status != 'IN_PROGRESS' && run.steps[run.steps.length-1].status != 'AWAITING_APPROVAL' && run.status == 'IN_PROGRESS'; else runFinished">
                     <mat-step [completed]="true">
                         <ng-template matStepLabel>
                             <mat-spinner color="accent" [diameter]="40"></mat-spinner>

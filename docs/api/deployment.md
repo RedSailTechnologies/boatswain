@@ -4,6 +4,9 @@
 ## Table of Contents
 
 - [deployment.proto](#deployment.proto)
+    - [ApprovalRead](#redsail.bosn.ApprovalRead)
+    - [ApprovalsRead](#redsail.bosn.ApprovalsRead)
+    - [ApproveStep](#redsail.bosn.ApproveStep)
     - [CreateDeployment](#redsail.bosn.CreateDeployment)
     - [DeploymentCreated](#redsail.bosn.DeploymentCreated)
     - [DeploymentDestroyed](#redsail.bosn.DeploymentDestroyed)
@@ -14,6 +17,7 @@
     - [DeploymentsRead](#redsail.bosn.DeploymentsRead)
     - [DestroyDeployment](#redsail.bosn.DestroyDeployment)
     - [LinkRead](#redsail.bosn.LinkRead)
+    - [ReadApprovals](#redsail.bosn.ReadApprovals)
     - [ReadDeployment](#redsail.bosn.ReadDeployment)
     - [ReadDeployments](#redsail.bosn.ReadDeployments)
     - [ReadRun](#redsail.bosn.ReadRun)
@@ -22,6 +26,7 @@
     - [RunRead](#redsail.bosn.RunRead)
     - [RunReadSummary](#redsail.bosn.RunReadSummary)
     - [RunsRead](#redsail.bosn.RunsRead)
+    - [StepApproved](#redsail.bosn.StepApproved)
     - [StepLog](#redsail.bosn.StepLog)
     - [StepRead](#redsail.bosn.StepRead)
     - [TemplateDeployment](#redsail.bosn.TemplateDeployment)
@@ -42,6 +47,57 @@
 
 ## deployment.proto
 Deployment is the service for creation and management of application installs/upgrades.
+
+
+<a name="redsail.bosn.ApprovalRead"></a>
+
+### ApprovalRead
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| uuid | [string](#string) |  |  |
+| run_uuid | [string](#string) |  |  |
+| run_name | [string](#string) |  |  |
+| run_version | [string](#string) |  |  |
+| step_name | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="redsail.bosn.ApprovalsRead"></a>
+
+### ApprovalsRead
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| approvals | [ApprovalRead](#redsail.bosn.ApprovalRead) | repeated |  |
+
+
+
+
+
+
+<a name="redsail.bosn.ApproveStep"></a>
+
+### ApproveStep
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| run_uuid | [string](#string) |  |  |
+| approve | [bool](#bool) |  |  |
+| override | [bool](#bool) |  |  |
+
+
+
+
 
 
 <a name="redsail.bosn.CreateDeployment"></a>
@@ -190,6 +246,16 @@ Deployment is the service for creation and management of application installs/up
 
 
 
+<a name="redsail.bosn.ReadApprovals"></a>
+
+### ReadApprovals
+
+
+
+
+
+
+
 <a name="redsail.bosn.ReadDeployment"></a>
 
 ### ReadDeployment
@@ -317,6 +383,16 @@ Deployment is the service for creation and management of application installs/up
 
 
 
+<a name="redsail.bosn.StepApproved"></a>
+
+### StepApproved
+
+
+
+
+
+
+
 <a name="redsail.bosn.StepLog"></a>
 
 ### StepLog
@@ -427,9 +503,10 @@ Deployment is the service for creation and management of application installs/up
 | ---- | ------ | ----------- |
 | NOT_STARTED | 0 |  |
 | IN_PROGRESS | 1 |  |
-| FAILED | 2 |  |
-| SUCCEEDED | 3 |  |
-| SKIPPED | 4 |  |
+| AWAITING_APPROVAL | 2 |  |
+| FAILED | 3 |  |
+| SUCCEEDED | 4 |  |
+| SKIPPED | 5 |  |
 
 
  
@@ -453,6 +530,8 @@ Deployment is the service for creation and management of application installs/up
 | Token | [ReadToken](#redsail.bosn.ReadToken) | [TokenRead](#redsail.bosn.TokenRead) | gets the token for this deployment, for use with web calls |
 | Run | [ReadRun](#redsail.bosn.ReadRun) | [RunRead](#redsail.bosn.RunRead) | read all the information about a particular run |
 | Runs | [ReadRuns](#redsail.bosn.ReadRuns) | [RunsRead](#redsail.bosn.RunsRead) | read summaries of all runs for a particular deployment |
+| Approve | [ApproveStep](#redsail.bosn.ApproveStep) | [StepApproved](#redsail.bosn.StepApproved) | approve a step for a run |
+| Approvals | [ReadApprovals](#redsail.bosn.ReadApprovals) | [ApprovalsRead](#redsail.bosn.ApprovalsRead) | gets all approvals for the user |
 
  
 

@@ -32,6 +32,12 @@ service Deployment {
 
     // read summaries of all runs for a particular deployment
     rpc Runs (ReadRuns) returns (RunsRead);
+
+    // approve a step for a run
+    rpc Approve (ApproveStep) returns (StepApproved);
+
+    // gets all approvals for the user
+    rpc Approvals (ReadApprovals) returns (ApprovalsRead);
 }
 
 message CreateDeployment {
@@ -152,6 +158,28 @@ message RunsRead {
     repeated RunReadSummary runs = 1; //the runs
 }
 
+message ApproveStep {
+    string run_uuid = 1;
+    bool approve = 2;
+    bool override = 3; 
+}
+
+message StepApproved {}
+
+message ReadApprovals {}
+
+message ApprovalRead {
+    string uuid = 1;
+    string run_uuid = 2;
+    string run_name = 3;
+    string run_version = 4;
+    string step_name = 5;
+}
+
+message ApprovalsRead{
+    repeated ApprovalRead approvals = 1;
+}
+
 enum LogLevel {
     DEBUG = 0;
     INFO = 1;
@@ -162,7 +190,8 @@ enum LogLevel {
 enum Status {
     NOT_STARTED = 0;
     IN_PROGRESS = 1;
-    FAILED = 2;
-    SUCCEEDED = 3;
-    SKIPPED = 4;
+    AWAITING_APPROVAL = 2;
+    FAILED = 3;
+    SUCCEEDED = 4;
+    SKIPPED = 5;
 }

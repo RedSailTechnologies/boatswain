@@ -26,8 +26,8 @@ func (rr *ReadRepository) All() ([]*Run, error) {
 	}
 
 	var runs []*Run
-	for _, d := range results {
-		runs = append(runs, d.(*Run))
+	for _, r := range results {
+		runs = append(runs, r.(*Run))
 	}
 	return runs, nil
 }
@@ -53,6 +53,6 @@ func newWriteRepository(s storage.Storage) *writeRepository {
 }
 
 // Save persists new events for the run
-func (wr *writeRepository) save(d *Run) error {
-	return wr.r.Save(d)
+func (wr *writeRepository) save(r *Run) error {
+	return wr.r.Save(r)
 }
