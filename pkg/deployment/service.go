@@ -9,6 +9,7 @@ import (
 	"github.com/redsailtechnologies/boatswain/pkg/auth"
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
+	"github.com/redsailtechnologies/boatswain/pkg/deployment/approval"
 	"github.com/redsailtechnologies/boatswain/pkg/deployment/run"
 	"github.com/redsailtechnologies/boatswain/pkg/deployment/template"
 	"github.com/redsailtechnologies/boatswain/pkg/deployment/trigger"
@@ -27,31 +28,35 @@ var runCollection = "runs"
 
 // Service is the implementation for twirp to use
 type Service struct {
-	auth    auth.Agent
-	agent   agent.AgentAction
-	git     git.Agent
-	cluster *cluster.ReadRepository
-	repo    *repo.ReadRepository
-	read    *ReadRepository
-	write   *writeRepository
-	runRead *run.ReadRepository
-	store   storage.Storage
-	ready   func() error
+	auth      auth.Agent
+	agent     agent.AgentAction
+	git       git.Agent
+	cluster   *cluster.ReadRepository
+	repo      *repo.ReadRepository
+	read      *ReadRepository
+	write     *writeRepository
+	runRead   *run.ReadRepository
+	aprvRead  *approval.ReadRepository
+	aprvWrite *approval.WriteRepository
+	store     storage.Storage
+	ready     func() error
 }
 
 // NewService creates the service
 func NewService(ag agent.AgentAction, au auth.Agent, g git.Agent, s storage.Storage) *Service {
 	return &Service{
-		agent:   ag,
-		auth:    au,
-		git:     g,
-		cluster: cluster.NewReadRepository(s),
-		repo:    repo.NewReadRepository(s),
-		read:    NewReadRepository(s),
-		write:   newWriteRepository(s),
-		runRead: run.NewReadRepository(s),
-		store:   s,
-		ready:   s.CheckReady,
+		agent:     ag,
+		auth:      au,
+		git:       g,
+		cluster:   cluster.NewReadRepository(s),
+		repo:      repo.NewReadRepository(s),
+		read:      NewReadRepository(s),
+		write:     newWriteRepository(s),
+		runRead:   run.NewReadRepository(s),
+		aprvRead:  approval.NewReadRepository(s),
+		aprvWrite: approval.NewWriteRepository(s),
+		store:     s,
+		ready:     s.CheckReady,
 	}
 }
 
@@ -315,6 +320,84 @@ func (s Service) Runs(ctx context.Context, req *pb.ReadRuns) (*pb.RunsRead, erro
 	return resp, nil
 }
 
+// Approve a step for a run
+func (s Service) Approve(ctx context.Context, cmd *pb.ApproveStep) (*pb.StepApproved, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+	user := s.auth.User(ctx)
+
+	approvals, err := s.aprvRead.All()
+	if err != nil {
+		logger.Error("could not read Approvals", "error", err)
+		return nil, tw.ToTwirpError(err, "error loading approvals")
+	}
+
+	for _, a := range approvals {
+		if a.RunUUID() == cmd.RunUuid {
+			a.Complete(cmd.Approve, cmd.Override, &user, ddd.NewTimestamp())
+			err = s.aprvWrite.Save(a)
+			if err != nil {
+				logger.Error("could not save approval", "error", err)
+				return nil, tw.ToTwirpError(err, "error updating approval")
+			}
+
+			r, err := s.runRead.Load(cmd.RunUuid)
+			if err != nil {
+				logger.Error("could not load run", "error", err)
+				return nil, tw.ToTwirpError(err, "error loading run")
+			}
+
+			// start the engine in the background
+			eng, err := run.NewEngine(r, s.store, s.agent, git.DefaultAgent{}, repo.DefaultAgent{}, s.deploymentTrigger)
+			if err != nil {
+				logger.Error("could not recreate run engine", "error", err)
+				return nil, tw.ToTwirpError(err, "error resuming run")
+			}
+			go eng.Resume()
+
+			return &pb.StepApproved{}, nil
+		}
+	}
+	return nil, twirp.NotFoundError("approval not found")
+}
+
+// Approvals gets all approvals for the user
+func (s Service) Approvals(ctx context.Context, req *pb.ReadApprovals) (*pb.ApprovalsRead, error) {
+	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
+		return nil, tw.ToTwirpError(err, "not authorized")
+	}
+	user := s.auth.User(ctx)
+
+	approvals, err := s.aprvRead.All()
+	if err != nil {
+		logger.Error("could not read Approvals", "error", err)
+		return nil, tw.ToTwirpError(err, "error loading approvals")
+	}
+
+	results := make([]*pb.ApprovalRead, 0)
+	for _, a := range approvals {
+		added := false
+		for _, u := range a.Users() {
+			if u == user.Name && !added {
+				added = s.addApproval(a, &results)
+			}
+		}
+
+		if !added {
+			for _, r := range a.Roles() {
+				if user.HasRole(r) && !added {
+					added = s.addApproval(a, &results)
+				}
+			}
+		}
+	}
+
+	return &pb.ApprovalsRead{
+		Approvals: results,
+	}, nil
+}
+
 // Manual triggers a deployment manually
 func (s Service) Manual(ctx context.Context, cmd *tr.TriggerManual) (*tr.ManualTriggered, error) {
 	ctx, err := s.auth.Authenticate(ctx)
@@ -322,19 +405,13 @@ func (s Service) Manual(ctx context.Context, cmd *tr.TriggerManual) (*tr.ManualT
 		logger.Error("error authenticating for manual trigger", "error", err)
 		return nil, twirp.NewError(twirp.Unauthenticated, "could not authenticate user")
 	}
-
 	user := s.auth.User(ctx)
 
 	runUUID, err := s.trigger(&trigger.Trigger{
-		UUID: cmd.Uuid,
-		Name: cmd.Name,
-		Type: trigger.ManualTrigger,
-		User: &trigger.User{
-			Name:    user.Name,
-			Email:   user.Email,
-			Roles:   s.auth.Roles(user),
-			Subject: user.Subject,
-		},
+		UUID:      cmd.Uuid,
+		Name:      cmd.Name,
+		Type:      trigger.ManualTrigger,
+		User:      &user,
 		Arguments: []byte(cmd.Args),
 	})
 	if err != nil {
@@ -379,10 +456,30 @@ func (s Service) Ready() error {
 	return s.ready()
 }
 
+func (s Service) addApproval(a *approval.Approval, list *[]*pb.ApprovalRead) bool {
+	run, err := s.runRead.Load(a.RunUUID())
+	if err != nil {
+		logger.Error("could not find run", "run", a.RunUUID())
+		return false
+	}
+
+	steps := run.Steps()
+	stepName := steps[len(steps)-1].Name
+
+	*list = append(*list, &pb.ApprovalRead{
+		Uuid:       a.UUID(),
+		RunUuid:    a.RunUUID(),
+		RunName:    run.Name(),
+		RunVersion: run.RunVersion(),
+		StepName:   stepName,
+	})
+	return true
+}
+
 func (s Service) deploymentTrigger(name, deployment string, args []byte) (string, error) {
 	deps, err := s.read.All()
 	if err != nil {
-		logger.Error("error reading Deployment", "error", err)
+		logger.Error("error reading Deployment", "falserror", err)
 		return "", err
 	}
 
@@ -449,8 +546,7 @@ func (s Service) trigger(trig *trigger.Trigger) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	go eng.Run()
+	go eng.Start()
 
 	// return the run id
 	return r.UUID(), nil
@@ -489,6 +585,8 @@ func convertStatus(s run.Status) pb.Status {
 		return pb.Status_NOT_STARTED
 	case run.InProgress:
 		return pb.Status_IN_PROGRESS
+	case run.AwaitingApproval:
+		return pb.Status_AWAITING_APPROVAL
 	case run.Failed:
 		return pb.Status_FAILED
 	case run.Succeeded:

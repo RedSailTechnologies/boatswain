@@ -49,6 +49,7 @@ type OIDCAgent struct {
 	cfg     *Config
 	jwtKey  *int
 	userKey *int
+	jwks    map[string]*jose.JSONWebKey
 }
 
 // NewOIDCAgent builds a new agent from the configuration
@@ -73,6 +74,7 @@ func NewOIDCAgent(config *Config) *OIDCAgent {
 		cfg:     config,
 		jwtKey:  new(int),
 		userKey: new(int),
+		jwks:    make(map[string]*jose.JSONWebKey),
 	}
 }
 
@@ -97,13 +99,14 @@ func (o *OIDCAgent) Authenticate(ctx context.Context) (context.Context, error) {
 	}
 	keyID := parsedToken.Headers[0].KeyID
 
-	key, err := o.getJWK(keyID)
+	err = o.getJWK(keyID)
 	if err != nil {
 		logger.Error("couldn't get key to verify jwt", "error", err)
 		return ctx, twirp.NewError(twirp.Unauthenticated, "couldn't get key to verify jwt")
 	}
+	key := o.jwks[keyID]
 
-	user := User{}
+	user := user{}
 	err = parsedToken.Claims(key.Key, &user)
 	if err != nil {
 		logger.Error("couldn't parse user claims", "error", err)
@@ -151,25 +154,8 @@ func (o *OIDCAgent) Authorize(ctx context.Context, role Role) error {
 
 // User gets the user from the context
 func (o *OIDCAgent) User(ctx context.Context) User {
-	return *o.userFromContext(ctx)
-}
-
-// Roles gets the roles for this user
-func (o *OIDCAgent) Roles(u User) []Role {
-	ret := make([]Role, 0)
-	for _, role := range u.Roles {
-		switch role {
-		case o.cfg.AdminRole:
-			ret = append(ret, Admin)
-		case o.cfg.EditorRole:
-			ret = append(ret, Editor)
-		case o.cfg.ReaderRole:
-			ret = append(ret, Reader)
-		default:
-			continue
-		}
-	}
-	return ret
+	u := o.userFromContext(ctx)
+	return o.toUser(u)
 }
 
 // Wrap wraps an existing http hander to store the auth JWT
@@ -187,41 +173,67 @@ func (o *OIDCAgent) Wrap(base http.Handler) http.Handler {
 	})
 }
 
-// TODO - cache this on a reasonable refresh timeline (and/or retry on failure?)
-func (o *OIDCAgent) getJWK(key string) (*jose.JSONWebKey, error) {
+func (o *OIDCAgent) toUser(u *user) User {
+	user := User{
+		Name:    u.Name,
+		Email:   u.Email,
+		Subject: u.Subject,
+	}
+
+	roles := make([]Role, len(u.Roles))
+	for i, r := range u.Roles {
+		switch r {
+		case o.cfg.AdminRole:
+			roles[i] = Admin
+		case o.cfg.EditorRole:
+			roles[i] = Editor
+		case o.cfg.ReaderRole:
+			roles[i] = Reader
+		}
+	}
+	user.Roles = roles
+
+	return user
+}
+
+func (o *OIDCAgent) getJWK(key string) error {
+	if _, ok := o.jwks[key]; ok {
+		return nil
+	}
 	req, err := http.NewRequest(http.MethodGet, o.cfg.Endpoints.JWKS, nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var client http.Client
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer resp.Body.Close()
 
 	var jwks jose.JSONWebKeySet
 	err = json.NewDecoder(resp.Body).Decode(&jwks)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	keys := jwks.Key(key)
 	if len(keys) < 1 {
-		return nil, errors.New("no jwks keys found")
+		return errors.New("no jwks keys found")
 	} else if len(keys) > 1 {
 		logger.Warn("more than one jwks key found", "keys", key)
 	}
 
-	return &keys[0], nil
+	o.jwks[key] = &keys[0]
+	return nil
 }
 
-func (o *OIDCAgent) userFromContext(ctx context.Context) *User {
+func (o *OIDCAgent) userFromContext(ctx context.Context) *user {
 	userVal := ctx.Value(o.userKey)
 	if userVal == nil {
 		return nil
 	}
-	user := userVal.(User)
+	user := userVal.(user)
 	return &user
 }

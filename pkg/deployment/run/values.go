@@ -10,6 +10,9 @@ const (
 	// InProgress signifies a step that has been started
 	InProgress Status = "InProgress"
 
+	// AwaitingApproval signifies a step that is awaiting a manual approver
+	AwaitingApproval Status = "AwaitingApproval"
+
 	// Failed signifies a step that failed
 	Failed Status = "Failed"
 

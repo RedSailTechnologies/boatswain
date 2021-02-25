@@ -16,6 +16,7 @@ import (
 
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
 	"github.com/redsailtechnologies/boatswain/pkg/ddd"
+	"github.com/redsailtechnologies/boatswain/pkg/deployment/approval"
 	"github.com/redsailtechnologies/boatswain/pkg/deployment/template"
 	"github.com/redsailtechnologies/boatswain/pkg/git"
 	"github.com/redsailtechnologies/boatswain/pkg/helm"
@@ -29,10 +30,12 @@ var retryCount int = 3
 
 // The Engine is the worker that performs all run steps and tracking
 type Engine struct {
-	run      *Run
-	write    *writeRepository
-	clusters *cluster.ReadRepository
-	repos    *repo.ReadRepository
+	run       *Run
+	write     *writeRepository
+	clusters  *cluster.ReadRepository
+	repos     *repo.ReadRepository
+	aprvRead  *approval.ReadRepository
+	aprvWrite *approval.WriteRepository
 
 	agent agent.AgentAction
 	git   git.Agent
@@ -49,30 +52,25 @@ func NewEngine(r *Run, s storage.Storage, a agent.AgentAction, g git.Agent, ra r
 		return nil, err
 	}
 	engine := &Engine{
-		run:      r,
-		write:    w,
-		clusters: cluster.NewReadRepository(s),
-		repos:    repo.NewReadRepository(s),
-		agent:    a,
-		git:      g,
-		repo:     ra,
-		trigger:  t,
+		run:       r,
+		write:     w,
+		clusters:  cluster.NewReadRepository(s),
+		repos:     repo.NewReadRepository(s),
+		aprvRead:  approval.NewReadRepository(s),
+		aprvWrite: approval.NewWriteRepository(s),
+		agent:     a,
+		git:       g,
+		repo:      ra,
+		trigger:   t,
 	}
 	return engine, nil
 }
 
-// Run starts the engine, and is designed to be run in the background
-func (e *Engine) Run() {
-	defer func() {
-		if err := recover(); err != nil {
-			logger.Error("recovering from panic", "error", err)
-			e.run.AppendLog(err.(error).Error(), Error, ddd.NewTimestamp())
-			e.finalize(Failed)
-		}
-	}()
+// Start the engine-designed to be run in the background
+func (e *Engine) Start() {
+	defer e.recover()
 
 	logger.Info("starting run", "uuid", e.run.UUID(), "start", ddd.NewTimestamp())
-
 	err := e.run.Start(ddd.NewTimestamp())
 	if err != nil {
 		logger.Warn("error starting run", "error", err)
@@ -80,36 +78,67 @@ func (e *Engine) Run() {
 		return
 	}
 	e.persist()
+	e.startLoop(Succeeded, Succeeded)
+}
 
-	var lastStatus Status = Succeeded
-	var overallStatus = Succeeded
-	for true {
+// Resume continues a run after a pause
+func (e *Engine) Resume() {
+	defer e.recover()
+
+	steps := e.run.Steps()
+	last := steps[len(steps)-1].Status
+	overall := Succeeded
+	for _, step := range steps {
+		if step.Status == Failed {
+			overall = Failed
+		}
+	}
+	logger.Info("continuing run", "uuid", e.run.UUID(), "start", ddd.NewTimestamp())
+	e.startLoop(last, overall)
+}
+
+func (e *Engine) startLoop(lastStatus, overallStatus Status) {
+	defer e.recover()
+
+	status := lastStatus
+	overall := overallStatus
+	looping := true
+
+	for looping {
 		step := e.run.CurrentTemplate()
 
 		// step is nil if there are no more steps to be executed
 		if step == nil {
-			e.finalize(overallStatus)
+			e.finalize(overall)
 			return
 		}
 
-		if shouldExecute(step, lastStatus) {
-			e.run.StartStep(step.Name, ddd.NewTimestamp())
-			e.persist()
+		if shouldExecute(step, status) {
+			if !e.run.Paused() {
+				e.run.StartStep(step.Name, ddd.NewTimestamp())
+				e.persist()
 
-			if step.Hold != "" {
-				e.executeHold(step.Hold)
+				// the hold is executed at the beginning of the step before any logic is executed
+				// so here its safe to run this only if we're starting the step, not if its been paused
+				if step.Hold != "" {
+					e.executeHold(step.Hold)
+				}
 			}
 
-			status := e.executeStep(step)
-
-			e.run.CompleteStep(status, ddd.NewTimestamp())
+			status = e.executeStep(step)
+			e.run.SetStatus(status)
+			if status == Failed || status == Succeeded {
+				e.run.CompleteStep(ddd.NewTimestamp())
+			}
 			e.persist()
 
 			if status == Failed {
-				overallStatus = Failed
+				overall = Failed
 			}
 
-			lastStatus = status
+			if e.run.Paused() {
+				looping = false
+			}
 		} else {
 			e.run.SkipStep(step.Name, "conditions not met", ddd.NewTimestamp())
 			e.persist()
@@ -121,8 +150,7 @@ func (e *Engine) executeStep(step *template.Step) Status {
 	if step.App != nil || step.Test != nil {
 		return e.executeActionStep(step)
 	} else if step.Approval != nil {
-		e.run.AppendLog("step type not implemented", Error, ddd.NewTimestamp())
-		return Skipped
+		return e.executeApprovalStep(step)
 	} else if step.Trigger != nil {
 		return e.executeTriggerStep(step)
 	}
@@ -295,10 +323,64 @@ func (e *Engine) executeTriggerStep(step *template.Step) Status {
 	return Succeeded
 }
 
-func (e *Engine) finalize(status Status) {
-	logger.Info("completing run", "uuid", e.run.UUID(), "status", status)
+func (e *Engine) executeApprovalStep(step *template.Step) Status {
+	approvals, err := e.aprvRead.All()
+	if err != nil {
+		e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+		return Failed
+	}
+
+	var appr *approval.Approval
+	for _, a := range approvals {
+		if a.RunUUID() == e.run.UUID() {
+			appr = a
+		}
+	}
+	if appr == nil {
+		appr, err = approval.Create(ddd.NewUUID(), e.run.UUID(), step.Approval.Users, step.Approval.Roles)
+		if err != nil {
+			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+			return Failed
+		}
+
+		err = e.aprvWrite.Save(appr)
+		if err != nil {
+			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+			return Failed
+		}
+		e.run.AppendLog("awaiting approval", Info, ddd.NewTimestamp())
+		return AwaitingApproval
+	} else if appr.Completed() {
+		appr.Destroy()
+		err := e.aprvWrite.Save(appr)
+		if err != nil {
+			logger.Warn("step could not be approved", "error", err, "run", e.run.UUID())
+			return AwaitingApproval
+		}
+		approver, err := appr.Approver()
+		if err != nil {
+			e.run.AppendLog(err.Error(), Error, ddd.NewTimestamp())
+			return Failed
+		}
+
+		if appr.Overridden() {
+			e.run.AppendLog(fmt.Sprintf("step overriden by %s", approver.Name), Info, ddd.NewTimestamp())
+			return Succeeded
+		} else if appr.Approved() {
+			e.run.AppendLog(fmt.Sprintf("step approved by %s", approver.Name), Info, ddd.NewTimestamp())
+			return Succeeded
+		}
+		e.run.AppendLog(fmt.Sprintf("step rejected by %s", approver.Name), Info, ddd.NewTimestamp())
+		return Failed
+	}
+	e.run.AppendLog("approval step not found or could not be created", Error, ddd.NewTimestamp())
+	return Failed
+}
+
+func (e *Engine) finalize(s Status) {
+	logger.Info("completing run", "uuid", e.run.UUID(), "status", s)
 	for i := 0; i < retryCount; i++ {
-		if err := e.run.Complete(status, ddd.NewTimestamp()); err != nil {
+		if err := e.run.Complete(s, ddd.NewTimestamp()); err != nil {
 			logger.Error("error completing run", "error", err)
 			continue
 		}
@@ -341,6 +423,14 @@ func (e *Engine) executeHold(h string) error {
 	}
 	time.Sleep(d)
 	return nil
+}
+
+func (e *Engine) recover() {
+	if err := recover(); err != nil {
+		logger.Error("recovering from panic", "error", err)
+		e.run.AppendLog(err.(error).Error(), Error, ddd.NewTimestamp())
+		e.finalize(Failed)
+	}
 }
 
 func shouldExecute(s *template.Step, last Status) bool {

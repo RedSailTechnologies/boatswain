@@ -517,6 +517,111 @@ const JSONToRunsRead = (m: RunsRead | RunsReadJSON): RunsRead => {
     };
 };
 
+export interface ApproveStep {
+    runUuid: string;
+    approve: boolean;
+    override: boolean;
+    
+}
+
+interface ApproveStepJSON {
+    run_uuid: string;
+    approve: boolean;
+    override: boolean;
+    
+}
+
+
+const ApproveStepToJSON = (m: ApproveStep): ApproveStepJSON => {
+    return {
+        run_uuid: m.runUuid,
+        approve: m.approve,
+        override: m.override,
+        
+    };
+};
+
+export interface StepApproved {
+    
+}
+
+interface StepApprovedJSON {
+    
+}
+
+
+const JSONToStepApproved = (m: StepApproved | StepApprovedJSON): StepApproved => {
+    
+    return {
+        
+    };
+};
+
+export interface ReadApprovals {
+    
+}
+
+interface ReadApprovalsJSON {
+    
+}
+
+
+const ReadApprovalsToJSON = (m: ReadApprovals): ReadApprovalsJSON => {
+    return {
+        
+    };
+};
+
+export interface ApprovalRead {
+    uuid: string;
+    runUuid: string;
+    runName: string;
+    runVersion: string;
+    stepName: string;
+    
+}
+
+interface ApprovalReadJSON {
+    uuid: string;
+    run_uuid: string;
+    run_name: string;
+    run_version: string;
+    step_name: string;
+    
+}
+
+
+const JSONToApprovalRead = (m: ApprovalRead | ApprovalReadJSON): ApprovalRead => {
+    
+    return {
+        uuid: m.uuid,
+        runUuid: (((m as ApprovalRead).runUuid) ? (m as ApprovalRead).runUuid : (m as ApprovalReadJSON).run_uuid),
+        runName: (((m as ApprovalRead).runName) ? (m as ApprovalRead).runName : (m as ApprovalReadJSON).run_name),
+        runVersion: (((m as ApprovalRead).runVersion) ? (m as ApprovalRead).runVersion : (m as ApprovalReadJSON).run_version),
+        stepName: (((m as ApprovalRead).stepName) ? (m as ApprovalRead).stepName : (m as ApprovalReadJSON).step_name),
+        
+    };
+};
+
+export interface ApprovalsRead {
+    approvals: ApprovalRead[];
+    
+}
+
+interface ApprovalsReadJSON {
+    approvals: ApprovalReadJSON[];
+    
+}
+
+
+const JSONToApprovalsRead = (m: ApprovalsRead | ApprovalsReadJSON): ApprovalsRead => {
+    
+    return {
+        approvals: (m.approvals as (ApprovalRead | ApprovalReadJSON)[]).map(JSONToApprovalRead),
+        
+    };
+};
+
 export interface Deployment {
     create: (createDeployment: CreateDeployment) => Promise<DeploymentCreated>;
     
@@ -535,6 +640,10 @@ export interface Deployment {
     run: (readRun: ReadRun) => Promise<RunRead>;
     
     runs: (readRuns: ReadRuns) => Promise<RunsRead>;
+    
+    approve: (approveStep: ApproveStep) => Promise<StepApproved>;
+    
+    approvals: (readApprovals: ReadApprovals) => Promise<ApprovalsRead>;
     
 }
 
@@ -681,6 +790,36 @@ export class DefaultDeployment implements Deployment {
             }
 
             return resp.json().then(JSONToRunsRead);
+        });
+    }
+    
+    approve(approveStep: ApproveStep): Promise<StepApproved> {
+        const url = this.hostname + this.pathPrefix + "Approve";
+        let body: ApproveStep | ApproveStepJSON = approveStep;
+        if (!this.writeCamelCase) {
+            body = ApproveStepToJSON(approveStep);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToStepApproved);
+        });
+    }
+    
+    approvals(readApprovals: ReadApprovals): Promise<ApprovalsRead> {
+        const url = this.hostname + this.pathPrefix + "Approvals";
+        let body: ReadApprovals | ReadApprovalsJSON = readApprovals;
+        if (!this.writeCamelCase) {
+            body = ReadApprovalsToJSON(readApprovals);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToApprovalsRead);
         });
     }
     

@@ -1,0 +1,29 @@
+<div class="page" *ngIf="approvals;else noData">
+    <mat-table [dataSource]="approvals" class="full-width">
+        <ng-container matColumnDef="run">
+            <mat-header-cell *matHeaderCellDef> Run </mat-header-cell>
+            <mat-cell *matCellDef="let element"> {{element.runName}} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="version">
+            <mat-header-cell *matHeaderCellDef> Version </mat-header-cell>
+            <mat-cell *matCellDef="let element"> {{element.runVersion}} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="step">
+            <mat-header-cell *matHeaderCellDef> Step </mat-header-cell>
+            <mat-cell *matCellDef="let element"> {{element.stepName}} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef></mat-header-cell>
+            <mat-cell *matCellDef="let element">
+                <button mat-button color="accent" style="margin-left: 5px;" (click)="approval(element, true, false)">Approve</button>
+                <button mat-button color="warn" style="margin-left: 5px;" (click)="approval(element, false, false)">Reject</button>
+                <button *ngIf="auth.isAdmin()" mat-button color="primary" style="margin-left: 5px;" (click)="approval(element, true, true)">Override</button>
+            </mat-cell>
+        </ng-container>
+        <mat-header-row *matHeaderRowDef="['run', 'version', 'step', 'actions']; sticky: true"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: ['run', 'version', 'step', 'actions'];"></mat-row>
+    </mat-table>
+</div>
+<ng-template #noData>
+    <mat-spinner color="primary" class="page-spinner"></mat-spinner>
+</ng-template>

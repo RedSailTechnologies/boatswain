@@ -154,13 +154,12 @@ strategy:
   - name: approval
     hold: 2h
     condition: any
-    any:
-      # approvals are how specific parts of a deployment can require manual intervention
-      # note the hold happens before the approval is accepted but any parts of this step following
-      # the approval are gated
+    # approvals are how specific parts of a deployment can require manual intervention
+    # note the hold happens before the approval is accepted but any parts of this step following
+    # the approval are gated
     approval:
-      groups:
-        - group-name # groups that can approve/start this trigger
+      roles:
+        - Admin # Boatswain roles Admin, Editor, Reader (more to come!)
       users: 
         - some-body # same for groups but with users
   

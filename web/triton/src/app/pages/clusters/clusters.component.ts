@@ -82,7 +82,7 @@ export class ClustersComponent implements OnInit {
         },
       })
       .afterClosed()
-      .subscribe((result: Boolean) => {
+      .subscribe((result: boolean) => {
         if (result) {
           this.client
             .destroy({ uuid: element.uuid })

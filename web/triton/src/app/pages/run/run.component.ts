@@ -1,8 +1,9 @@
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatStepper } from '@angular/material/stepper';
+import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
-import { DefaultDeployment, Deployment, ReadRun, RunRead } from 'src/app/services/deployment/deployment';
+import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-dialog.component';
+import { ApproveStep, DefaultDeployment, Deployment, ReadRun, RunRead, StepRead } from 'src/app/services/deployment/deployment';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 
 @Component({
@@ -21,9 +22,7 @@ export class RunComponent implements OnInit {
   public stop: string;
   public idx: number;
 
-  @ViewChild('stepper') stepper : MatStepper;
-
-  constructor(private route: ActivatedRoute, auth: AuthService) {
+  constructor(private dialog: MatDialog, private route: ActivatedRoute, public auth: AuthService) {
     this.client = new DefaultDeployment(
       `${location.protocol}//${location.host}/api`,
       auth.fetch()
@@ -34,7 +33,7 @@ export class RunComponent implements OnInit {
     this.route.params.subscribe(params => {
       this.id = params['uuid']
       this.refresh();
-    })
+    }).unsubscribe()
   }
 
   refresh(): void {
@@ -48,11 +47,6 @@ export class RunComponent implements OnInit {
       if (this.run.status == "IN_PROGRESS") {
         setTimeout(() => this.refresh(), 3 * 1000);
       }
-
-      if (this.stepper) {
-        this.moveLast()
-      }
-      // FIXME set the page title and browser title somehow
     });
   }
 
@@ -61,14 +55,6 @@ export class RunComponent implements OnInit {
       return "";
     }
     return new Date(date * 1000).toLocaleString();
-  }
-
-  moveLast(): void {
-    try {
-      this.stepper.next()
-    } catch {
-      setTimeout(() => this.moveLast(), 100)
-    }
   }
 
   statusColor(status: string): string {
@@ -84,5 +70,32 @@ export class RunComponent implements OnInit {
 
   stepError(status: string): boolean {
     return status == 'FAILED'
+  }
+
+  approval(step: StepRead, approve: boolean, override: boolean) {
+    var message = "Approve";
+    if (!approve) {
+      message = "Reject";
+    }
+    if (override) {
+      message = "Override";
+    }
+    this.dialog.open(ConfirmDialogComponent, {
+      panelClass: 'message-box',
+      data: {
+        reason: message,
+        message: `${message} ${step.name}?`,
+      },
+    })
+    .afterClosed()
+    .subscribe((result: boolean) => {
+      if (result) {
+        this.client.approve(<ApproveStep>{
+          runUuid: this.run.uuid,
+          approve: approve,
+          override: override
+        });
+      }
+    });
   }
 }

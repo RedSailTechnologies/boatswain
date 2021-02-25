@@ -11,16 +11,8 @@ type Trigger struct {
 	Name      string
 	Type      Type
 	Token     *string
-	User      *User
+	User      *auth.User
 	Arguments []byte
-}
-
-// User is the user's identifying information attached to a trigger
-type User struct {
-	Name    string
-	Email   string
-	Roles   []auth.Role
-	Subject string
 }
 
 // Type represents the way a trigger is set off
@@ -87,26 +79,8 @@ func (t Trigger) validateManualTrigger(temp template.Trigger) error {
 	}
 
 	// first check roles as its a bit more inclusive
-	role, err := auth.ToRole(temp.Manual.Role)
-	if err == nil {
-		for _, userRole := range t.User.Roles {
-			switch role {
-			case auth.Reader:
-				if userRole == auth.Reader {
-					return nil
-				}
-				fallthrough
-			case auth.Editor:
-				if userRole == auth.Editor {
-					return nil
-				}
-				fallthrough
-			case auth.Admin:
-				if userRole == auth.Admin {
-					return nil
-				}
-			}
-		}
+	if t.User.HasRole(temp.Manual.Role) {
+		return nil
 	}
 
 	for _, user := range temp.Manual.Users {

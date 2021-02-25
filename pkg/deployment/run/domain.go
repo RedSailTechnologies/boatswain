@@ -44,6 +44,9 @@ func Create(uuid string, tpl *template.Template, trig *trigger.Trigger) (*Run, e
 	if tpl == nil {
 		return nil, RuntimeError{m: "template cannot be nil"}
 	}
+	if trig == nil {
+		return nil, RuntimeError{m: "trigger cannot be nil"}
+	}
 
 	r := &Run{}
 	r.on(&Created{
@@ -88,14 +91,16 @@ func (r *Run) AppendLog(message string, level LogLevel, timestamp int64) error {
 	return nil
 }
 
+// SetStatus pauses the current step
+func (r *Run) SetStatus(s Status) error {
+	r.on(&StatusSet{Status: s})
+	return nil
+}
+
 // CompleteStep completes the currently running step
-func (r *Run) CompleteStep(status Status, timestamp int64) error {
-	if status == NotStarted || status == InProgress {
-		return RuntimeError{m: "to complete a step status must be terminal"}
-	}
+func (r *Run) CompleteStep(timestamp int64) error {
 	r.on(&StepCompleted{
 		Timestamp: timestamp,
-		Status:    status,
 	})
 	return nil
 }
@@ -130,7 +135,7 @@ func (r *Run) UUID() string {
 	return r.uuid
 }
 
-// Destroyed determines if this deployment has been destroyed
+// Destroyed determines if this run has been destroyed
 func (r *Run) Destroyed() bool {
 	return false // runs can't be destroyed, but we still implement the interface
 }
@@ -180,9 +185,14 @@ func (r *Run) StopTime() int64 {
 	return r.stop
 }
 
-// Status gets the runs current status
+// Status gets the run's current status
 func (r *Run) Status() Status {
 	return r.status
+}
+
+// Paused returns if this run has been paused for some reason, for example a manual approval
+func (r *Run) Paused() bool {
+	return len(r.steps) != 0 && r.steps[len(r.steps)-1].Status == AwaitingApproval
 }
 
 // Steps gets the steps for this run
@@ -244,11 +254,12 @@ func (r *Run) on(event ddd.Event) {
 		r.steps = append(r.steps, s)
 	case *AppendLog:
 		r.steps[r.current].log(e.Message, e.Level, e.Timestamp)
+	case *StatusSet:
+		r.steps[r.current].Status = e.Status
 	case *StepCompleted:
 		s := &r.steps[r.current]
-		s.Status = e.Status
 		s.Stop = e.Timestamp
-		s.log(fmt.Sprintf(completeMessageTemplate, e.Status), Info, e.Timestamp)
+		s.log(fmt.Sprintf(completeMessageTemplate, r.steps[r.current].Status), Info, e.Timestamp)
 		r.current++
 	case *StepSkipped:
 		s := Step{

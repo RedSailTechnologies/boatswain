@@ -49,6 +49,7 @@ import { DeploymentDialogComponent } from './dialogs/deployment-dialog/deploymen
 import { DeploymentComponent } from './pages/deployment/deployment.component';
 import { RunComponent } from './pages/run/run.component';
 import { TriggerDialogComponent } from './dialogs/trigger-dialog/trigger-dialog.component';
+import { ApprovalsComponent } from './pages/approvals/approvals.component';
 
 export function initializeConfig(config: ConfigService) {
   return () => config.load();
@@ -74,7 +75,8 @@ export function initializeConfig(config: ConfigService) {
     DeploymentDialogComponent,
     DeploymentComponent,
     RunComponent,
-    TriggerDialogComponent
+    TriggerDialogComponent,
+    ApprovalsComponent
   ],
   imports: [
     AppRoutingModule,

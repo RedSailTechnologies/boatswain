@@ -27,7 +27,7 @@ func TestAuthorizationNoUser(t *testing.T) {
 
 func TestAuthorizationValidAdmin(t *testing.T) {
 	ctx := context.TODO()
-	user := User{
+	user := user{
 		Name: "Some User",
 		Roles: []string{
 			"admin",
@@ -52,7 +52,7 @@ func TestAuthorizationValidAdmin(t *testing.T) {
 
 func TestAuthorizationInvalidAdmin(t *testing.T) {
 	ctx := context.TODO()
-	user := User{
+	user := user{
 		Name: "Some User",
 		Roles: []string{
 			"administrator!",
@@ -77,7 +77,7 @@ func TestAuthorizationInvalidAdmin(t *testing.T) {
 
 func TestAuthorizationValidEditor(t *testing.T) {
 	ctx := context.TODO()
-	user := User{
+	user := user{
 		Name: "Some User",
 		Roles: []string{
 			"editor",
@@ -102,7 +102,7 @@ func TestAuthorizationValidEditor(t *testing.T) {
 
 func TestAuthorizationInvalidEditor(t *testing.T) {
 	ctx := context.TODO()
-	user := User{
+	user := user{
 		Name: "Some User",
 		Roles: []string{
 			"edit!",
@@ -127,7 +127,7 @@ func TestAuthorizationInvalidEditor(t *testing.T) {
 
 func TestAuthorizationValidReader(t *testing.T) {
 	ctx := context.TODO()
-	user := User{
+	user := user{
 		Name: "Some User",
 		Roles: []string{
 			"reader",
@@ -152,7 +152,7 @@ func TestAuthorizationValidReader(t *testing.T) {
 
 func TestAuthorizationInvalidReader(t *testing.T) {
 	ctx := context.TODO()
-	user := User{
+	user := user{
 		Name: "Some User",
 		Roles: []string{
 			"README.md",

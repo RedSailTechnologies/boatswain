@@ -66,6 +66,12 @@ type Deployment interface {
 
 	// read summaries of all runs for a particular deployment
 	Runs(context.Context, *ReadRuns) (*RunsRead, error)
+
+	// approve a step for a run
+	Approve(context.Context, *ApproveStep) (*StepApproved, error)
+
+	// gets all approvals for the user
+	Approvals(context.Context, *ReadApprovals) (*ApprovalsRead, error)
 }
 
 // ==========================
@@ -74,7 +80,7 @@ type Deployment interface {
 
 type deploymentProtobufClient struct {
 	client      HTTPClient
-	urls        [9]string
+	urls        [11]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -94,7 +100,7 @@ func NewDeploymentProtobufClient(baseURL string, client HTTPClient, opts ...twir
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Deployment")
-	urls := [9]string{
+	urls := [11]string{
 		serviceURL + "Create",
 		serviceURL + "Update",
 		serviceURL + "Destroy",
@@ -104,6 +110,8 @@ func NewDeploymentProtobufClient(baseURL string, client HTTPClient, opts ...twir
 		serviceURL + "Token",
 		serviceURL + "Run",
 		serviceURL + "Runs",
+		serviceURL + "Approve",
+		serviceURL + "Approvals",
 	}
 
 	return &deploymentProtobufClient{
@@ -528,13 +536,105 @@ func (c *deploymentProtobufClient) callRuns(ctx context.Context, in *ReadRuns) (
 	return out, nil
 }
 
+func (c *deploymentProtobufClient) Approve(ctx context.Context, in *ApproveStep) (*StepApproved, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Deployment")
+	ctx = ctxsetters.WithMethodName(ctx, "Approve")
+	caller := c.callApprove
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *ApproveStep) (*StepApproved, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ApproveStep)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ApproveStep) when calling interceptor")
+					}
+					return c.callApprove(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*StepApproved)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*StepApproved) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *deploymentProtobufClient) callApprove(ctx context.Context, in *ApproveStep) (*StepApproved, error) {
+	out := new(StepApproved)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[9], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *deploymentProtobufClient) Approvals(ctx context.Context, in *ReadApprovals) (*ApprovalsRead, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Deployment")
+	ctx = ctxsetters.WithMethodName(ctx, "Approvals")
+	caller := c.callApprovals
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *ReadApprovals) (*ApprovalsRead, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ReadApprovals)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ReadApprovals) when calling interceptor")
+					}
+					return c.callApprovals(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*ApprovalsRead)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*ApprovalsRead) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *deploymentProtobufClient) callApprovals(ctx context.Context, in *ReadApprovals) (*ApprovalsRead, error) {
+	out := new(ApprovalsRead)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[10], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 // ======================
 // Deployment JSON Client
 // ======================
 
 type deploymentJSONClient struct {
 	client      HTTPClient
-	urls        [9]string
+	urls        [11]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -554,7 +654,7 @@ func NewDeploymentJSONClient(baseURL string, client HTTPClient, opts ...twirp.Cl
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(clientOpts.PathPrefix(), "redsail.bosn", "Deployment")
-	urls := [9]string{
+	urls := [11]string{
 		serviceURL + "Create",
 		serviceURL + "Update",
 		serviceURL + "Destroy",
@@ -564,6 +664,8 @@ func NewDeploymentJSONClient(baseURL string, client HTTPClient, opts ...twirp.Cl
 		serviceURL + "Token",
 		serviceURL + "Run",
 		serviceURL + "Runs",
+		serviceURL + "Approve",
+		serviceURL + "Approvals",
 	}
 
 	return &deploymentJSONClient{
@@ -988,6 +1090,98 @@ func (c *deploymentJSONClient) callRuns(ctx context.Context, in *ReadRuns) (*Run
 	return out, nil
 }
 
+func (c *deploymentJSONClient) Approve(ctx context.Context, in *ApproveStep) (*StepApproved, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Deployment")
+	ctx = ctxsetters.WithMethodName(ctx, "Approve")
+	caller := c.callApprove
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *ApproveStep) (*StepApproved, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ApproveStep)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ApproveStep) when calling interceptor")
+					}
+					return c.callApprove(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*StepApproved)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*StepApproved) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *deploymentJSONClient) callApprove(ctx context.Context, in *ApproveStep) (*StepApproved, error) {
+	out := new(StepApproved)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[9], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *deploymentJSONClient) Approvals(ctx context.Context, in *ReadApprovals) (*ApprovalsRead, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "redsail.bosn")
+	ctx = ctxsetters.WithServiceName(ctx, "Deployment")
+	ctx = ctxsetters.WithMethodName(ctx, "Approvals")
+	caller := c.callApprovals
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *ReadApprovals) (*ApprovalsRead, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ReadApprovals)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ReadApprovals) when calling interceptor")
+					}
+					return c.callApprovals(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*ApprovalsRead)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*ApprovalsRead) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *deploymentJSONClient) callApprovals(ctx context.Context, in *ReadApprovals) (*ApprovalsRead, error) {
+	out := new(ApprovalsRead)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[10], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 // =========================
 // Deployment Server Handler
 // =========================
@@ -1098,6 +1292,12 @@ func (s *deploymentServer) ServeHTTP(resp http.ResponseWriter, req *http.Request
 		return
 	case "Runs":
 		s.serveRuns(ctx, resp, req)
+		return
+	case "Approve":
+		s.serveApprove(ctx, resp, req)
+		return
+	case "Approvals":
+		s.serveApprovals(ctx, resp, req)
 		return
 	default:
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
@@ -2658,6 +2858,356 @@ func (s *deploymentServer) serveRunsProtobuf(ctx context.Context, resp http.Resp
 	}
 	if respContent == nil {
 		s.writeError(ctx, resp, twirp.InternalError("received a nil *RunsRead and nil error while calling Runs. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *deploymentServer) serveApprove(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveApproveJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveApproveProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *deploymentServer) serveApproveJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Approve")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(ApproveStep)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Deployment.Approve
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *ApproveStep) (*StepApproved, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ApproveStep)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ApproveStep) when calling interceptor")
+					}
+					return s.Deployment.Approve(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*StepApproved)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*StepApproved) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *StepApproved
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *StepApproved and nil error while calling Approve. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *deploymentServer) serveApproveProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Approve")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(ApproveStep)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Deployment.Approve
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *ApproveStep) (*StepApproved, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ApproveStep)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ApproveStep) when calling interceptor")
+					}
+					return s.Deployment.Approve(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*StepApproved)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*StepApproved) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *StepApproved
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *StepApproved and nil error while calling Approve. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *deploymentServer) serveApprovals(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveApprovalsJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveApprovalsProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *deploymentServer) serveApprovalsJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Approvals")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	reqContent := new(ReadApprovals)
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the json request could not be decoded"))
+		return
+	}
+
+	handler := s.Deployment.Approvals
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *ReadApprovals) (*ApprovalsRead, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ReadApprovals)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ReadApprovals) when calling interceptor")
+					}
+					return s.Deployment.Approvals(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*ApprovalsRead)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*ApprovalsRead) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *ApprovalsRead
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *ApprovalsRead and nil error while calling Approvals. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	var buf bytes.Buffer
+	marshaler := &jsonpb.Marshaler{OrigName: true, EmitDefaults: !s.jsonSkipDefaults}
+	if err = marshaler.Marshal(&buf, respContent); err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	respBytes := buf.Bytes()
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *deploymentServer) serveApprovalsProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Approvals")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to read request body"))
+		return
+	}
+	reqContent := new(ReadApprovals)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Deployment.Approvals
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *ReadApprovals) (*ApprovalsRead, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*ReadApprovals)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*ReadApprovals) when calling interceptor")
+					}
+					return s.Deployment.Approvals(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*ApprovalsRead)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*ApprovalsRead) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *ApprovalsRead
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *ApprovalsRead and nil error while calling Approvals. nil responses are not supported"))
 		return
 	}
 

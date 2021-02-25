@@ -6,8 +6,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHasRole(t *testing.T) {
-	sut := &User{}
+func TestExternalHasRole(t *testing.T) {
+	sut := &User{
+		Roles: []Role{
+			Admin,
+		},
+	}
+	assert.False(t, sut.HasRole("fake"))
+	assert.False(t, sut.HasRole(string(Editor)))
+	assert.True(t, sut.HasRole(string(Admin)))
+}
+
+func TestInternalHasRole(t *testing.T) {
+	sut := &user{}
 	empty := sut.hasRole("some role")
 	sut.Roles = []string{
 		"some role",
@@ -25,7 +36,7 @@ func TestHasRole(t *testing.T) {
 }
 
 func TestValidScope(t *testing.T) {
-	sut := &User{Scope: "scope"}
+	sut := &user{Scope: "scope"}
 
 	noErr := sut.validateScope("scope")
 	err := sut.validateScope("three sixty no")

@@ -4,8 +4,26 @@ import (
 	"fmt"
 )
 
-// User represents our representation of an oidc user
+// User is the external (to the system) representation of a user
 type User struct {
+	Name    string
+	Email   string
+	Subject string
+	Roles   []Role
+}
+
+// HasRole checks if a user has a role represented by the string passed
+func (u *User) HasRole(r string) bool {
+	role := Role(r)
+	for _, r := range u.Roles {
+		if r == role {
+			return true
+		}
+	}
+	return false
+}
+
+type user struct {
 	token string
 
 	Name         string   `json:"name"`
@@ -18,7 +36,7 @@ type User struct {
 	Roles        []string `json:"roles"`
 }
 
-func (u *User) hasRole(r string) bool {
+func (u *user) hasRole(r string) bool {
 	for _, role := range u.Roles {
 		if role == r {
 			return true
@@ -27,7 +45,7 @@ func (u *User) hasRole(r string) bool {
 	return false
 }
 
-func (u *User) validateScope(s string) error {
+func (u *user) validateScope(s string) error {
 	if u.Scope != s {
 		return &userScopeError{scope: u.Scope}
 	}
