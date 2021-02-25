@@ -101,7 +101,7 @@ package: echo
 	@mkdir -p $(HELM_OUT)
 	@helm dependency update --skip-refresh deploy/boatswain
 	@for chart in $(CHART_LIST); do \
-		helm package deploy/$$chart --version $(shell make version) --app-version $(shell make version) --destination $(HELM_OUT); \
+		helm package deploy/$$chart --version $(shell make versionplain) --app-version $(shell make versionplain) --destination $(HELM_OUT); \
 	done
 
 poseidon: echo
@@ -163,6 +163,9 @@ endif
 ## version: gets the current version of the repo
 version:
 	@git describe --tags --abbrev=0
+
+versionplain:
+	@git describe --tags --abbrev=0 | cut -d'v' -f2
 
 versionprev:
 	@version=$(shell make version);git describe --tags --abbrev=0 --tags $$version^

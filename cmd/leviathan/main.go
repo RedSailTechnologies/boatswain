@@ -30,7 +30,7 @@ import (
 
 func main() {
 	var actionEndpoint, httpPort, mongoConn, mongoDB, tlsCert, tlsKey string
-	flag.StringVar(&actionEndpoint, "action-endpoint", cfg.EnvOrDefaultString("ACTION_ENDPOINT", "http://localhost:"+httpPort), "agent action service endpoint")
+	flag.StringVar(&actionEndpoint, "action-endpoint", cfg.EnvOrDefaultString("ACTION_ENDPOINT", "http://localhost:8080"), "agent action service endpoint")
 	flag.StringVar(&mongoConn, "mongo-conn", cfg.EnvOrDefaultString("MONGO_CONNECTION_STRING", ""), "mongodb connection string")
 	flag.StringVar(&mongoDB, "mongo-db", cfg.EnvOrDefaultString("MONGO_DB_NAME", "boatswain"), "mongodb database name")
 	flag.StringVar(&httpPort, "http-port", cfg.EnvOrDefaultString("HTTP_PORT", "8080"), "http port")
@@ -49,7 +49,7 @@ func main() {
 	auth := auth.NewOIDCAgent(authCfg)
 
 	// Twirp Clients
-	actionClient := ag.NewAgentActionProtobufClient("http://localhost:8080", &http.Client{}, twirp.WithClientPathPrefix("/agents"))
+	actionClient := ag.NewAgentActionProtobufClient(actionEndpoint, &http.Client{}, twirp.WithClientPathPrefix("/agents"))
 
 	// Services
 	hooks := twirp.ChainHooks(tw.JWTHook(auth), tw.LoggingHooks())
@@ -91,7 +91,7 @@ func main() {
 			http.ServeFile(w, r, "triton/index.html")
 		}
 		http.ServeFile(w, r, "triton/"+r.RequestURI)
-	}) // TODO AdamP - fix multiplexer
+	})
 
 	logger.Info("starting leviathan server...ITS HUUUUUUUUUUGE!")
 	if tlsCert == "" || tlsKey == "" {
