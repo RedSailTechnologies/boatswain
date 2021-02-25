@@ -12,6 +12,10 @@ type Substitution struct {
 type Template struct {
 	Name    string `yaml:"name"`
 	Version string `yaml:"version"`
+	Links   []struct {
+		Name string `yaml:"name"`
+		URL  string `yaml:"url"`
+	} `yaml:"links"`
 
 	Clusters []string `yaml:"clusters"`
 

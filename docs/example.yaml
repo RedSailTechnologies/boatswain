@@ -25,6 +25,13 @@ name: ${{ .Parameters.name }}
 # unless they use it but it should probably be unique for each deployment
 version: ${{ .Parameters.version }}
 
+# links are a way to provide amplifying information for this deployment in the
+# form of external tools-one example might be a grafana dashboard or a pod or a link to its logs
+# these will display on a run page and can use variables
+links:
+  - name: externalthing
+    url: http://somecoolplace.spoof/
+
 # the names of clusters currently configured in bosn - these can be added through 
 # the ui or specified as a configuration file on installing bosn but must be in
 # this list prior to execution of the deployment

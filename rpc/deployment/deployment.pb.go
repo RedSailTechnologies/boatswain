@@ -1105,6 +1105,61 @@ func (x *StepRead) GetLogs() []*StepLog {
 	return nil
 }
 
+type LinkRead struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Url  string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+}
+
+func (x *LinkRead) Reset() {
+	*x = LinkRead{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_deployment_proto_msgTypes[18]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LinkRead) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LinkRead) ProtoMessage() {}
+
+func (x *LinkRead) ProtoReflect() protoreflect.Message {
+	mi := &file_deployment_proto_msgTypes[18]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LinkRead.ProtoReflect.Descriptor instead.
+func (*LinkRead) Descriptor() ([]byte, []int) {
+	return file_deployment_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *LinkRead) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *LinkRead) GetUrl() string {
+	if x != nil {
+		return x.Url
+	}
+	return ""
+}
+
 type RunRead struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1116,13 +1171,14 @@ type RunRead struct {
 	Status    Status      `protobuf:"varint,4,opt,name=status,proto3,enum=redsail.bosn.Status" json:"status,omitempty"`
 	StartTime int64       `protobuf:"varint,5,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
 	StopTime  int64       `protobuf:"varint,6,opt,name=stop_time,json=stopTime,proto3" json:"stop_time,omitempty"`
-	Steps     []*StepRead `protobuf:"bytes,7,rep,name=steps,proto3" json:"steps,omitempty"`
+	Links     []*LinkRead `protobuf:"bytes,7,rep,name=links,proto3" json:"links,omitempty"`
+	Steps     []*StepRead `protobuf:"bytes,8,rep,name=steps,proto3" json:"steps,omitempty"`
 }
 
 func (x *RunRead) Reset() {
 	*x = RunRead{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_deployment_proto_msgTypes[18]
+		mi := &file_deployment_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1135,7 +1191,7 @@ func (x *RunRead) String() string {
 func (*RunRead) ProtoMessage() {}
 
 func (x *RunRead) ProtoReflect() protoreflect.Message {
-	mi := &file_deployment_proto_msgTypes[18]
+	mi := &file_deployment_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1148,7 +1204,7 @@ func (x *RunRead) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RunRead.ProtoReflect.Descriptor instead.
 func (*RunRead) Descriptor() ([]byte, []int) {
-	return file_deployment_proto_rawDescGZIP(), []int{18}
+	return file_deployment_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *RunRead) GetUuid() string {
@@ -1193,6 +1249,13 @@ func (x *RunRead) GetStopTime() int64 {
 	return 0
 }
 
+func (x *RunRead) GetLinks() []*LinkRead {
+	if x != nil {
+		return x.Links
+	}
+	return nil
+}
+
 func (x *RunRead) GetSteps() []*StepRead {
 	if x != nil {
 		return x.Steps
@@ -1211,7 +1274,7 @@ type ReadRuns struct {
 func (x *ReadRuns) Reset() {
 	*x = ReadRuns{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_deployment_proto_msgTypes[19]
+		mi := &file_deployment_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1224,7 +1287,7 @@ func (x *ReadRuns) String() string {
 func (*ReadRuns) ProtoMessage() {}
 
 func (x *ReadRuns) ProtoReflect() protoreflect.Message {
-	mi := &file_deployment_proto_msgTypes[19]
+	mi := &file_deployment_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1237,7 +1300,7 @@ func (x *ReadRuns) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReadRuns.ProtoReflect.Descriptor instead.
 func (*ReadRuns) Descriptor() ([]byte, []int) {
-	return file_deployment_proto_rawDescGZIP(), []int{19}
+	return file_deployment_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ReadRuns) GetDeploymentUuid() string {
@@ -1263,7 +1326,7 @@ type RunReadSummary struct {
 func (x *RunReadSummary) Reset() {
 	*x = RunReadSummary{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_deployment_proto_msgTypes[20]
+		mi := &file_deployment_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1276,7 +1339,7 @@ func (x *RunReadSummary) String() string {
 func (*RunReadSummary) ProtoMessage() {}
 
 func (x *RunReadSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_deployment_proto_msgTypes[20]
+	mi := &file_deployment_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1289,7 +1352,7 @@ func (x *RunReadSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RunReadSummary.ProtoReflect.Descriptor instead.
 func (*RunReadSummary) Descriptor() ([]byte, []int) {
-	return file_deployment_proto_rawDescGZIP(), []int{20}
+	return file_deployment_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *RunReadSummary) GetUuid() string {
@@ -1345,7 +1408,7 @@ type RunsRead struct {
 func (x *RunsRead) Reset() {
 	*x = RunsRead{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_deployment_proto_msgTypes[21]
+		mi := &file_deployment_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1358,7 +1421,7 @@ func (x *RunsRead) String() string {
 func (*RunsRead) ProtoMessage() {}
 
 func (x *RunsRead) ProtoReflect() protoreflect.Message {
-	mi := &file_deployment_proto_msgTypes[21]
+	mi := &file_deployment_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1371,7 +1434,7 @@ func (x *RunsRead) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RunsRead.ProtoReflect.Descriptor instead.
 func (*RunsRead) Descriptor() ([]byte, []int) {
-	return file_deployment_proto_rawDescGZIP(), []int{21}
+	return file_deployment_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *RunsRead) GetRuns() []*RunReadSummary {
@@ -1464,19 +1527,25 @@ var file_deployment_proto_rawDesc = []byte{
 	0x6d, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x73, 0x74, 0x6f, 0x70, 0x54, 0x69,
 	0x6d, 0x65, 0x12, 0x29, 0x0a, 0x04, 0x6c, 0x6f, 0x67, 0x73, 0x18, 0x05, 0x20, 0x03, 0x28, 0x0b,
 	0x32, 0x15, 0x2e, 0x72, 0x65, 0x64, 0x73, 0x61, 0x69, 0x6c, 0x2e, 0x62, 0x6f, 0x73, 0x6e, 0x2e,
-	0x53, 0x74, 0x65, 0x70, 0x4c, 0x6f, 0x67, 0x52, 0x04, 0x6c, 0x6f, 0x67, 0x73, 0x22, 0xe3, 0x01,
-	0x0a, 0x07, 0x52, 0x75, 0x6e, 0x52, 0x65, 0x61, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x75, 0x75, 0x69,
-	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x75, 0x75, 0x69, 0x64, 0x12, 0x12, 0x0a,
-	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d,
-	0x65, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x2c, 0x0a, 0x06, 0x73,
-	0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x14, 0x2e, 0x72, 0x65,
-	0x64, 0x73, 0x61, 0x69, 0x6c, 0x2e, 0x62, 0x6f, 0x73, 0x6e, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x75,
-	0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x74, 0x61,
-	0x72, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x73,
-	0x74, 0x61, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x74, 0x6f, 0x70,
-	0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x73, 0x74, 0x6f,
-	0x70, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x2c, 0x0a, 0x05, 0x73, 0x74, 0x65, 0x70, 0x73, 0x18, 0x07,
+	0x53, 0x74, 0x65, 0x70, 0x4c, 0x6f, 0x67, 0x52, 0x04, 0x6c, 0x6f, 0x67, 0x73, 0x22, 0x30, 0x0a,
+	0x08, 0x4c, 0x69, 0x6e, 0x6b, 0x52, 0x65, 0x61, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x10, 0x0a,
+	0x03, 0x75, 0x72, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75, 0x72, 0x6c, 0x22,
+	0x91, 0x02, 0x0a, 0x07, 0x52, 0x75, 0x6e, 0x52, 0x65, 0x61, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x75,
+	0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x75, 0x75, 0x69, 0x64, 0x12,
+	0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e,
+	0x61, 0x6d, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x2c, 0x0a,
+	0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x14, 0x2e,
+	0x72, 0x65, 0x64, 0x73, 0x61, 0x69, 0x6c, 0x2e, 0x62, 0x6f, 0x73, 0x6e, 0x2e, 0x53, 0x74, 0x61,
+	0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x73,
+	0x74, 0x61, 0x72, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x09, 0x73, 0x74, 0x61, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x74,
+	0x6f, 0x70, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x73,
+	0x74, 0x6f, 0x70, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x2c, 0x0a, 0x05, 0x6c, 0x69, 0x6e, 0x6b, 0x73,
+	0x18, 0x07, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x72, 0x65, 0x64, 0x73, 0x61, 0x69, 0x6c,
+	0x2e, 0x62, 0x6f, 0x73, 0x6e, 0x2e, 0x4c, 0x69, 0x6e, 0x6b, 0x52, 0x65, 0x61, 0x64, 0x52, 0x05,
+	0x6c, 0x69, 0x6e, 0x6b, 0x73, 0x12, 0x2c, 0x0a, 0x05, 0x73, 0x74, 0x65, 0x70, 0x73, 0x18, 0x08,
 	0x20, 0x03, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x72, 0x65, 0x64, 0x73, 0x61, 0x69, 0x6c, 0x2e, 0x62,
 	0x6f, 0x73, 0x6e, 0x2e, 0x53, 0x74, 0x65, 0x70, 0x52, 0x65, 0x61, 0x64, 0x52, 0x05, 0x73, 0x74,
 	0x65, 0x70, 0x73, 0x22, 0x33, 0x0a, 0x08, 0x52, 0x65, 0x61, 0x64, 0x52, 0x75, 0x6e, 0x73, 0x12,
@@ -1567,7 +1636,7 @@ func file_deployment_proto_rawDescGZIP() []byte {
 }
 
 var file_deployment_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_deployment_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_deployment_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_deployment_proto_goTypes = []interface{}{
 	(LogLevel)(0),                 // 0: redsail.bosn.LogLevel
 	(Status)(0),                   // 1: redsail.bosn.Status
@@ -1589,10 +1658,11 @@ var file_deployment_proto_goTypes = []interface{}{
 	(*ReadRun)(nil),               // 17: redsail.bosn.ReadRun
 	(*StepLog)(nil),               // 18: redsail.bosn.StepLog
 	(*StepRead)(nil),              // 19: redsail.bosn.StepRead
-	(*RunRead)(nil),               // 20: redsail.bosn.RunRead
-	(*ReadRuns)(nil),              // 21: redsail.bosn.ReadRuns
-	(*RunReadSummary)(nil),        // 22: redsail.bosn.RunReadSummary
-	(*RunsRead)(nil),              // 23: redsail.bosn.RunsRead
+	(*LinkRead)(nil),              // 20: redsail.bosn.LinkRead
+	(*RunRead)(nil),               // 21: redsail.bosn.RunRead
+	(*ReadRuns)(nil),              // 22: redsail.bosn.ReadRuns
+	(*RunReadSummary)(nil),        // 23: redsail.bosn.RunReadSummary
+	(*RunsRead)(nil),              // 24: redsail.bosn.RunsRead
 }
 var file_deployment_proto_depIdxs = []int32{
 	11, // 0: redsail.bosn.DeploymentsRead.deployments:type_name -> redsail.bosn.DeploymentReadSummary
@@ -1600,32 +1670,33 @@ var file_deployment_proto_depIdxs = []int32{
 	1,  // 2: redsail.bosn.StepRead.status:type_name -> redsail.bosn.Status
 	18, // 3: redsail.bosn.StepRead.logs:type_name -> redsail.bosn.StepLog
 	1,  // 4: redsail.bosn.RunRead.status:type_name -> redsail.bosn.Status
-	19, // 5: redsail.bosn.RunRead.steps:type_name -> redsail.bosn.StepRead
-	1,  // 6: redsail.bosn.RunReadSummary.status:type_name -> redsail.bosn.Status
-	22, // 7: redsail.bosn.RunsRead.runs:type_name -> redsail.bosn.RunReadSummary
-	2,  // 8: redsail.bosn.Deployment.Create:input_type -> redsail.bosn.CreateDeployment
-	4,  // 9: redsail.bosn.Deployment.Update:input_type -> redsail.bosn.UpdateDeployment
-	6,  // 10: redsail.bosn.Deployment.Destroy:input_type -> redsail.bosn.DestroyDeployment
-	8,  // 11: redsail.bosn.Deployment.Read:input_type -> redsail.bosn.ReadDeployment
-	10, // 12: redsail.bosn.Deployment.All:input_type -> redsail.bosn.ReadDeployments
-	13, // 13: redsail.bosn.Deployment.Template:input_type -> redsail.bosn.TemplateDeployment
-	15, // 14: redsail.bosn.Deployment.Token:input_type -> redsail.bosn.ReadToken
-	17, // 15: redsail.bosn.Deployment.Run:input_type -> redsail.bosn.ReadRun
-	21, // 16: redsail.bosn.Deployment.Runs:input_type -> redsail.bosn.ReadRuns
-	3,  // 17: redsail.bosn.Deployment.Create:output_type -> redsail.bosn.DeploymentCreated
-	5,  // 18: redsail.bosn.Deployment.Update:output_type -> redsail.bosn.DeploymentUpdated
-	7,  // 19: redsail.bosn.Deployment.Destroy:output_type -> redsail.bosn.DeploymentDestroyed
-	9,  // 20: redsail.bosn.Deployment.Read:output_type -> redsail.bosn.DeploymentRead
-	12, // 21: redsail.bosn.Deployment.All:output_type -> redsail.bosn.DeploymentsRead
-	14, // 22: redsail.bosn.Deployment.Template:output_type -> redsail.bosn.DeploymentTemplated
-	16, // 23: redsail.bosn.Deployment.Token:output_type -> redsail.bosn.TokenRead
-	20, // 24: redsail.bosn.Deployment.Run:output_type -> redsail.bosn.RunRead
-	23, // 25: redsail.bosn.Deployment.Runs:output_type -> redsail.bosn.RunsRead
-	17, // [17:26] is the sub-list for method output_type
-	8,  // [8:17] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	20, // 5: redsail.bosn.RunRead.links:type_name -> redsail.bosn.LinkRead
+	19, // 6: redsail.bosn.RunRead.steps:type_name -> redsail.bosn.StepRead
+	1,  // 7: redsail.bosn.RunReadSummary.status:type_name -> redsail.bosn.Status
+	23, // 8: redsail.bosn.RunsRead.runs:type_name -> redsail.bosn.RunReadSummary
+	2,  // 9: redsail.bosn.Deployment.Create:input_type -> redsail.bosn.CreateDeployment
+	4,  // 10: redsail.bosn.Deployment.Update:input_type -> redsail.bosn.UpdateDeployment
+	6,  // 11: redsail.bosn.Deployment.Destroy:input_type -> redsail.bosn.DestroyDeployment
+	8,  // 12: redsail.bosn.Deployment.Read:input_type -> redsail.bosn.ReadDeployment
+	10, // 13: redsail.bosn.Deployment.All:input_type -> redsail.bosn.ReadDeployments
+	13, // 14: redsail.bosn.Deployment.Template:input_type -> redsail.bosn.TemplateDeployment
+	15, // 15: redsail.bosn.Deployment.Token:input_type -> redsail.bosn.ReadToken
+	17, // 16: redsail.bosn.Deployment.Run:input_type -> redsail.bosn.ReadRun
+	22, // 17: redsail.bosn.Deployment.Runs:input_type -> redsail.bosn.ReadRuns
+	3,  // 18: redsail.bosn.Deployment.Create:output_type -> redsail.bosn.DeploymentCreated
+	5,  // 19: redsail.bosn.Deployment.Update:output_type -> redsail.bosn.DeploymentUpdated
+	7,  // 20: redsail.bosn.Deployment.Destroy:output_type -> redsail.bosn.DeploymentDestroyed
+	9,  // 21: redsail.bosn.Deployment.Read:output_type -> redsail.bosn.DeploymentRead
+	12, // 22: redsail.bosn.Deployment.All:output_type -> redsail.bosn.DeploymentsRead
+	14, // 23: redsail.bosn.Deployment.Template:output_type -> redsail.bosn.DeploymentTemplated
+	16, // 24: redsail.bosn.Deployment.Token:output_type -> redsail.bosn.TokenRead
+	21, // 25: redsail.bosn.Deployment.Run:output_type -> redsail.bosn.RunRead
+	24, // 26: redsail.bosn.Deployment.Runs:output_type -> redsail.bosn.RunsRead
+	18, // [18:27] is the sub-list for method output_type
+	9,  // [9:18] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_deployment_proto_init() }
@@ -1851,7 +1922,7 @@ func file_deployment_proto_init() {
 			}
 		}
 		file_deployment_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RunRead); i {
+			switch v := v.(*LinkRead); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1863,7 +1934,7 @@ func file_deployment_proto_init() {
 			}
 		}
 		file_deployment_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ReadRuns); i {
+			switch v := v.(*RunRead); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1875,7 +1946,7 @@ func file_deployment_proto_init() {
 			}
 		}
 		file_deployment_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RunReadSummary); i {
+			switch v := v.(*ReadRuns); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1887,6 +1958,18 @@ func file_deployment_proto_init() {
 			}
 		}
 		file_deployment_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RunReadSummary); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_deployment_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*RunsRead); i {
 			case 0:
 				return &v.state
@@ -1905,7 +1988,7 @@ func file_deployment_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_deployment_proto_rawDesc,
 			NumEnums:      2,
-			NumMessages:   22,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

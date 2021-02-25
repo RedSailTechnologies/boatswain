@@ -13,6 +13,7 @@
     - [DeploymentUpdated](#redsail.bosn.DeploymentUpdated)
     - [DeploymentsRead](#redsail.bosn.DeploymentsRead)
     - [DestroyDeployment](#redsail.bosn.DestroyDeployment)
+    - [LinkRead](#redsail.bosn.LinkRead)
     - [ReadDeployment](#redsail.bosn.ReadDeployment)
     - [ReadDeployments](#redsail.bosn.ReadDeployments)
     - [ReadRun](#redsail.bosn.ReadRun)
@@ -173,6 +174,22 @@ Deployment is the service for creation and management of application installs/up
 
 
 
+<a name="redsail.bosn.LinkRead"></a>
+
+### LinkRead
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  |  |
+| url | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="redsail.bosn.ReadDeployment"></a>
 
 ### ReadDeployment
@@ -257,6 +274,7 @@ Deployment is the service for creation and management of application installs/up
 | status | [Status](#redsail.bosn.Status) |  |  |
 | start_time | [int64](#int64) |  |  |
 | stop_time | [int64](#int64) |  |  |
+| links | [LinkRead](#redsail.bosn.LinkRead) | repeated |  |
 | steps | [StepRead](#redsail.bosn.StepRead) | repeated |  |
 
 

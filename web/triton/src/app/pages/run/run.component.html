@@ -9,6 +9,19 @@
                 <br />
                 Stop: {{stop}}
             </span>
+            <span *ngIf="run.links.length != 0">
+                <br />
+                Links:
+                <ul>
+                    <span *ngFor="let link of run.links">
+                        <li>
+                            <a mat-button href="{{link.url}}">
+                                {{link.name}}
+                            </a>
+                        </li>
+                    </span>
+                </ul>
+            </span>
         </mat-card-subtitle>
         <mat-card-content>
             <mat-vertical-stepper [selectedIndex]="run.status == 'IN_PROGRESS' ? run.steps.length : run.steps.length - 1" #stepper> 

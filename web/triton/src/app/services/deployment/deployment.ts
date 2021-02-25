@@ -384,6 +384,28 @@ const JSONToStepRead = (m: StepRead | StepReadJSON): StepRead => {
     };
 };
 
+export interface LinkRead {
+    name: string;
+    url: string;
+    
+}
+
+interface LinkReadJSON {
+    name: string;
+    url: string;
+    
+}
+
+
+const JSONToLinkRead = (m: LinkRead | LinkReadJSON): LinkRead => {
+    
+    return {
+        name: m.name,
+        url: m.url,
+        
+    };
+};
+
 export interface RunRead {
     uuid: string;
     name: string;
@@ -391,6 +413,7 @@ export interface RunRead {
     status: string;
     startTime: number;
     stopTime: number;
+    links: LinkRead[];
     steps: StepRead[];
     
 }
@@ -402,6 +425,7 @@ interface RunReadJSON {
     status: string;
     start_time: number;
     stop_time: number;
+    links: LinkReadJSON[];
     steps: StepReadJSON[];
     
 }
@@ -416,6 +440,7 @@ const JSONToRunRead = (m: RunRead | RunReadJSON): RunRead => {
         status: m.status,
         startTime: (((m as RunRead).startTime) ? (m as RunRead).startTime : (m as RunReadJSON).start_time),
         stopTime: (((m as RunRead).stopTime) ? (m as RunRead).stopTime : (m as RunReadJSON).stop_time),
+        links: (m.links as (LinkRead | LinkReadJSON)[]).map(JSONToLinkRead),
         steps: (m.steps as (StepRead | StepReadJSON)[]).map(JSONToStepRead),
         
     };

@@ -253,15 +253,23 @@ func (s Service) Run(ctx context.Context, req *pb.ReadRun) (*pb.RunRead, error) 
 		return nil, tw.ToTwirpError(err, "error loading Run")
 	}
 
-	steps := make([]*pb.StepRead, 0)
-	for _, step := range r.Steps() {
-		steps = append(steps, &pb.StepRead{
+	steps := make([]*pb.StepRead, len(r.Steps()))
+	for i, step := range r.Steps() {
+		steps[i] = &pb.StepRead{
 			Name:      step.Name,
 			Status:    convertStatus(step.Status),
 			StartTime: step.Start,
 			StopTime:  step.Stop,
 			Logs:      convertLogs(step.Logs),
-		})
+		}
+	}
+
+	links := make([]*pb.LinkRead, len(r.Links()))
+	for i, link := range r.Links() {
+		links[i] = &pb.LinkRead{
+			Name: link.Name,
+			Url:  link.URL,
+		}
 	}
 
 	return &pb.RunRead{
@@ -271,6 +279,7 @@ func (s Service) Run(ctx context.Context, req *pb.ReadRun) (*pb.RunRead, error) 
 		Status:    convertStatus(r.Status()),
 		StartTime: r.StartTime(),
 		StopTime:  r.StopTime(),
+		Links:     links,
 		Steps:     steps,
 	}, nil
 }
