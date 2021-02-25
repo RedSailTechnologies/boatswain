@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.8.0
+* 24c72b2 Feature/approvals (#64)
+* 3091ad9 Feature/links (#61)
+
 ## v0.7.0
 * 80848b1 feature/enhanced triggers (#60)
 
