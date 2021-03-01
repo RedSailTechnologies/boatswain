@@ -44,7 +44,7 @@ func (s Service) Create(ctx context.Context, cmd *pb.CreateRepo) (*pb.RepoCreate
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
 
-	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, cmd.Token, Type(cmd.Type), ddd.NewTimestamp())
+	r, err := Create(ddd.NewUUID(), cmd.Name, cmd.Endpoint, cmd.Token, cmd.Username, cmd.Password, Type(cmd.Type), cmd.HelmOci, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error creating Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "could not create Repo")
@@ -71,7 +71,20 @@ func (s Service) Update(ctx context.Context, cmd *pb.UpdateRepo) (*pb.RepoUpdate
 		return nil, tw.ToTwirpError(err, "error loading Repo")
 	}
 
-	err = r.Update(cmd.Name, cmd.Endpoint, cmd.Token, Type(cmd.Type), ddd.NewTimestamp())
+	token := r.Token()
+	if cmd.Token != "" {
+		token = cmd.Token
+	}
+	username := r.Username()
+	if cmd.Username != "" {
+		username = cmd.Username
+	}
+	password := r.Password()
+	if cmd.Password != "" {
+		password = cmd.Password
+	}
+
+	err = r.Update(cmd.Name, cmd.Endpoint, token, username, password, Type(cmd.Type), cmd.HelmOci, ddd.NewTimestamp())
 	if err != nil {
 		logger.Error("error updating Repo", "error", err)
 		return nil, tw.ToTwirpError(err, "Repo could not be updated")
@@ -146,29 +159,6 @@ func (s Service) Read(ctx context.Context, req *pb.ReadRepo) (*pb.RepoRead, erro
 		Type:     pb.RepoType(r.Type()),
 		Ready:    ready,
 	}, nil
-}
-
-// Find finds the repo uuid by name
-func (s Service) Find(ctx context.Context, req *pb.FindRepo) (*pb.RepoFound, error) {
-	if err := s.auth.Authorize(ctx, auth.Reader); err != nil {
-		return nil, tw.ToTwirpError(err, "not authorized")
-	}
-
-	repos, err := s.read.All()
-	if err != nil {
-		logger.Error("error getting Repos", "error", err)
-		return nil, twirp.InternalError("error loading Repos")
-	}
-
-	for _, repo := range repos {
-		if repo.Name() == req.Name {
-			return &pb.RepoFound{
-				Uuid: repo.UUID(),
-			}, nil
-		}
-	}
-
-	return nil, twirp.NotFoundError("could not find repo with that name")
 }
 
 // All gets all repos currently configured and their status

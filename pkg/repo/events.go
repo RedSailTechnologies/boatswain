@@ -15,7 +15,10 @@ type Created struct {
 	Name      string
 	Endpoint  string
 	Token     string
+	Username  string
+	Password  string
 	Type      Type
+	HelmOCI   bool
 }
 
 // EventType marks this as an event
@@ -39,7 +42,10 @@ type Updated struct {
 	Name      string
 	Endpoint  string
 	Token     string
+	Username  string
+	Password  string
 	Type      Type
+	HelmOCI   bool
 }
 
 // EventType marks this as an event

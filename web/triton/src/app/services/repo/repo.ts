@@ -7,6 +7,9 @@ export interface CreateRepo {
     endpoint: string;
     type: string;
     token: string;
+    username: string;
+    password: string;
+    helmOci: boolean;
     
 }
 
@@ -15,6 +18,9 @@ interface CreateRepoJSON {
     endpoint: string;
     type: string;
     token: string;
+    username: string;
+    password: string;
+    helm_oci: boolean;
     
 }
 
@@ -25,6 +31,9 @@ const CreateRepoToJSON = (m: CreateRepo): CreateRepoJSON => {
         endpoint: m.endpoint,
         type: m.type,
         token: m.token,
+        username: m.username,
+        password: m.password,
+        helm_oci: m.helmOci,
         
     };
 };
@@ -51,6 +60,9 @@ export interface UpdateRepo {
     endpoint: string;
     type: string;
     token: string;
+    username: string;
+    password: string;
+    helmOci: boolean;
     
 }
 
@@ -60,6 +72,9 @@ interface UpdateRepoJSON {
     endpoint: string;
     type: string;
     token: string;
+    username: string;
+    password: string;
+    helm_oci: boolean;
     
 }
 
@@ -71,6 +86,9 @@ const UpdateRepoToJSON = (m: UpdateRepo): UpdateRepoJSON => {
         endpoint: m.endpoint,
         type: m.type,
         token: m.token,
+        username: m.username,
+        password: m.password,
+        helm_oci: m.helmOci,
         
     };
 };
@@ -148,7 +166,7 @@ export interface RepoRead {
     name: string;
     endpoint: string;
     type: string;
-    token: string;
+    helmOci: boolean;
     ready: boolean;
     
 }
@@ -158,7 +176,7 @@ interface RepoReadJSON {
     name: string;
     endpoint: string;
     type: string;
-    token: string;
+    helm_oci: boolean;
     ready: boolean;
     
 }
@@ -171,45 +189,8 @@ const JSONToRepoRead = (m: RepoRead | RepoReadJSON): RepoRead => {
         name: m.name,
         endpoint: m.endpoint,
         type: m.type,
-        token: m.token,
+        helmOci: (((m as RepoRead).helmOci) ? (m as RepoRead).helmOci : (m as RepoReadJSON).helm_oci),
         ready: m.ready,
-        
-    };
-};
-
-export interface FindRepo {
-    name: string;
-    
-}
-
-interface FindRepoJSON {
-    name: string;
-    
-}
-
-
-const FindRepoToJSON = (m: FindRepo): FindRepoJSON => {
-    return {
-        name: m.name,
-        
-    };
-};
-
-export interface RepoFound {
-    uuid: string;
-    
-}
-
-interface RepoFoundJSON {
-    uuid: string;
-    
-}
-
-
-const JSONToRepoFound = (m: RepoFound | RepoFoundJSON): RepoFound => {
-    
-    return {
-        uuid: m.uuid,
         
     };
 };
@@ -300,8 +281,6 @@ export interface Repo {
     
     read: (readRepo: ReadRepo) => Promise<RepoRead>;
     
-    find: (findRepo: FindRepo) => Promise<RepoFound>;
-    
     all: (readRepos: ReadRepos) => Promise<ReposRead>;
     
     file: (readFile: ReadFile) => Promise<FileRead>;
@@ -376,21 +355,6 @@ export class DefaultRepo implements Repo {
             }
 
             return resp.json().then(JSONToRepoRead);
-        });
-    }
-    
-    find(findRepo: FindRepo): Promise<RepoFound> {
-        const url = this.hostname + this.pathPrefix + "Find";
-        let body: FindRepo | FindRepoJSON = findRepo;
-        if (!this.writeCamelCase) {
-            body = FindRepoToJSON(findRepo);
-        }
-        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
-            if (!resp.ok) {
-                return throwTwirpError(resp);
-            }
-
-            return resp.json().then(JSONToRepoFound);
         });
     }
     

@@ -14,7 +14,10 @@ type Repo struct {
 	name     string
 	endpoint string
 	token    string
+	username string
+	password string
 	repoType Type
+	helmOCI  bool
 }
 
 // Replay recreates the repo from a series of events
@@ -27,7 +30,7 @@ func Replay(events []ddd.Event) ddd.Aggregate {
 }
 
 // Create handles create commands
-func Create(uuid, name, endpoint, token string, t Type, timestamp int64) (*Repo, error) {
+func Create(uuid, name, endpoint, token, username, password string, t Type, helmOCI bool, timestamp int64) (*Repo, error) {
 	if uuid == "" {
 		return nil, ddd.IDError{}
 	}
@@ -42,7 +45,10 @@ func Create(uuid, name, endpoint, token string, t Type, timestamp int64) (*Repo,
 		Name:      name,
 		Endpoint:  endpoint,
 		Token:     token,
+		Username:  username,
+		Password:  password,
 		Type:      t,
+		HelmOCI:   helmOCI,
 	})
 	return r, nil
 }
@@ -59,7 +65,7 @@ func (r *Repo) Destroy(timestamp int64) error {
 }
 
 // Update handles update commands
-func (r *Repo) Update(name, endpoint, token string, t Type, timestamp int64) error {
+func (r *Repo) Update(name, endpoint, token, username, password string, t Type, helmOCI bool, timestamp int64) error {
 	err := validateFields(name, endpoint)
 	if err != nil {
 		return err
@@ -72,7 +78,10 @@ func (r *Repo) Update(name, endpoint, token string, t Type, timestamp int64) err
 		Name:      name,
 		Endpoint:  endpoint,
 		Token:     token,
+		Username:  username,
+		Password:  password,
 		Type:      t,
+		HelmOCI:   helmOCI,
 	})
 	return nil
 }
@@ -102,6 +111,21 @@ func (r *Repo) Token() string {
 	return r.token
 }
 
+// Username gets the repo's username
+func (r *Repo) Username() string {
+	return r.username
+}
+
+// HelmOCI returns whether this is an OCI repo
+func (r *Repo) HelmOCI() bool {
+	return r.helmOCI
+}
+
+// Password gets the repo's password
+func (r *Repo) Password() string {
+	return r.password
+}
+
 // Type gets the repo type (helm, git, etc.)
 func (r *Repo) Type() Type {
 	return r.repoType
@@ -128,14 +152,20 @@ func (r *Repo) on(event ddd.Event) {
 		r.name = e.Name
 		r.endpoint = e.Endpoint
 		r.token = e.Token
+		r.username = e.Username
+		r.password = e.Password
 		r.repoType = e.Type
+		r.helmOCI = e.HelmOCI
 	case *Destroyed:
 		r.destroyed = true
 	case *Updated:
 		r.name = e.Name
 		r.endpoint = e.Endpoint
 		r.token = e.Token
+		r.username = e.Username
+		r.password = e.Password
 		r.repoType = e.Type
+		r.helmOCI = e.HelmOCI
 	}
 }
 
