@@ -401,11 +401,16 @@ func (e *Engine) downloadChart(c, v, r string) ([]byte, error) {
 		return nil, err
 	}
 
-	endpoint, token, err := getRepoInfo(r, allRepos)
+	repo, err := findRepo(r, allRepos)
 	if err != nil {
 		return nil, err
 	}
-	return e.repo.GetChart(c, v, endpoint, token)
+
+	// TODO AdamP - some work could be done here to improve how we use auth methods in this agent
+	if repo.HelmOCI() {
+		return e.repo.GetChartFromOCIV2(c, v, repo.Endpoint(), repo.Username(), repo.Password())
+	}
+	return e.repo.GetChart(c, v, repo.Endpoint(), repo.Token())
 }
 
 func (e *Engine) persist() {
@@ -457,13 +462,13 @@ func getCluster(c string, l []*cluster.Cluster) *cluster.Cluster {
 	return nil
 }
 
-func getRepoInfo(r string, l []*repo.Repo) (string, string, error) {
+func findRepo(r string, l []*repo.Repo) (*repo.Repo, error) {
 	for _, repo := range l {
 		if repo.Name() == r {
-			return repo.Endpoint(), repo.Token(), nil
+			return repo, nil
 		}
 	}
-	return "", "", errors.New("repo not found")
+	return nil, errors.New("repo not found")
 }
 
 func mergeVals(one, two map[string]interface{}) map[string]interface{} {

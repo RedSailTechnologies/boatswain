@@ -20,12 +20,29 @@
             <mat-label>Endpoint</mat-label>
             <input matInput required formControlName="endpoint" />
         </mat-form-field>
-        <br />
-        <mat-form-field appearance="fill" style="width:100%;">
-            <mat-label>Token</mat-label>
-            <input matInput formControlName="token" />
+        <mat-form-field appearance="fill">
+            <mat-select [(value)]="authType" placeholder="Auth Type (Optional)">
+                <mat-option [value]="'none'">none</mat-option>
+                <mat-option [value]="'token'">token</mat-option>
+                <mat-option [value]="'basic'">basic</mat-option>
+            </mat-select>
         </mat-form-field>
         <br />
+        <mat-form-field *ngIf="authType == 'token'" appearance="fill" style="width:100%;">
+            <mat-label>Token</mat-label>
+            <input matInput formControlName="token" />
+            <br />
+        </mat-form-field>
+        <mat-form-field *ngIf="authType == 'basic'" appearance="fill" style="width:100%;">
+            <mat-label>Username</mat-label>
+            <input matInput formControlName="username" />
+            <br />
+        </mat-form-field>
+        <mat-form-field *ngIf="authType == 'basic'" appearance="fill" style="width:100%;">
+            <mat-label>Password</mat-label>
+            <input type="password" matInput formControlName="password" />
+            <br />
+        </mat-form-field>
         <mat-form-field>
             <mat-select required placeholder="Type" formControlName="type">
                 <mat-option *ngFor="let type of repoTypes" [value]="type">
@@ -33,6 +50,8 @@
                 </mat-option>
             </mat-select>
         </mat-form-field>
+        <br />
+        <mat-checkbox *ngIf="repoForm.controls['type'].value == 'HELM'" [formControl]="repoForm.controls['oci']">OCI</mat-checkbox>
     </form>
     <br />
 </div>

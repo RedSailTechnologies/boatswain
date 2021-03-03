@@ -20,10 +20,14 @@ export class RepoDialogComponent implements OnInit {
     name: new FormControl(''),
     endpoint: new FormControl(''),
     token: new FormControl(''),
+    username: new FormControl(''),
+    password: new FormControl(''),
     type: new FormControl(''),
+    oci: new FormControl(''),
   });
   public isAdd: boolean;
   public title: string;
+  public authType: string;
 
   constructor(public dialog: MatDialogRef<RepoDialogComponent>, 
               @Inject(MAT_DIALOG_DATA) data,
@@ -37,7 +41,10 @@ export class RepoDialogComponent implements OnInit {
       this.repoForm.controls["name"].setValue(this.repo.name);
       this.repoForm.controls["endpoint"].setValue(this.repo.endpoint);
       this.repoForm.controls["token"].setValue("***");
+      this.repoForm.controls["username"].setValue("***");
+      this.repoForm.controls["password"].setValue("***");
       this.repoForm.controls["type"].setValue(this.repo.type);
+      this.repoForm.controls["oci"].setValue(this.repo.helmOci);
     }
     this.client = new DefaultRepo(`${location.protocol}//${location.host}/api`, auth.fetch());
   }
@@ -64,8 +71,11 @@ export class RepoDialogComponent implements OnInit {
       repo = <CreateRepo>{
         "name": this.repoForm.controls["name"].value,
         "endpoint": this.repoForm.controls["endpoint"].value,
-        "token": this.repoForm.controls["token"].value == "***" ? this.repo.token : this.repoForm.controls["token"].value,
+        "token": this.repoForm.controls["token"].value == "***" ? "" : this.repoForm.controls["token"].value,
+        "username": this.repoForm.controls["username"].value == "***" ? "" : this.repoForm.controls["username"].value,
+        "password": this.repoForm.controls["password"].value == "***" ? "" : this.repoForm.controls["password"].value,
         "type": <string><unknown>this.typeEnum(),
+        "helmOci": this.repoForm.controls["oci"].value
       };
       promise = this.client.create(repo);
     } else {
@@ -73,8 +83,10 @@ export class RepoDialogComponent implements OnInit {
         "uuid": this.repo.uuid,
         "name": this.repoForm.controls["name"].value,
         "endpoint": this.repoForm.controls["endpoint"].value,
-        "token": this.repoForm.controls["token"].value == "***" ? this.repo.token : this.repoForm.controls["token"].value,
+        "username": this.repoForm.controls["username"].value == "***" ? "" : this.repoForm.controls["username"].value,
+        "password": this.repoForm.controls["password"].value == "***" ? "" : this.repoForm.controls["password"].value,
         "type": <string><unknown>this.typeEnum(),
+        "helmOci": this.repoForm.controls["oci"].value
       };
       promise = this.client.update(repo);
     }
