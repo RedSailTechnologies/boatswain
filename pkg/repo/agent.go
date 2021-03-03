@@ -2,8 +2,11 @@ package repo
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"time"
@@ -19,6 +22,7 @@ import (
 type Agent interface {
 	CheckIndex(name, endpoint, token string) bool
 	GetChart(name, version, endpoint, token string) ([]byte, error)
+	GetChartFromOCIV2(name, version, endpoint, username, password string) ([]byte, error)
 }
 
 // DefaultAgent is the default implementation of the Agent interface
@@ -98,6 +102,61 @@ func (a DefaultAgent) GetChart(name, version, endpoint, token string) ([]byte, e
 	}
 
 	return bytes, nil
+}
+
+const (
+	v2manifest string = "%s/v2/%s/manifests/%s"
+	v2blob     string = "%s/v2/%s/blobs/%s"
+)
+
+type manifest struct {
+	Layers []struct {
+		Digest string `json:"digest"`
+	} `json:"layers"`
+}
+
+// GetChartFromOCIV2 gets a chart from a V2 compliant OCI registry
+func (a DefaultAgent) GetChartFromOCIV2(name, version, endpoint, username, password string) ([]byte, error) {
+	u := fmt.Sprintf(v2manifest, endpoint, name, version)
+	manifestRequest, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+	manifestRequest.SetBasicAuth(username, password)
+	manifestRequest.Header.Add("accept", "application/vnd.oci.image.manifest.v1+json")
+
+	client := &http.Client{}
+	resp, err := client.Do(manifestRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	m := &manifest{}
+	json.Unmarshal(b, m)
+	if len(m.Layers) != 1 {
+		return nil, errors.New("manifest has too many layers")
+	}
+
+	u = fmt.Sprintf(v2blob, endpoint, name, m.Layers[0].Digest)
+	digestRequest, err := http.NewRequest("GET", u, nil)
+	digestRequest.SetBasicAuth(username, password)
+	digestRequest.Header.Add("accept", "application/tar+gzip")
+
+	resp, err = client.Do(digestRequest)
+	if err != nil {
+		return nil, err
+	}
+	file, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return file, nil
 }
 
 func toChartRepo(name, endpoint, token string) (*repo.ChartRepository, error) {

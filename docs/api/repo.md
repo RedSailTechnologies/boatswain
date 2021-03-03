@@ -7,18 +7,17 @@
     - [CreateRepo](#redsail.bosn.CreateRepo)
     - [DestroyRepo](#redsail.bosn.DestroyRepo)
     - [FileRead](#redsail.bosn.FileRead)
-    - [FindRepo](#redsail.bosn.FindRepo)
     - [ReadFile](#redsail.bosn.ReadFile)
     - [ReadRepo](#redsail.bosn.ReadRepo)
     - [ReadRepos](#redsail.bosn.ReadRepos)
     - [RepoCreated](#redsail.bosn.RepoCreated)
     - [RepoDestroyed](#redsail.bosn.RepoDestroyed)
-    - [RepoFound](#redsail.bosn.RepoFound)
     - [RepoRead](#redsail.bosn.RepoRead)
     - [RepoUpdated](#redsail.bosn.RepoUpdated)
     - [ReposRead](#redsail.bosn.ReposRead)
     - [UpdateRepo](#redsail.bosn.UpdateRepo)
   
+    - [AuthType](#redsail.bosn.AuthType)
     - [RepoType](#redsail.bosn.RepoType)
   
     - [Repo](#redsail.bosn.Repo)
@@ -46,6 +45,9 @@ Repo is the service managing external repositories, such as helm.
 | endpoint | [string](#string) |  | repo endpoint |
 | type | [RepoType](#redsail.bosn.RepoType) |  | type of repo |
 | token | [string](#string) |  | an auth token (if required for this repo) |
+| username | [string](#string) |  | a username to login with |
+| password | [string](#string) |  | a password to login with |
+| helm_oci | [bool](#bool) |  | whether or not this is an OCI registry rather than a typical helm registry |
 
 
 
@@ -76,21 +78,6 @@ Repo is the service managing external repositories, such as helm.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | file | [bytes](#bytes) |  | the contents of the file read |
-
-
-
-
-
-
-<a name="redsail.bosn.FindRepo"></a>
-
-### FindRepo
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| name | [string](#string) |  | the name of the repo to search for |
 
 
 
@@ -159,21 +146,6 @@ Repo is the service managing external repositories, such as helm.
 
 
 
-<a name="redsail.bosn.RepoFound"></a>
-
-### RepoFound
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| uuid | [string](#string) |  | unique id of the repo found |
-
-
-
-
-
-
 <a name="redsail.bosn.RepoRead"></a>
 
 ### RepoRead
@@ -186,7 +158,7 @@ Repo is the service managing external repositories, such as helm.
 | name | [string](#string) |  | name of the repo |
 | endpoint | [string](#string) |  | repo endpoint |
 | type | [RepoType](#redsail.bosn.RepoType) |  | type of repo |
-| token | [string](#string) |  | an auth token (if required for this repo) |
+| helm_oci | [bool](#bool) |  | whether or not this is an OCI registry rather than a typical helm registry |
 | ready | [bool](#bool) |  | repo ready status, based on whether index.yaml can be fetched |
 
 
@@ -232,12 +204,27 @@ Repo is the service managing external repositories, such as helm.
 | endpoint | [string](#string) |  | repo endpoint |
 | type | [RepoType](#redsail.bosn.RepoType) |  | type of repo |
 | token | [string](#string) |  | an auth token (if required for this repo) |
+| username | [string](#string) |  | a username to login with |
+| password | [string](#string) |  | a password to login with |
+| helm_oci | [bool](#bool) |  | whether or not this is an OCI registry rather than a typical helm registry |
 
 
 
 
 
  
+
+
+<a name="redsail.bosn.AuthType"></a>
+
+### AuthType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| CREDENTIALS | 0 |  |
+| TOKEN | 1 |  |
+
 
 
 <a name="redsail.bosn.RepoType"></a>
@@ -267,7 +254,6 @@ Repo is the service managing external repositories, such as helm.
 | Update | [UpdateRepo](#redsail.bosn.UpdateRepo) | [RepoUpdated](#redsail.bosn.RepoUpdated) | edits an already existing repo |
 | Destroy | [DestroyRepo](#redsail.bosn.DestroyRepo) | [RepoDestroyed](#redsail.bosn.RepoDestroyed) | removes a repo from the list of configurations |
 | Read | [ReadRepo](#redsail.bosn.ReadRepo) | [RepoRead](#redsail.bosn.RepoRead) | reads out a repo |
-| Find | [FindRepo](#redsail.bosn.FindRepo) | [RepoFound](#redsail.bosn.RepoFound) | finds the repo uuid by name |
 | All | [ReadRepos](#redsail.bosn.ReadRepos) | [ReposRead](#redsail.bosn.ReposRead) | gets all repos currently configured and their status |
 | File | [ReadFile](#redsail.bosn.ReadFile) | [FileRead](#redsail.bosn.FileRead) | gets the contents of a file from this git repository |
 
