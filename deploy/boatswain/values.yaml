@@ -1,12 +1,19 @@
 global:
   partOf: boatswain
+
+  mongodb:
+    auth:
+      existingSecret: boatswain-mongodb
+      rootPassword: boatswain
+    service:
+      port: 27017
   
   # the values for oidc authentication/authorization
   oidc:
     url: ''
     clientId: ''
     clientScopes: ''
-    apiScope: ''
+    apiScope: boatswain
     roles:
       admin: Boatswain.Admin
       editor: Boatswain.Editor
@@ -14,4 +21,4 @@ global:
 
 mongodb:
   auth:
-    enabled: false
+    existingSecret: boatswain-mongodb

@@ -34,8 +34,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: MONGO_CONNECTION_STRING
-              value: {{ .Values.config.mongoConn }}
+            {{ include "boatswain.mongodbConn" . | nindent 12 }}
             - name: OIDC_URL
               value: {{ printf "%s/%s" .Values.global.oidc.url ".well-known/openid-configuration" }}
             - name: USER_SCOPE
