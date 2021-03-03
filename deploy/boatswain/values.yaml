@@ -19,6 +19,22 @@ global:
       editor: Boatswain.Editor
       reader: Boatswain.Reader
 
+kraken:
+  enabled: true
+
+gyarados:
+  enabled: true
+
+poseidon:
+  enabled: true
+
+mate:
+  enabled: true
+
+triton:
+  enabled: true
+
 mongodb:
   auth:
     existingSecret: boatswain-mongodb
+  enabled: true
