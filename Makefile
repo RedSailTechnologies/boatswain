@@ -85,6 +85,7 @@ init: echo
 	@go get github.com/twitchtv/twirp/protoc-gen-twirp
 	@go get -u go.larrymyers.com/protoc-gen-twirp_typescript
 	@go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
+	@go mod tidy
 
 gyarados: echo
 	@$(MAKE) -f $(WORKDIR)/Makefile PROJECT_NAME=gyarados template
