@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.8.2
+* c8d9b1e add mongo security (#70)
+* 07300d1 Feature/oci repos (#69)
+* 7bdbe86 updates for 0.8.1 (#67)
+
 ## v0.8.1
 * 38fa302 0.8.0 changes and hotfix for action endpoint (#66)
 
