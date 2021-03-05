@@ -6,9 +6,7 @@
 - [agent.proto](#agent.proto)
     - [Action](#redsail.bosn.Action)
     - [ActionsRead](#redsail.bosn.ActionsRead)
-    - [AgentRegistered](#redsail.bosn.AgentRegistered)
     - [ReadActions](#redsail.bosn.ReadActions)
-    - [RegisterAgent](#redsail.bosn.RegisterAgent)
     - [Result](#redsail.bosn.Result)
     - [ResultReturned](#redsail.bosn.ResultReturned)
     - [ReturnResult](#redsail.bosn.ReturnResult)
@@ -65,21 +63,6 @@ Agent is the service for external clusters to call into to register and receive 
 
 
 
-<a name="redsail.bosn.AgentRegistered"></a>
-
-### AgentRegistered
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| cluster_token | [string](#string) |  | the unique token for the agent to used when calling for actions |
-
-
-
-
-
-
 <a name="redsail.bosn.ReadActions"></a>
 
 ### ReadActions
@@ -90,21 +73,6 @@ Agent is the service for external clusters to call into to register and receive 
 | ----- | ---- | ----- | ----------- |
 | cluster_uuid | [string](#string) |  |  |
 | cluster_token | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="redsail.bosn.RegisterAgent"></a>
-
-### RegisterAgent
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| cluster_uuid | [string](#string) |  | the uuid of the agent to register |
 
 
 

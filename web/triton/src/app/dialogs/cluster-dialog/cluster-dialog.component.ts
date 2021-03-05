@@ -66,15 +66,8 @@ export class ClusterDialogComponent implements OnInit {
       promise = this.client.update(cluster);
     }
 
-    promise.then(val => {
+    promise.then(_ => {
       spinnerRef.close()
-      this.message.open(MessageDialogComponent, {
-        panelClass: 'message-box',
-        data: {
-          "reason": "Info",
-          "message": "Cluster UUID: " + val.uuid
-        }
-      });
       this.dialog.close()
     }).catch(error => {
       spinnerRef.close();

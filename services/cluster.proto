@@ -22,7 +22,7 @@ service Cluster {
     rpc All (ReadClusters) returns (ClustersRead);
 
     // gets the cluster's access token
-    rpc Token (ReadToken) returns (TokenRead);
+    rpc Token (ReadClusterToken) returns (ClusterTokenRead);
 }
 
 message CreateCluster {
@@ -62,10 +62,10 @@ message ClustersRead {
     repeated ClusterRead clusters = 1; // clusters read
 }
 
-message ReadToken {
+message ReadClusterToken {
     string uuid = 1; //unique id of the cluster
 }
 
-message TokenRead {
+message ClusterTokenRead {
     string token = 1; // the token for this cluster
 }

@@ -3,7 +3,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageDialogComponent } from 'src/app/dialogs/message-dialog/message-dialog.component';
 import { TriggerDialogComponent } from 'src/app/dialogs/trigger-dialog/trigger-dialog.component';
-import { DefaultDeployment, Deployment, DeploymentRead, ReadDeployment, ReadRuns, ReadToken, RunReadSummary, TemplateDeployment } from 'src/app/services/deployment/deployment';
+import { DefaultDeployment, Deployment, DeploymentRead, ReadDeployment, ReadRuns, ReadDeploymentToken, RunReadSummary, TemplateDeployment } from 'src/app/services/deployment/deployment';
 import { AuthService } from 'src/app/utils/auth/auth.service';
 
 @Component({
@@ -83,7 +83,7 @@ export class DeploymentComponent implements OnInit {
   }
 
   token() {
-    this.client.token(<ReadToken>{
+    this.client.token(<ReadDeploymentToken>{
       uuid: this.deployment.uuid
     }).then(val => {
       this.dialog.open(MessageDialogComponent, {

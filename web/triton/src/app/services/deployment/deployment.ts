@@ -273,36 +273,36 @@ const JSONToDeploymentTemplated = (m: DeploymentTemplated | DeploymentTemplatedJ
     };
 };
 
-export interface ReadToken {
+export interface ReadDeploymentToken {
     uuid: string;
     
 }
 
-interface ReadTokenJSON {
+interface ReadDeploymentTokenJSON {
     uuid: string;
     
 }
 
 
-const ReadTokenToJSON = (m: ReadToken): ReadTokenJSON => {
+const ReadDeploymentTokenToJSON = (m: ReadDeploymentToken): ReadDeploymentTokenJSON => {
     return {
         uuid: m.uuid,
         
     };
 };
 
-export interface TokenRead {
+export interface DeploymentTokenRead {
     token: string;
     
 }
 
-interface TokenReadJSON {
+interface DeploymentTokenReadJSON {
     token: string;
     
 }
 
 
-const JSONToTokenRead = (m: TokenRead | TokenReadJSON): TokenRead => {
+const JSONToDeploymentTokenRead = (m: DeploymentTokenRead | DeploymentTokenReadJSON): DeploymentTokenRead => {
     
     return {
         token: m.token,
@@ -635,7 +635,7 @@ export interface Deployment {
     
     template: (templateDeployment: TemplateDeployment) => Promise<DeploymentTemplated>;
     
-    token: (readToken: ReadToken) => Promise<TokenRead>;
+    token: (readDeploymentToken: ReadDeploymentToken) => Promise<DeploymentTokenRead>;
     
     run: (readRun: ReadRun) => Promise<RunRead>;
     
@@ -748,18 +748,18 @@ export class DefaultDeployment implements Deployment {
         });
     }
     
-    token(readToken: ReadToken): Promise<TokenRead> {
+    token(readDeploymentToken: ReadDeploymentToken): Promise<DeploymentTokenRead> {
         const url = this.hostname + this.pathPrefix + "Token";
-        let body: ReadToken | ReadTokenJSON = readToken;
+        let body: ReadDeploymentToken | ReadDeploymentTokenJSON = readDeploymentToken;
         if (!this.writeCamelCase) {
-            body = ReadTokenToJSON(readToken);
+            body = ReadDeploymentTokenToJSON(readDeploymentToken);
         }
         return this.fetch(createTwirpRequest(url, body)).then((resp) => {
             if (!resp.ok) {
                 return throwTwirpError(resp);
             }
 
-            return resp.json().then(JSONToTokenRead);
+            return resp.json().then(JSONToDeploymentTokenRead);
         });
     }
     

@@ -25,7 +25,7 @@ service Deployment {
     rpc Template (TemplateDeployment) returns (DeploymentTemplated);
 
     // gets the token for this deployment, for use with web calls
-    rpc Token (ReadToken) returns (TokenRead);
+    rpc Token (ReadDeploymentToken) returns (DeploymentTokenRead);
 
     // read all the information about a particular run
     rpc Run (ReadRun) returns (RunRead);
@@ -98,11 +98,11 @@ message DeploymentTemplated {
     string yaml = 2; // the templated yaml for this deployment
 }
 
-message ReadToken {
+message ReadDeploymentToken {
     string uuid = 1; // unique id of the deployment
 }
 
-message TokenRead {
+message DeploymentTokenRead {
     string token = 1; // deployment token for web calls
 }
 
