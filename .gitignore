@@ -21,6 +21,7 @@ deploy/boatswain/Chart.lock
 
 # Dev stuff
 temp.yaml
+temp.md
 **/__debug_bin
 .env
 **/docker-compose.yaml
