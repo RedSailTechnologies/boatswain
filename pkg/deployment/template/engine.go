@@ -2,6 +2,7 @@ package template
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -46,7 +47,7 @@ func (e *Engine) Run(f []byte, v []byte) (*Template, error) {
 		return nil, err
 	}
 
-	b, err := yaml.Marshal(templated)
+	b, err := json.Marshal(templated)
 	if err != nil {
 		return nil, err
 	}

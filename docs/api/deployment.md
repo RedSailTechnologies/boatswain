@@ -13,16 +13,17 @@
     - [DeploymentRead](#redsail.bosn.DeploymentRead)
     - [DeploymentReadSummary](#redsail.bosn.DeploymentReadSummary)
     - [DeploymentTemplated](#redsail.bosn.DeploymentTemplated)
+    - [DeploymentTokenRead](#redsail.bosn.DeploymentTokenRead)
     - [DeploymentUpdated](#redsail.bosn.DeploymentUpdated)
     - [DeploymentsRead](#redsail.bosn.DeploymentsRead)
     - [DestroyDeployment](#redsail.bosn.DestroyDeployment)
     - [LinkRead](#redsail.bosn.LinkRead)
     - [ReadApprovals](#redsail.bosn.ReadApprovals)
     - [ReadDeployment](#redsail.bosn.ReadDeployment)
+    - [ReadDeploymentToken](#redsail.bosn.ReadDeploymentToken)
     - [ReadDeployments](#redsail.bosn.ReadDeployments)
     - [ReadRun](#redsail.bosn.ReadRun)
     - [ReadRuns](#redsail.bosn.ReadRuns)
-    - [ReadToken](#redsail.bosn.ReadToken)
     - [RunRead](#redsail.bosn.RunRead)
     - [RunReadSummary](#redsail.bosn.RunReadSummary)
     - [RunsRead](#redsail.bosn.RunsRead)
@@ -30,7 +31,6 @@
     - [StepLog](#redsail.bosn.StepLog)
     - [StepRead](#redsail.bosn.StepRead)
     - [TemplateDeployment](#redsail.bosn.TemplateDeployment)
-    - [TokenRead](#redsail.bosn.TokenRead)
     - [UpdateDeployment](#redsail.bosn.UpdateDeployment)
   
     - [LogLevel](#redsail.bosn.LogLevel)
@@ -190,6 +190,21 @@ Deployment is the service for creation and management of application installs/up
 
 
 
+<a name="redsail.bosn.DeploymentTokenRead"></a>
+
+### DeploymentTokenRead
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| token | [string](#string) |  | deployment token for web calls |
+
+
+
+
+
+
 <a name="redsail.bosn.DeploymentUpdated"></a>
 
 ### DeploymentUpdated
@@ -271,6 +286,21 @@ Deployment is the service for creation and management of application installs/up
 
 
 
+<a name="redsail.bosn.ReadDeploymentToken"></a>
+
+### ReadDeploymentToken
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| uuid | [string](#string) |  | unique id of the deployment |
+
+
+
+
+
+
 <a name="redsail.bosn.ReadDeployments"></a>
 
 ### ReadDeployments
@@ -305,21 +335,6 @@ Deployment is the service for creation and management of application installs/up
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | deployment_uuid | [string](#string) |  | unique id of the deployment to get runs for |
-
-
-
-
-
-
-<a name="redsail.bosn.ReadToken"></a>
-
-### ReadToken
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| uuid | [string](#string) |  | unique id of the deployment |
 
 
 
@@ -444,21 +459,6 @@ Deployment is the service for creation and management of application installs/up
 
 
 
-<a name="redsail.bosn.TokenRead"></a>
-
-### TokenRead
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| token | [string](#string) |  | deployment token for web calls |
-
-
-
-
-
-
 <a name="redsail.bosn.UpdateDeployment"></a>
 
 ### UpdateDeployment
@@ -527,7 +527,7 @@ Deployment is the service for creation and management of application installs/up
 | Read | [ReadDeployment](#redsail.bosn.ReadDeployment) | [DeploymentRead](#redsail.bosn.DeploymentRead) | reads out a deployment |
 | All | [ReadDeployments](#redsail.bosn.ReadDeployments) | [DeploymentsRead](#redsail.bosn.DeploymentsRead) | gets all deployments currently configured and their status |
 | Template | [TemplateDeployment](#redsail.bosn.TemplateDeployment) | [DeploymentTemplated](#redsail.bosn.DeploymentTemplated) | get the templated version of this deployment |
-| Token | [ReadToken](#redsail.bosn.ReadToken) | [TokenRead](#redsail.bosn.TokenRead) | gets the token for this deployment, for use with web calls |
+| Token | [ReadDeploymentToken](#redsail.bosn.ReadDeploymentToken) | [DeploymentTokenRead](#redsail.bosn.DeploymentTokenRead) | gets the token for this deployment, for use with web calls |
 | Run | [ReadRun](#redsail.bosn.ReadRun) | [RunRead](#redsail.bosn.RunRead) | read all the information about a particular run |
 | Runs | [ReadRuns](#redsail.bosn.ReadRuns) | [RunsRead](#redsail.bosn.RunsRead) | read summaries of all runs for a particular deployment |
 | Approve | [ApproveStep](#redsail.bosn.ApproveStep) | [StepApproved](#redsail.bosn.StepApproved) | approve a step for a run |

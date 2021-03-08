@@ -176,7 +176,7 @@ func (s Service) All(ctx context.Context, req *pb.ReadClusters) (*pb.ClustersRea
 }
 
 // Token gets the cluster's access token
-func (s Service) Token(ctx context.Context, cmd *pb.ReadToken) (*pb.TokenRead, error) {
+func (s Service) Token(ctx context.Context, cmd *pb.ReadClusterToken) (*pb.ClusterTokenRead, error) {
 	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
@@ -187,7 +187,7 @@ func (s Service) Token(ctx context.Context, cmd *pb.ReadToken) (*pb.TokenRead, e
 		return nil, twirp.NotFoundError("cluster not found")
 	}
 
-	return &pb.TokenRead{
+	return &pb.ClusterTokenRead{
 		Token: c.Token(),
 	}, nil
 }

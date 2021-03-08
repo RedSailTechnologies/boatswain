@@ -75,7 +75,7 @@ export class RepoDialogComponent implements OnInit {
         "username": this.repoForm.controls["username"].value == "***" ? "" : this.repoForm.controls["username"].value,
         "password": this.repoForm.controls["password"].value == "***" ? "" : this.repoForm.controls["password"].value,
         "type": <string><unknown>this.typeEnum(),
-        "helmOci": this.repoForm.controls["oci"].value
+        "helmOci": this.repoForm.controls["oci"].value != "" ? this.repoForm.controls["oci"].value : false
       };
       promise = this.client.create(repo);
     } else {
@@ -86,7 +86,7 @@ export class RepoDialogComponent implements OnInit {
         "username": this.repoForm.controls["username"].value == "***" ? "" : this.repoForm.controls["username"].value,
         "password": this.repoForm.controls["password"].value == "***" ? "" : this.repoForm.controls["password"].value,
         "type": <string><unknown>this.typeEnum(),
-        "helmOci": this.repoForm.controls["oci"].value
+        "helmOci": this.repoForm.controls["oci"].value != "" ? this.repoForm.controls["oci"].value : false
       };
       promise = this.client.update(repo);
     }

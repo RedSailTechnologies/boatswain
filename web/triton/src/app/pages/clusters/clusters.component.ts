@@ -3,7 +3,7 @@ import {
   ClusterRead,
   Cluster,
   DefaultCluster,
-  ReadToken,
+  ReadClusterToken,
 } from 'src/app/services/cluster/cluster';
 import { MatDialog } from '@angular/material/dialog';
 import { ClusterDialogComponent } from 'src/app/dialogs/cluster-dialog/cluster-dialog.component';
@@ -134,14 +134,15 @@ export class ClustersComponent implements OnInit {
   }
 
   token(cluster: ClusterRead) {
-    this.client.token(<ReadToken>{
+    this.client.token(<ReadClusterToken>{
       uuid: cluster.uuid
     }).then(val => {
       this.dialog.open(MessageDialogComponent, {
         panelClass: 'message-box',
         data: {
-          "reason": "Token",
-          "message": "Cluster UUID: " + cluster.uuid + "\nCluster Token: " + val.token
+          "reason": "Tentacle Config",
+          "message": `config:\n  bosnURL: ${location.protocol}//${location.host}\n  clusterUUID: ${cluster.uuid}\n  clusterToken: ${val.token}`,
+          "showCopy": true
         }
       });
     }).catch(error => {
@@ -152,6 +153,6 @@ export class ClustersComponent implements OnInit {
           "message": "An error occured.\n" + error
         }
       });
-    })
+    });
   }
 }

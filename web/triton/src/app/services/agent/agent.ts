@@ -2,28 +2,6 @@
 import {createTwirpRequest, throwTwirpError, Fetch} from './twirp';
 
 
-export interface RegisterAgent {
-    clusterUuid: string;
-    
-}
-
-interface RegisterAgentJSON {
-    cluster_uuid: string;
-    
-}
-
-
-export interface AgentRegistered {
-    clusterToken: string;
-    
-}
-
-interface AgentRegisteredJSON {
-    cluster_token: string;
-    
-}
-
-
 export interface ReadActions {
     clusterUuid: string;
     clusterToken: string;

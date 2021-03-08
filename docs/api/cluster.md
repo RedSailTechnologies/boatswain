@@ -7,14 +7,14 @@
     - [ClusterCreated](#redsail.bosn.ClusterCreated)
     - [ClusterDestroyed](#redsail.bosn.ClusterDestroyed)
     - [ClusterRead](#redsail.bosn.ClusterRead)
+    - [ClusterTokenRead](#redsail.bosn.ClusterTokenRead)
     - [ClusterUpdated](#redsail.bosn.ClusterUpdated)
     - [ClustersRead](#redsail.bosn.ClustersRead)
     - [CreateCluster](#redsail.bosn.CreateCluster)
     - [DestroyCluster](#redsail.bosn.DestroyCluster)
     - [ReadCluster](#redsail.bosn.ReadCluster)
+    - [ReadClusterToken](#redsail.bosn.ReadClusterToken)
     - [ReadClusters](#redsail.bosn.ReadClusters)
-    - [ReadToken](#redsail.bosn.ReadToken)
-    - [TokenRead](#redsail.bosn.TokenRead)
     - [UpdateCluster](#redsail.bosn.UpdateCluster)
   
     - [Cluster](#redsail.bosn.Cluster)
@@ -66,6 +66,21 @@ Cluster is the service managing external clusters.
 | uuid | [string](#string) |  | unique id of the cluster |
 | name | [string](#string) |  | name of the cluster |
 | ready | [bool](#bool) |  | server ready status, based on agent status |
+
+
+
+
+
+
+<a name="redsail.bosn.ClusterTokenRead"></a>
+
+### ClusterTokenRead
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| token | [string](#string) |  | the token for this cluster |
 
 
 
@@ -142,19 +157,9 @@ Cluster is the service managing external clusters.
 
 
 
-<a name="redsail.bosn.ReadClusters"></a>
+<a name="redsail.bosn.ReadClusterToken"></a>
 
-### ReadClusters
-
-
-
-
-
-
-
-<a name="redsail.bosn.ReadToken"></a>
-
-### ReadToken
+### ReadClusterToken
 
 
 
@@ -167,15 +172,10 @@ Cluster is the service managing external clusters.
 
 
 
-<a name="redsail.bosn.TokenRead"></a>
+<a name="redsail.bosn.ReadClusters"></a>
 
-### TokenRead
+### ReadClusters
 
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| token | [string](#string) |  | the token for this cluster |
 
 
 
@@ -216,7 +216,7 @@ Cluster is the service managing external clusters.
 | Destroy | [DestroyCluster](#redsail.bosn.DestroyCluster) | [ClusterDestroyed](#redsail.bosn.ClusterDestroyed) | removes a cluster from the list of configurations |
 | Read | [ReadCluster](#redsail.bosn.ReadCluster) | [ClusterRead](#redsail.bosn.ClusterRead) | reads out a cluster |
 | All | [ReadClusters](#redsail.bosn.ReadClusters) | [ClustersRead](#redsail.bosn.ClustersRead) | gets all clusters currently configured and their status |
-| Token | [ReadToken](#redsail.bosn.ReadToken) | [TokenRead](#redsail.bosn.TokenRead) | gets the cluster&#39;s access token |
+| Token | [ReadClusterToken](#redsail.bosn.ReadClusterToken) | [ClusterTokenRead](#redsail.bosn.ClusterTokenRead) | gets the cluster&#39;s access token |
 
  
 

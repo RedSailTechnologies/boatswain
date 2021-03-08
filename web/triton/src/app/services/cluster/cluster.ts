@@ -187,36 +187,36 @@ const JSONToClustersRead = (m: ClustersRead | ClustersReadJSON): ClustersRead =>
     };
 };
 
-export interface ReadToken {
+export interface ReadClusterToken {
     uuid: string;
     
 }
 
-interface ReadTokenJSON {
+interface ReadClusterTokenJSON {
     uuid: string;
     
 }
 
 
-const ReadTokenToJSON = (m: ReadToken): ReadTokenJSON => {
+const ReadClusterTokenToJSON = (m: ReadClusterToken): ReadClusterTokenJSON => {
     return {
         uuid: m.uuid,
         
     };
 };
 
-export interface TokenRead {
+export interface ClusterTokenRead {
     token: string;
     
 }
 
-interface TokenReadJSON {
+interface ClusterTokenReadJSON {
     token: string;
     
 }
 
 
-const JSONToTokenRead = (m: TokenRead | TokenReadJSON): TokenRead => {
+const JSONToClusterTokenRead = (m: ClusterTokenRead | ClusterTokenReadJSON): ClusterTokenRead => {
     
     return {
         token: m.token,
@@ -235,7 +235,7 @@ export interface Cluster {
     
     all: (readClusters: ReadClusters) => Promise<ClustersRead>;
     
-    token: (readToken: ReadToken) => Promise<TokenRead>;
+    token: (readClusterToken: ReadClusterToken) => Promise<ClusterTokenRead>;
     
 }
 
@@ -325,18 +325,18 @@ export class DefaultCluster implements Cluster {
         });
     }
     
-    token(readToken: ReadToken): Promise<TokenRead> {
+    token(readClusterToken: ReadClusterToken): Promise<ClusterTokenRead> {
         const url = this.hostname + this.pathPrefix + "Token";
-        let body: ReadToken | ReadTokenJSON = readToken;
+        let body: ReadClusterToken | ReadClusterTokenJSON = readClusterToken;
         if (!this.writeCamelCase) {
-            body = ReadTokenToJSON(readToken);
+            body = ReadClusterTokenToJSON(readClusterToken);
         }
         return this.fetch(createTwirpRequest(url, body)).then((resp) => {
             if (!resp.ok) {
                 return throwTwirpError(resp);
             }
 
-            return resp.json().then(JSONToTokenRead);
+            return resp.json().then(JSONToClusterTokenRead);
         });
     }
     

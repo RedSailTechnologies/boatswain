@@ -17,14 +17,6 @@ service AgentAction {
     rpc Run (Action) returns (Result);
 }
 
-message RegisterAgent {
-    string cluster_uuid = 1; // the uuid of the agent to register
-}
-
-message AgentRegistered {
-    string cluster_token = 1; // the unique token for the agent to used when calling for actions
-}
-
 message ReadActions {
     string cluster_uuid = 1;
     string cluster_token = 2;

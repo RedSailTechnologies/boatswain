@@ -230,7 +230,7 @@ func (s Service) Template(ctx context.Context, req *pb.TemplateDeployment) (*pb.
 }
 
 // Token gets the token for this deployment, for use with web calls
-func (s Service) Token(ctx context.Context, req *pb.ReadToken) (*pb.TokenRead, error) {
+func (s Service) Token(ctx context.Context, req *pb.ReadDeploymentToken) (*pb.DeploymentTokenRead, error) {
 	if err := s.auth.Authorize(ctx, auth.Admin); err != nil {
 		return nil, tw.ToTwirpError(err, "not authorized")
 	}
@@ -241,7 +241,7 @@ func (s Service) Token(ctx context.Context, req *pb.ReadToken) (*pb.TokenRead, e
 		return nil, tw.ToTwirpError(err, "error loading Deployment")
 	}
 
-	return &pb.TokenRead{
+	return &pb.DeploymentTokenRead{
 		Token: d.Token(),
 	}, nil
 }
