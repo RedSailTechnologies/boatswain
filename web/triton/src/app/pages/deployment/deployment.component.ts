@@ -90,7 +90,7 @@ export class DeploymentComponent implements OnInit {
         panelClass: 'message-box',
         data: {
           "reason": "Token",
-          "message": "Deployment UUID: " + this.deployment.uuid + "\nDeployment Token: " + val.token
+          "message": "uuid: " + this.deployment.uuid + "\ntoken: " + val.token
         }
       });
     }).catch(error => {
