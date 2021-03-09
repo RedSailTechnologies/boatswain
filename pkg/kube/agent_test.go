@@ -10,23 +10,24 @@ import (
 )
 
 func TestGetClusterStatus(t *testing.T) {
-	var fakeClientset kubernetes.Interface
-	fakeClientset = fake.NewSimpleClientset(
-		&v1.NodeList{
-			Items: []v1.Node{
-				v1.Node{
-					Status: v1.NodeStatus{
-						Conditions: []v1.NodeCondition{
-							v1.NodeCondition{
-								Type:   v1.NodeReady,
-								Status: v1.ConditionTrue,
+	fakeClientset := func() (kubernetes.Interface, error) {
+		return fake.NewSimpleClientset(
+			&v1.NodeList{
+				Items: []v1.Node{
+					{
+						Status: v1.NodeStatus{
+							Conditions: []v1.NodeCondition{
+								{
+									Type:   v1.NodeReady,
+									Status: v1.ConditionTrue,
+								},
 							},
 						},
 					},
 				},
 			},
-		},
-	)
+		), nil
+	}
 
 	sut := NewDefaultAgent(fakeClientset)
 	result, err := sut.GetStatus(&Args{})

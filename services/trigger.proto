@@ -11,6 +11,9 @@ service Trigger {
 
     // triggers a deployment from a web call
     rpc Web (TriggerWeb) returns (WebTriggered);
+
+    // gets the status of a run
+    rpc Status (ReadStatus) returns (StatusRead);
 }
 
 message TriggerManual {
@@ -32,4 +35,23 @@ message TriggerWeb {
 
 message WebTriggered {
     string run_uuid = 1;
+}
+
+message ReadStatus {
+    string deployment_uuid = 1;
+    string deployment_token = 2;
+    string run_uuid = 3;
+}
+
+message StatusRead {
+    TriggerStatus status = 1;
+}
+
+enum TriggerStatus {
+    NOT_STARTED = 0;
+    IN_PROGRESS = 1;
+    AWAITING_APPROVAL = 2;
+    FAILED = 3;
+    SUCCEEDED = 4;
+    SKIPPED = 5;
 }

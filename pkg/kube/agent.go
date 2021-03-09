@@ -32,19 +32,24 @@ const (
 
 // DefaultAgent is the default implementation of the KubeAgent
 type DefaultAgent struct {
-	kube kubernetes.Interface
+	kubeFunc func() (kubernetes.Interface, error)
 }
 
 // NewDefaultAgent inits the default agent with the specified kube interface
-func NewDefaultAgent(kube kubernetes.Interface) *DefaultAgent {
+func NewDefaultAgent(kubeFunc func() (kubernetes.Interface, error)) *DefaultAgent {
 	return &DefaultAgent{
-		kube: kube,
+		kubeFunc: kubeFunc,
 	}
 }
 
 // GetDeployments gets all the deployments for a particular cluster
 func (k DefaultAgent) GetDeployments(args *Args) (*Result, error) {
-	d, err := k.kube.AppsV1().Deployments("").List(context.TODO(), metav1.ListOptions{})
+	k8s, err := k.kubeFunc()
+	if err != nil {
+		return nil, err
+	}
+
+	d, err := k8s.AppsV1().Deployments("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		logger.Error("could not get deployments from cluster", "error", err)
 		return nil, err
@@ -57,7 +62,12 @@ func (k DefaultAgent) GetDeployments(args *Args) (*Result, error) {
 
 // GetStatefulSets gets all the statefulsets for a particular cluster
 func (k DefaultAgent) GetStatefulSets(args *Args) (*Result, error) {
-	ss, err := k.kube.AppsV1().StatefulSets("").List(context.TODO(), metav1.ListOptions{})
+	k8s, err := k.kubeFunc()
+	if err != nil {
+		return nil, err
+	}
+
+	ss, err := k8s.AppsV1().StatefulSets("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		logger.Error("could not get statefulsets from cluster", "error", err)
 		return nil, err
@@ -70,7 +80,12 @@ func (k DefaultAgent) GetStatefulSets(args *Args) (*Result, error) {
 
 // GetStatus returns the status of a cluster by ensuring each node is in a ready state
 func (k DefaultAgent) GetStatus(args *Args) (*Result, error) {
-	nodes, err := k.kube.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	k8s, err := k.kubeFunc()
+	if err != nil {
+		return nil, err
+	}
+
+	nodes, err := k8s.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		logger.Error("could not get nodes from cluster", "error", err)
 		return nil, err

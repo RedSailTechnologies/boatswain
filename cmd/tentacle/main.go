@@ -7,7 +7,6 @@ import (
 	"time"
 
 	tw "github.com/twitchtv/twirp"
-	"k8s.io/client-go/kubernetes"
 
 	"github.com/redsailtechnologies/boatswain/pkg/cfg"
 	"github.com/redsailtechnologies/boatswain/pkg/health"
@@ -51,16 +50,7 @@ func init() {
 
 	client = agent.NewAgentProtobufClient(bosnURL, &http.Client{}, tw.WithClientPathPrefix("/agents"))
 
-	config, err := kube.GetInClusterConfig()
-	if err != nil {
-		logger.Fatal("could not get in cluster config, please install in a cluster and give this deployment a service account with sufficient permissions", "error", err)
-	}
-	k8sConfig, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		logger.Fatal("could not convert in cluster config to kubernetes interface", "error", err)
-	}
-
-	helmAgent = helm.NewDefaultAgent(config)
+	helmAgent = helm.NewDefaultAgent(restConfig)
 	kubeAgent = kube.NewDefaultAgent(k8sConfig)
 }
 

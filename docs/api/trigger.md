@@ -5,9 +5,13 @@
 
 - [trigger.proto](#trigger.proto)
     - [ManualTriggered](#redsail.bosn.ManualTriggered)
+    - [ReadStatus](#redsail.bosn.ReadStatus)
+    - [StatusRead](#redsail.bosn.StatusRead)
     - [TriggerManual](#redsail.bosn.TriggerManual)
     - [TriggerWeb](#redsail.bosn.TriggerWeb)
     - [WebTriggered](#redsail.bosn.WebTriggered)
+  
+    - [TriggerStatus](#redsail.bosn.TriggerStatus)
   
     - [Trigger](#redsail.bosn.Trigger)
   
@@ -31,6 +35,38 @@ Trigger is the service for creating triggers to start deployments.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | run_uuid | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="redsail.bosn.ReadStatus"></a>
+
+### ReadStatus
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| deployment_uuid | [string](#string) |  |  |
+| deployment_token | [string](#string) |  |  |
+| run_uuid | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="redsail.bosn.StatusRead"></a>
+
+### StatusRead
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| status | [TriggerStatus](#redsail.bosn.TriggerStatus) |  |  |
 
 
 
@@ -88,6 +124,22 @@ Trigger is the service for creating triggers to start deployments.
 
  
 
+
+<a name="redsail.bosn.TriggerStatus"></a>
+
+### TriggerStatus
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| NOT_STARTED | 0 |  |
+| IN_PROGRESS | 1 |  |
+| AWAITING_APPROVAL | 2 |  |
+| FAILED | 3 |  |
+| SUCCEEDED | 4 |  |
+| SKIPPED | 5 |  |
+
+
  
 
  
@@ -102,6 +154,7 @@ Trigger is the service for creating triggers to start deployments.
 | ----------- | ------------ | ------------- | ------------|
 | Manual | [TriggerManual](#redsail.bosn.TriggerManual) | [ManualTriggered](#redsail.bosn.ManualTriggered) | triggers a deployment manually |
 | Web | [TriggerWeb](#redsail.bosn.TriggerWeb) | [WebTriggered](#redsail.bosn.WebTriggered) | triggers a deployment from a web call |
+| Status | [ReadStatus](#redsail.bosn.ReadStatus) | [StatusRead](#redsail.bosn.StatusRead) | gets the status of a run |
 
  
 

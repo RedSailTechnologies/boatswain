@@ -1,0 +1,28 @@
+name: ${{ .Parameters.name }}
+version: ${{ .Parameters.version }}
+clusters:
+  - test
+apps:
+  - name: grafana
+    helm:
+      chart: grafana
+      repo: bitnami
+      version: '4.2.5'
+triggers:
+  - manual:
+      name: user-trigger
+      users:
+        - "Adam Page"
+strategy:
+  - name: upgrade-grafana
+    hold: 2m10s
+    condition: succeeded
+    app:
+      name: grafana
+      cluster: test
+      namespace: default
+      helm:
+        command: upgrade
+        install: true
+        wait: true
+        timeout: 10m

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.8.4
+* 6179108 Hotfix/minor issues 0.8 (#72)
+
+## v0.8.3
+* 2a11904 feature/add conditions for charts (#71)
+
 ## v0.8.2
 * c8d9b1e add mongo security (#70)
 * 07300d1 Feature/oci repos (#69)
