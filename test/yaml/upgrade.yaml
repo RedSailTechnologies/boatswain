@@ -15,8 +15,7 @@ triggers:
         - "Adam Page"
 strategy:
   - name: upgrade-grafana
-    hold: 2m10s
-    condition: succeeded
+    condition: always
     app:
       name: grafana
       cluster: test
