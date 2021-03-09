@@ -8,6 +8,7 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/storage/driver"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
 )
@@ -200,12 +201,8 @@ func (a DefaultAgent) Upgrade(args *Args) (*Result, error) {
 	if args.Install {
 		history := action.NewHistory(cfg)
 		history.Max = 1
-		releases, err := history.Run(args.Name)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(releases) == 0 {
+		_, err := history.Run(args.Name)
+		if err == driver.ErrReleaseNotFound {
 			return a.Install(args)
 		}
 	}
