@@ -230,6 +230,8 @@ func (e *Engine) executeActionStep(step *template.Step) Status {
 			Chart:     chart,
 			Values:    vals,
 			Wait:      step.App.Helm.Wait,
+			Timeout:   step.App.Helm.Timeout,
+			Install:   step.App.Helm.Install,
 		}
 		jsonArgs, err := json.Marshal(args)
 		if err != nil {

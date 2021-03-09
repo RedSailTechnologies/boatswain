@@ -24,8 +24,7 @@ type Template struct {
 	Tests []struct {
 		Name string `yaml:"name"`
 		Helm *struct {
-			Name    string `yaml:"name"`
-			Timeout string `yaml:"timeout"`
+			Name string `yaml:"name"`
 		} `yaml:"helm,omitempty"`
 	} `yaml:"tests,omitempty"`
 
@@ -74,6 +73,8 @@ type Step struct {
 		Helm      *struct {
 			Command string `yaml:"command"`
 			Wait    bool   `yaml:"wait"`
+			Timeout string `yaml:"timeout"`
+			Install bool   `yaml:"install"`
 			Version int    `yaml:"version"`
 			Values  *struct {
 				Library *struct {
@@ -91,6 +92,7 @@ type Step struct {
 		Name      string `yaml:"name"`
 		Cluster   string `yaml:"cluster"`
 		Namespace string `yaml:"namespace"`
+		Timeout   string `yaml:"timeout"`
 	} `yaml:"test,omitempty"`
 
 	Approval *struct {

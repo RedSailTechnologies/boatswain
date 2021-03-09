@@ -14,6 +14,8 @@ type Args struct {
 	Values    map[string]interface{}
 	Version   int
 	Wait      bool
+	Timeout   string
+	Install   bool
 }
 
 // ConvertArgs converts byte data back to args

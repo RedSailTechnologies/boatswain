@@ -91,10 +91,55 @@ const JSONToWebTriggered = (m: WebTriggered | WebTriggeredJSON): WebTriggered =>
     };
 };
 
+export interface ReadStatus {
+    deploymentUuid: string;
+    deploymentToken: string;
+    runUuid: string;
+    
+}
+
+interface ReadStatusJSON {
+    deployment_uuid: string;
+    deployment_token: string;
+    run_uuid: string;
+    
+}
+
+
+const ReadStatusToJSON = (m: ReadStatus): ReadStatusJSON => {
+    return {
+        deployment_uuid: m.deploymentUuid,
+        deployment_token: m.deploymentToken,
+        run_uuid: m.runUuid,
+        
+    };
+};
+
+export interface StatusRead {
+    status: string;
+    
+}
+
+interface StatusReadJSON {
+    status: string;
+    
+}
+
+
+const JSONToStatusRead = (m: StatusRead | StatusReadJSON): StatusRead => {
+    
+    return {
+        status: m.status,
+        
+    };
+};
+
 export interface Trigger {
     manual: (triggerManual: TriggerManual) => Promise<ManualTriggered>;
     
     web: (triggerWeb: TriggerWeb) => Promise<WebTriggered>;
+    
+    status: (readStatus: ReadStatus) => Promise<StatusRead>;
     
 }
 
@@ -136,6 +181,21 @@ export class DefaultTrigger implements Trigger {
             }
 
             return resp.json().then(JSONToWebTriggered);
+        });
+    }
+    
+    status(readStatus: ReadStatus): Promise<StatusRead> {
+        const url = this.hostname + this.pathPrefix + "Status";
+        let body: ReadStatus | ReadStatusJSON = readStatus;
+        if (!this.writeCamelCase) {
+            body = ReadStatusToJSON(readStatus);
+        }
+        return this.fetch(createTwirpRequest(url, body)).then((resp) => {
+            if (!resp.ok) {
+                return throwTwirpError(resp);
+            }
+
+            return resp.json().then(JSONToStatusRead);
         });
     }
     

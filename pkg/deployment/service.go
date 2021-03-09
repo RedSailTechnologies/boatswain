@@ -451,6 +451,29 @@ func (s Service) Web(ctx context.Context, cmd *tr.TriggerWeb) (*tr.WebTriggered,
 	}, nil
 }
 
+// Status gets the status of a run
+func (s Service) Status(ctx context.Context, cmd *tr.ReadStatus) (*tr.StatusRead, error) {
+	d, err := s.read.Load(cmd.DeploymentUuid)
+	if err != nil {
+		logger.Error("error reading Deployment", "error", err)
+		return nil, tw.ToTwirpError(err, "couldn't read deployment to trigger")
+	}
+
+	if cmd.DeploymentToken != d.Token() {
+		return nil, twirp.NewError(twirp.Unauthenticated, "invalid token")
+	}
+
+	run, err := s.runRead.Load(cmd.RunUuid)
+	if err != nil {
+		logger.Error("error reading Run", "error", err)
+		return nil, tw.ToTwirpError(err, "error loading Run")
+	}
+
+	return &tr.StatusRead{
+		Status: convertTriggerStatus(run.Status()),
+	}, nil
+}
+
 // Ready implements the ReadyService method so this service can be part of a health check routine
 func (s Service) Ready() error {
 	return s.ready()
@@ -593,6 +616,25 @@ func convertStatus(s run.Status) pb.Status {
 		return pb.Status_SUCCEEDED
 	case run.Skipped:
 		return pb.Status_SKIPPED
+	default:
+		return -1
+	}
+}
+
+func convertTriggerStatus(s run.Status) tr.TriggerStatus {
+	switch s {
+	case run.NotStarted:
+		return tr.TriggerStatus_NOT_STARTED
+	case run.InProgress:
+		return tr.TriggerStatus_IN_PROGRESS
+	case run.AwaitingApproval:
+		return tr.TriggerStatus_AWAITING_APPROVAL
+	case run.Failed:
+		return tr.TriggerStatus_FAILED
+	case run.Succeeded:
+		return tr.TriggerStatus_SUCCEEDED
+	case run.Skipped:
+		return tr.TriggerStatus_SKIPPED
 	default:
 		return -1
 	}
