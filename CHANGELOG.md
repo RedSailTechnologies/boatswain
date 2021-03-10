@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## v0.8.5
+* 6cdfef6 Feature/helm qol (#73)
+
 ## v0.8.4
 * 6179108 Hotfix/minor issues 0.8 (#72)
 

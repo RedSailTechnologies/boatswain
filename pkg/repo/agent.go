@@ -178,7 +178,6 @@ func toChartRepo(name, endpoint, token string) (*repo.ChartRepository, error) {
 		URL:      endpoint,
 		Username: un,
 		Password: token,
-		// InsecureSkipTLSverify: true, // FIXME - give this option to the user
 	}
 
 	return repo.NewChartRepository(entry, providers)

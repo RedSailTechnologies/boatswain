@@ -16,31 +16,16 @@ type Template struct {
 		Name string `yaml:"name"`
 		URL  string `yaml:"url"`
 	} `yaml:"links"`
-
-	Clusters []string `yaml:"clusters"`
-
-	Apps *[]App `yaml:"apps,omitempty"`
-
-	Tests []struct {
-		Name string `yaml:"name"`
-		Helm *struct {
-			Name string `yaml:"name"`
-		} `yaml:"helm,omitempty"`
-	} `yaml:"tests,omitempty"`
-
-	Triggers *[]Trigger `yaml:"triggers,omitempty"`
-
-	Strategy *[]Step `yaml:"strategy,omitempty"`
+	Application *Application `yaml:"apps,omitempty"`
+	Triggers    *[]Trigger   `yaml:"triggers,omitempty"`
+	Strategy    *[]Step      `yaml:"strategy,omitempty"`
 }
 
-// An App is a deployable application within a template
-type App struct {
-	Name string `yaml:"name"`
-	Helm *struct {
-		Chart   string `yaml:"chart"`
-		Repo    string `yaml:"repo"`
-		Version string `yaml:"version"`
-	} `yaml:"helm,omitempty"`
+// An Application is a way to link deployments to applications
+type Application struct {
+	Name    string `yaml:"name"`
+	PartOf  string `yaml:"partOf"`
+	Version string `yaml:"version"`
 }
 
 // A Trigger is a way of validating how this deployment is run
@@ -66,34 +51,33 @@ type Step struct {
 	Condition string `yaml:"condition"`
 
 	// step information
-	App *struct {
-		Name      string `yaml:"name"`
-		Cluster   string `yaml:"cluster"`
-		Namespace string `yaml:"namespace"`
-		Helm      *struct {
-			Command string `yaml:"command"`
-			Wait    bool   `yaml:"wait"`
-			Timeout string `yaml:"timeout"`
-			Install bool   `yaml:"install"`
-			Version int    `yaml:"version"`
-			Values  *struct {
-				Library *struct {
-					Chart   string `yaml:"chart"`
-					Repo    string `yaml:"repo"`
-					Version string `yaml:"version"`
-					File    string `yaml:"file"`
-				} `yaml:"library,omitempty"`
-				Raw *map[string]interface{} `yaml:"raw,omitempty"`
-			} `yaml:"values,omitempty"`
-		} `yaml:"helm,omitempty"`
-	} `yaml:"app,omitempty"`
-
-	Test *struct {
-		Name      string `yaml:"name"`
-		Cluster   string `yaml:"cluster"`
-		Namespace string `yaml:"namespace"`
-		Timeout   string `yaml:"timeout"`
-	} `yaml:"test,omitempty"`
+	Helm *struct {
+		Name      string             `yaml:"name"`
+		Selector  *map[string]string `yaml:"selector,omitempty"`
+		Cluster   string             `yaml:"cluster"`
+		Namespace string             `yaml:"namespace"`
+		Command   string             `yaml:"command"`
+		Chart     *struct {
+			Name    string `yaml:"name"`
+			Repo    string `yaml:"repo"`
+			Version string `yaml:"version"`
+		} `yaml:"chart,omitempty"`
+		Options *struct {
+			RollbackVersion int    `yaml:"rollbackVersion"`
+			Wait            bool   `yaml:"wait"`
+			Install         bool   `yaml:"install"`
+			Timeout         string `yaml:"timeout"`
+		} `yaml:"options,omitempty"`
+		Values *struct {
+			Library *struct {
+				Chart   string `yaml:"chart"`
+				Repo    string `yaml:"repo"`
+				Version string `yaml:"version"`
+				File    string `yaml:"file"`
+			} `yaml:"library,omitempty"`
+			Raw *map[string]interface{} `yaml:"raw,omitempty"`
+		} `yaml:"values,omitempty"`
+	} `yaml:"helm,omitempty"`
 
 	Approval *struct {
 		Roles []string `yaml:"roles"`
@@ -105,9 +89,4 @@ type Step struct {
 		Deployment string                 `yaml:"deployment"`
 		Arguments  map[string]interface{} `yaml:"arguments,omitempty"`
 	} `yaml:"trigger,omitempty"`
-}
-
-// Validate is how a deployment can verify structural correctness before execution
-func (t Template) Validate() error {
-	return nil
 }
