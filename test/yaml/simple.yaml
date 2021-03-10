@@ -18,4 +18,4 @@ strategy:
     branch: feature/selector-naming
     repo: boatswain
     arguments:
-      name: install-another-grafana
+      stepName: install-another-grafana
