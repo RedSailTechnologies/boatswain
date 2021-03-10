@@ -36,7 +36,7 @@ const (
 	DeploymentsResult ResultType = "DeploymentsResult"
 
 	// ReleaseNameResult represents a helm release name lookup
-	ReleaseNameResult ResultType = "ReleaseName"
+	ReleaseNameResult ResultType = "ReleaseNameResult"
 
 	// StatefulSetsResult represents a result of StatefulSets
 	StatefulSetsResult ResultType = "StatefulSetsResult"
@@ -95,7 +95,7 @@ func ConvertReleaseName(data []byte) (string, error) {
 		return "", err
 	}
 
-	if result.Type != DeploymentsResult {
+	if result.Type != ReleaseNameResult {
 		return "", ResultTypeError{}
 	}
 

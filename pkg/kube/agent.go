@@ -89,6 +89,7 @@ func (k DefaultAgent) GetReleaseName(args *Args) (*Result, error) {
 		if val, ok := d.Annotations[helmAnnotation]; ok {
 			return &Result{
 				Data: val,
+				Type: ReleaseNameResult,
 			}, nil
 		}
 	}
@@ -103,6 +104,7 @@ func (k DefaultAgent) GetReleaseName(args *Args) (*Result, error) {
 		if val, ok := s.Annotations[helmAnnotation]; ok {
 			return &Result{
 				Data: val,
+				Type: ReleaseNameResult,
 			}, nil
 		}
 	}
