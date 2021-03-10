@@ -1,4 +1,4 @@
-name: simple-wordpress
+name: simple
 version: ${{ .Parameters.version }}
 application:
   name: grafana
@@ -19,3 +19,4 @@ strategy:
     repo: boatswain
     arguments:
       stepName: install-another-grafana
+      helmName: another-grafana

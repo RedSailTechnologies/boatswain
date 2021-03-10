@@ -1,7 +1,7 @@
 name: ${{ .Inputs.stepName }}
 condition: always
 helm:
-  name: grafana
+  name: ${{ .Inputs.helmName }}
   cluster: test
   namespace: default
   command: upgrade
