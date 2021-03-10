@@ -1,29 +1,30 @@
 name: simple-wordpress
 version: ${{ .Parameters.version }}
-clusters:
-  - test
-apps:
-  - name: wordpress
-    helm:
-      chart: wordpress
-      repo: bitnami
-      version: 10.6.5
+application:
+  name: grafana
+  partOf: ""
+  version: "9000.1"
 triggers:
   - deployment:
-      name: simple-deploy-trigger
+      name: deploy-trigger
   - web:
-      name: wordpress-trigger
+      name: web-trigger
   - manual:
       name: user-trigger
       users:
         - "Adam Page"
 strategy:
-  - name: deploy-wordpress
+  - name: another-grafana
     condition: always
-    app:
-      name: wordpress
+    helm:
+      name: grafana
       cluster: test
       namespace: default
-      helm:
-        command: install
+      command: upgrade
+      chart: 
+        name: grafana
+        repo: bitnami
+        version: '4.2.5'
+      options:
         wait: true
+        install: true
