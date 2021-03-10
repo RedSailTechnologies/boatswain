@@ -105,7 +105,7 @@ strategy:
       options:
         wait: true
         install: false
-  - name: upgrade-install-grafana-fail
+  - name: upgrade-install-grafana-succeed
     condition: failed
     helm:
       name: grafana

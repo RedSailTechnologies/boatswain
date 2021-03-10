@@ -207,6 +207,10 @@ func (e *Engine) getReleaseName(s *template.Step, c *cluster.Cluster) (string, e
 			TimeoutSeconds: 600, // FIXME - configurable?
 			Args:           jsonArgs,
 		})
+		if err != nil {
+			return "", err
+		}
+
 		name, err = kube.ConvertReleaseName(res.Data)
 		if err != nil {
 			return "", err
