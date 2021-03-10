@@ -14,17 +14,8 @@ triggers:
       users:
         - "Adam Page"
 strategy:
-  - name: install-another-grafana
-    condition: always
-    helm:
-      name: another-grafana
-      cluster: test
-      namespace: default
-      command: upgrade
-      chart: 
-        name: grafana
-        repo: bitnami
-        version: '4.2.5'
-      options:
-        wait: true
-        install: true
+  - template: test/yaml/template.yaml
+    branch: feature/selector-naming
+    repo: boatswain
+    arguments:
+      name: install-another-grafana

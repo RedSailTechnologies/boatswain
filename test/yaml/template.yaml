@@ -1,4 +1,14 @@
-name: wordpress
+name: ${{ .Inputs.stepName }}
+condition: always
 helm:
-  chart: ${{ .Inputs.chart }}
-  repo: bitnami
+  name: grafana
+  cluster: test
+  namespace: default
+  command: upgrade
+  chart: 
+    name: grafana
+    repo: bitnami
+    version: '4.2.5'
+  options:
+    wait: true
+    install: true
