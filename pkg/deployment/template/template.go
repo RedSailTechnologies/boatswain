@@ -10,15 +10,15 @@ type Substitution struct {
 
 // A Template is the go type representing yaml for a cd object
 type Template struct {
-	Name    string `yaml:"name"`
-	Version string `yaml:"version"`
-	Links   []struct {
+	Name        string       `yaml:"name"`
+	Version     string       `yaml:"version"`
+	Application *Application `yaml:"apps,omitempty"`
+	Links       []struct {
 		Name string `yaml:"name"`
 		URL  string `yaml:"url"`
 	} `yaml:"links"`
-	Application *Application `yaml:"apps,omitempty"`
-	Triggers    *[]Trigger   `yaml:"triggers,omitempty"`
-	Strategy    *[]Step      `yaml:"strategy,omitempty"`
+	Triggers *[]Trigger `yaml:"triggers,omitempty"`
+	Strategy *[]Step    `yaml:"strategy,omitempty"`
 }
 
 // An Application is a way to link deployments to applications

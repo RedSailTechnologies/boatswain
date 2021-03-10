@@ -551,7 +551,7 @@ func (s Service) trigger(trig *trigger.Trigger) (string, error) {
 		logger.Error("yaml file could not be templated", "error", err)
 		return "", err
 	}
-	if errors := temp.Validate(); errors != nil {
+	if errors := temp.Validate(); len(errors) > 0 {
 		logger.Error("could not validate template", "errors", errors)
 		return "", err
 	}
