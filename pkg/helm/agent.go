@@ -73,16 +73,18 @@ func (a DefaultAgent) Install(args *Args) (*Result, error) {
 		}
 	}
 
-	timeout, err := time.ParseDuration(args.Timeout)
-	if err != nil {
-		return nil, err
-	}
-
 	install := action.NewInstall(cfg)
 	install.ReleaseName = args.Name
 	install.Namespace = args.Namespace
 	install.Wait = args.Wait
-	install.Timeout = timeout
+
+	if args.Timeout != "" {
+		timeout, err := time.ParseDuration(args.Timeout)
+		if err != nil {
+			return nil, err
+		}
+		install.Timeout = timeout
+	}
 
 	result, err := install.Run(chart, args.Values)
 	return &Result{
@@ -103,15 +105,17 @@ func (a DefaultAgent) Rollback(args *Args) (*Result, error) {
 		return nil, err
 	}
 
-	timeout, err := time.ParseDuration(args.Timeout)
-	if err != nil {
-		return nil, err
-	}
-
 	rollback := action.NewRollback(cfg)
 	rollback.Version = args.Version
 	rollback.Wait = args.Wait
-	rollback.Timeout = timeout
+
+	if args.Timeout != "" {
+		timeout, err := time.ParseDuration(args.Timeout)
+		if err != nil {
+			return nil, err
+		}
+		rollback.Timeout = timeout
+	}
 
 	err = rollback.Run(args.Name)
 	return &Result{
@@ -130,15 +134,16 @@ func (a DefaultAgent) Test(args *Args) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	timeout, err := time.ParseDuration(args.Timeout)
-	if err != nil {
-		return nil, err
-	}
-
 	test := action.NewReleaseTesting(cfg)
 	test.Namespace = args.Namespace
-	test.Timeout = timeout
+
+	if args.Timeout != "" {
+		timeout, err := time.ParseDuration(args.Timeout)
+		if err != nil {
+			return nil, err
+		}
+		test.Timeout = timeout
+	}
 
 	result, err := test.Run(args.Name)
 	return &Result{
@@ -159,13 +164,16 @@ func (a DefaultAgent) Uninstall(args *Args) (*Result, error) {
 		return nil, err
 	}
 
-	timeout, err := time.ParseDuration(args.Timeout)
-	if err != nil {
-		return nil, err
+	uninstall := action.NewUninstall(cfg)
+
+	if args.Timeout != "" {
+		timeout, err := time.ParseDuration(args.Timeout)
+		if err != nil {
+			return nil, err
+		}
+		uninstall.Timeout = timeout
 	}
 
-	uninstall := action.NewUninstall(cfg)
-	uninstall.Timeout = timeout
 	result, err := uninstall.Run(args.Name)
 	return &Result{
 		Data: result,
@@ -193,11 +201,6 @@ func (a DefaultAgent) Upgrade(args *Args) (*Result, error) {
 		}
 	}
 
-	timeout, err := time.ParseDuration(args.Timeout)
-	if err != nil {
-		return nil, err
-	}
-
 	if args.Install {
 		history := action.NewHistory(cfg)
 		history.Max = 1
@@ -210,7 +213,14 @@ func (a DefaultAgent) Upgrade(args *Args) (*Result, error) {
 	upgrade := action.NewUpgrade(cfg)
 	upgrade.Namespace = args.Namespace
 	upgrade.Wait = args.Wait
-	upgrade.Timeout = timeout
+
+	if args.Timeout != "" {
+		timeout, err := time.ParseDuration(args.Timeout)
+		if err != nil {
+			return nil, err
+		}
+		upgrade.Timeout = timeout
+	}
 
 	result, err := upgrade.Run(args.Name, chart, args.Values)
 	return &Result{
