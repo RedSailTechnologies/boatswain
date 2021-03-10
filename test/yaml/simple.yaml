@@ -14,10 +14,10 @@ triggers:
       users:
         - "Adam Page"
 strategy:
-  - name: another-grafana
+  - name: install-another-grafana
     condition: always
     helm:
-      name: grafana
+      name: another-grafana
       cluster: test
       namespace: default
       command: upgrade
