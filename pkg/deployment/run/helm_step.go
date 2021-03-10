@@ -186,7 +186,7 @@ func (e *Engine) downloadChart(c, v, r string) ([]byte, error) {
 func (e *Engine) getReleaseName(s *template.Step, c *cluster.Cluster) (string, error) {
 	name := s.Helm.Name
 	if name == "" {
-		if s.Helm.Selector == nil { // TODO AdamP - move to validation
+		if s.Helm.Selector == nil {
 			return "", errors.New("no name or selector found")
 		}
 
