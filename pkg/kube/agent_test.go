@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func TestGetClusterStatus(t *testing.T) {
+func TestGetStatus(t *testing.T) {
 	fakeClientset := func() (kubernetes.Interface, error) {
 		return fake.NewSimpleClientset(
 			&v1.NodeList{

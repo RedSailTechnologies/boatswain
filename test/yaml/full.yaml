@@ -72,7 +72,7 @@ strategy:
     helm:
       name: grafana
       selector:
-        apps.kubernetes.io/name: thisgetsoverridenanyways
+        app.kubernetes.io/name: thisgetsoverridenanyways
       cluster: test
       namespace: default
       command: rollback

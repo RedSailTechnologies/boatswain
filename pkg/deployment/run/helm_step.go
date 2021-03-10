@@ -209,6 +209,8 @@ func (e *Engine) getReleaseName(s *template.Step, c *cluster.Cluster) (string, e
 		})
 		if err != nil {
 			return "", err
+		} else if res.Error != "" {
+			return "", errors.New(res.Error)
 		}
 
 		name, err = kube.ConvertReleaseName(res.Data)
