@@ -61,11 +61,16 @@ triggers:
 ################
 
 # a strategy is the means by which an application is deployed, and is a collection of steps
-# these steps execute in order based on the condition of the previous step and their condition
+# these steps execute in order based on the condition, which are condition() or condition(stepName)
+# available conditions are always, any, failed, and succeeded with the following behavior:
+#   always: run always, regardless of the step name passed and any previous results
+#   any: run for any condition of the given step, if no step is passed the previous step result is used
+#   failed: run only if the step failed, if no step is passed the previous step result is used
+#   succeeded: run only if the step failed, if no step is passed the previous step result is used
 strategy:
   - name: my-deploy-step
     hold: 10m1s # this is executed before the step is started, see: https://pkg.go.dev/time#ParseDuration
-    condition: always # valid are always, any, succeeded, and failed
+    condition: always() # valid are always, any, succeeded, and failed
     helm:
       name: my-release # the release name, exactly how its used by helm, overrides selector
       # the selector feature allows the user to look up a helm release name by labels
@@ -113,7 +118,7 @@ strategy:
   # an approval is a step where a person must log in and unblock it before it proceeds
   # a rejection here is counted as a step failure for conditions
   - name: my-approval
-    condition: succeeeded
+    condition: succeeeded(my-deploy-step)
     approval:
       # similar to roles above as far as permissions, but multiple can be specified
       roles:
@@ -124,7 +129,7 @@ strategy:
     
   # triggers are steps that trigger other boatswain deployments
   - name: trigger-another
-    condition: failed # this runs if the approval fails only
+    condition: failed() # this runs if the approval fails only
     trigger:
       name: my-trigger # note this is the name of the trigger on the deployment being triggered
       deployment: my-deployment # the boatswain name of the deployment being triggered

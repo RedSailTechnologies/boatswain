@@ -1,5 +1,5 @@
 name: ${{ .Inputs.stepName }}
-condition: always
+condition: always()
 helm:
   name: ${{ .Inputs.helmName }}
   cluster: test
