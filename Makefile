@@ -99,6 +99,7 @@ leviathan: echo proto
 ## package: generates helm packages
 package: echo
 	@echo Packaging charts to $(HELM_OUT)
+	@rm -rf $(HELM_OUT)
 	@mkdir -p $(HELM_OUT)
 	@helm dependency update --skip-refresh deploy/boatswain
 	@for chart in $(CHART_LIST); do \

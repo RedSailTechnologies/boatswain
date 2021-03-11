@@ -202,13 +202,6 @@ func (r *Run) Steps() []Step {
 	return cp
 }
 
-// Apps gets the apps for this run
-func (r *Run) Apps() []template.App {
-	cp := make([]template.App, len(*r.template.Apps))
-	copy(cp, *r.template.Apps)
-	return cp
-}
-
 // Events gets the run's event history
 func (r *Run) Events() []ddd.Event {
 	cp := make([]ddd.Event, len(r.events))
@@ -278,10 +271,8 @@ func (r *Run) on(event ddd.Event) {
 }
 
 func getTemplateType(s template.Step) string {
-	if s.App != nil {
-		return "App"
-	} else if s.Test != nil {
-		return "Test"
+	if s.Helm != nil {
+		return "Helm"
 	} else if s.Approval != nil {
 		return "Approval"
 	} else if s.Trigger != nil {

@@ -1,18 +1,14 @@
 name: ${{ .Parameters.name }}
 version: ${{ .Parameters.version }}
+application:
+  name: ${{ .Parameters.name }}
+  partOf: ""
+  version: ${{ .Parameters.version }}
 links:
   - name: FakeURL
     url: http://${{ .Parameters.name }}.fake
   - name: Google
     url: http://www.google.com
-clusters:
-  - test
-apps:
-  - name: grafana
-    helm:
-      chart: grafana
-      repo: bitnami
-      version: '4.2.5'
 triggers:
   - web:
       name: grafana-trigger
@@ -22,7 +18,7 @@ triggers:
         - "Adam Page"
 strategy:
   - name: approve-install
-    condition: any
+    condition: always
     approval:
       users: 
         - 'Adam Page'
@@ -33,58 +29,100 @@ strategy:
         - Admin
   - name: deploy-grafana
     condition: succeeded
-    app:
+    helm:
       name: grafana
       cluster: test
       namespace: default
-      helm:
-        command: install
+      command: install
+      chart: 
+        name: grafana
+        repo: bitnami
+        version: '4.2.5'
+      options:
         wait: true
-        values:
-          library:
-            chart: grafana
-            repo: bitnami
-            version: '4.2.5'
-            file: values-production.yaml
-          raw:
-            ingress:
-              enabled: true
-              hostName: localhost
-              path: "/"
+      values:
+        library:
+          chart: grafana
+          repo: bitnami
+          version: '4.2.5'
+          file: values-production.yaml
+        raw:
+          ingress:
+            enabled: true
+            hostName: localhost
+            path: "/"
   - name: upgrade-grafana
-    hold: 2m10s
+    hold: 10s
     condition: succeeded
-    app:
-      name: grafana
+    helm:
+      selector:
+        app.kubernetes.io/name: grafana
       cluster: test
       namespace: default
-      helm:
-        command: upgrade
+      command: upgrade
+      chart: 
+        name: grafana
+        repo: bitnami
+        version: '4.2.5'
+      options:
         wait: true
   - name: rollback-grafana
     hold: 1m
     condition: succeeded
-    app:
+    helm:
       name: grafana
+      selector:
+        app.kubernetes.io/name: thisgetsoverridenanyways
       cluster: test
       namespace: default
-      helm:
-        command: rollback
+      command: rollback
+      chart: 
+        name: grafana
+        repo: bitnami
+        version: '4.2.5'
+      options:
         wait: true
   - name: uninstall-grafana
     condition: succeeded
-    app:
+    helm:
       name: grafana
       cluster: test
       namespace: default
-      helm:
-        command: uninstall
+      command: uninstall
+      options:
         wait: true
+  - name: upgrade-install-grafana-fail
+    condition: succeeded
+    helm:
+      name: grafana
+      cluster: test
+      namespace: default
+      command: upgrade
+      chart: 
+        name: grafana
+        repo: bitnami
+        version: '4.2.5'
+      options:
+        wait: true
+        install: false
+  - name: upgrade-install-grafana-succeed
+    condition: failed
+    helm:
+      name: grafana
+      cluster: test
+      namespace: default
+      command: upgrade
+      chart: 
+        name: grafana
+        repo: bitnami
+        version: '4.2.5'
+      options:
+        wait: true
+        install: true
   - name: trigger-another-deployment
     condition: succeeded
     trigger:
-      name: simple-deploy-trigger
+      name: deploy-trigger
       deployment: simple
       arguments:
         version: ${{ .Parameters.version }}
-        

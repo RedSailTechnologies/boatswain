@@ -1,0 +1,14 @@
+name: ${{ .Inputs.stepName }}
+condition: always
+helm:
+  name: ${{ .Inputs.helmName }}
+  cluster: test
+  namespace: default
+  command: upgrade
+  chart: 
+    name: grafana
+    repo: bitnami
+    version: '4.2.5'
+  options:
+    wait: true
+    install: true

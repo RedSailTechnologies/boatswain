@@ -50,12 +50,14 @@ func runKubeAction(action *agent.Action, response *agent.ReturnResult) *agent.Re
 
 	var result *kube.Result
 	switch kube.AgentAction(action.Action) {
-	case kube.GetStatus:
-		result, err = kubeAgent.GetStatus(args)
 	case kube.GetDeployments:
 		result, err = kubeAgent.GetDeployments(args)
+	case kube.GetReleaseName:
+		result, err = kubeAgent.GetReleaseName(args)
 	case kube.GetStatefulSets:
 		result, err = kubeAgent.GetStatefulSets(args)
+	case kube.GetStatus:
+		result, err = kubeAgent.GetStatus(args)
 	default:
 		response.Result.Error = "kube agent action not found"
 		return response

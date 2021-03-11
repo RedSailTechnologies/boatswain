@@ -1,11 +1,9 @@
 #############
 ### NOTES ###
 #############
-# Everything in an array other than the clusters list can be substituted for a template, to
-# include: apps, tests, triggers, and strategies.
-
-# This means that a deployment can be an aggregation of a bunch of different templates, overwriting
-# and specifying values as needed either by an input file or parameters from triggers
+# Everything can be templated. The way the template system works is is when we see the template
+# syntax we replace that key with the file contents, first replacing the .Inputs with the
+# arguments passed to the template. See .Inputs vs .Parameters below.
 
 # .Inputs vs .Parameters
 # Inputs come from merging a template with another file when setting up a deployment, or specified
@@ -18,165 +16,117 @@
 ### METADATA ###
 ################
 
-# the name for this deployment, mostly just for display
-name: ${{ .Parameters.name }}
+# the name here is mostly for display of this run, it is a readable identifier for this run
+name: myapp
 
-# the version of this deployment, note this won't impact parts of the deployment
-# unless they use it but it should probably be unique for each deployment
+# the version is also metadata although it will likely be a parameter that is also used elsewhere
 version: ${{ .Parameters.version }}
 
-# links are a way to provide amplifying information for this deployment in the
-# form of external tools-one example might be a grafana dashboard or a pod or a link to its logs
-# these will display on a run page and can use variables
+# application is a place to specify how to link this run to the applications page
+application:
+  name: myapp # linked to the label apps.kubernetes.io/name
+  partOf: mysystem # linked to the label apps.kubernetes.io/part-of
+  version: ${{ .Parameters.version }} # linked to the label apps.kubernetes.io/version
+
+# links are attached to runs in order to allow easy access to external services such as grafana
+# they can still be templated in order to be customized per run
 links:
-  - name: externalthing
-    url: http://somecoolplace.spoof/
+  - name: mylink
+    url: http://mylinkurl.doenstexist
 
-# the names of clusters currently configured in bosn - these can be added through 
-# the ui or specified as a configuration file on installing bosn but must be in
-# this list prior to execution of the deployment
-clusters:
-  - dev
-  - staging
-
-# apps are one of the objects we can use in a strategy, meant for long-lived applications/changes
-apps:
-  - name: sample-app # the name of the app, used with helm and with bosn output
-    helm: # specifics of this application
-      chart: sample-app # the name of the chart for the app
-      repo: myrepo # the name of the helm repo, note this must be configured in bosn
-      version: ${{ .Parameters.sampleAppChartVersion }} # the version of the chart, note the template syntax
-  
-  # the name of another template in boatswain, note the path@branch syntax
-  - template: path/to/default-app.yaml
-    branch: branch
-    repo: git-repo # name of the git repo to find this template in
-    # these will populate in the template under the Inputs object
-    arguments:
-      version: '1.0.1' # example usage inside the template: ${{ .Inputs.version }}
-
-# tests are another object we can use in a strategy, not meant to be long lived, but otherwise are
-# the same as apps in their specs
-tests:
-  # tests can be specified much like an app, the expectation here is that this is a job or 
-  # collection of jobs, and after the install with wait the tests should be done
-  - name: sample-app-load
-    helm:
-      name: sample-app
-      timeout: 10m # similar to the --timeout flag for helm test, defaults to 5m
-
-
-#################
-### EXECUTION ###
-#################
-
-# triggers are what start the strategy's execution, all must be met for the trigger to fire
+################
+### TRIGGERS ###
+################
 triggers:
-  # deployments can trigger other deployments
-  - deployment: 
-      name: mydeploymenttrigger
+  # a deployment trigger is when one deployment triggers another, see below for the other end
+  - deployment:
+      name: deployment-trigger
   
-  # trigger a deployment by the rpc/json call, calling this deployment name and sending required params
+  # a web trigger is a trigger that the user can get a token for and call with a normal web post
+  # useful for integrating with CI or other automated systems
   - web:
-      name: mywebtrigger
-        
-  # trigger a deployment manually, note roles and users are optional but one or the other must be set
-  # and they are ORed together, meaning anyone from the role or anyone in the user list can be used
+      name: web-trigger
+  
+  # although the point of boatswain is CD, we do have manual triggers
+  # for roles note that it is that role and higher roles so as an example Editor below can also
+  # be approved by a user with the Admin role
   - manual:
-      name: somemanualtrigger
-      # one of the three bosn roles: Admin, Editor, Reader 
-      # these cascade downward from Admin -> Editor -> Reader
+      name: manual-trigger
       role: Editor
       users:
-        - some.body
-        - i.used
-        - to.know
+        - "Adam Page"
 
-# strategy is the backbone of the execution flow that specifies how deployments and tests are run
+################
+### STRATEGY ###
+################
+
+# a strategy is the means by which an application is deployed, and is a collection of steps
+# these steps execute in order based on the condition of the previous step and their condition
 strategy:
-  - name: deploy-app # the name for the step in this part of the strategy
-    condition: always # the condition to run this step under (always, any, succeeded, failed)
-    app: 
-      name: sample-app # the name of the app, from the above metadata section
-      cluster: dev # the name of the cluster, which must be on the list above
-      namespace: app-ns # the namespace to use
-      helm:
-        command: upgrade # install, upgrade, rollback, uninstall - defaults to install
-        wait: true # whether to deploy helm with the wait flag, defaults to false
-        values:
-          # raw values just as if all children of raw were sent to helm with -f
-          # note that these values will override library values if both are supplied
-          raw:
-            someValue: ${{ .Parameters.someValue }}
+  - name: my-deploy-step
+    hold: 10m1s # this is executed before the step is started, see: https://pkg.go.dev/time#ParseDuration
+    condition: always # valid are always, any, succeeded, and failed
+    helm:
+      name: my-release # the release name, exactly how its used by helm, overrides selector
+      # the selector feature allows the user to look up a helm release name by labels
+      # it gets all deployments and statefulsets with the given label selector and looks
+      # through them for the meta.helm.sh/release-name annotation to get the release name
+      # as mentioned above if name is specified, this is ignored and it should also be noted
+      # that the system makes no guarantees if multiple releases are found
+      selector:
+        apps.kubernetes.io/name: myapp
+      cluster: dev # the name of the boatswain cluster to use - this is how we contact that cluster
+      namespace: coolnamespace # the namespace to run the command in (and also search for selectors)
+      command: install # helm command similar to the cli, valid: install, upgrade, uninstall, rollback, test
+      chart:
+        name: mychart # the name of the chart in the repo
+        repo: myrepo # the boatswain repo to get this chart from, note that oci are supported
+        version: "1.0" # the version of the chart to pull, must be specified for oci repos
+      options:
+        rollbackVersion: 2 # helm uses int indexes for release versions, so this is the target when rolling back
+        wait: true # similar to the --wait flag, whether to wait for the helm command to be ready
+        install: false # similar to --install flag, ONLY for the upgrade command
+        timeout: 1m10s # the time to wait for the deployment to be ready , see: https://pkg.go.dev/time#ParseDuration
+      values:
+        library: # use a file from a library chart as a values file input, note we don't enforce that its a libary chart
+          chart: mychart # the name of the chart
+          repo: myrepo # the bosn repo to get the chart from, oci is supported
+          version: "1.0" # the version of the chart, required for oci
+          file: myfile.yaml # the name of the values file to use, only one may be selected
+        raw: # specify raw values, NOTE that these override library and chart values
+          something:
+            something:
+              something: darkside
+  
+  # template syntax used to substitute another template in here, note the arguments become the
+  # .Inputs object on the template and .Parameters are treated the same as they would be in this
+  # file, and that the repo is the name of the boatswain repo
+  - template: path/to/template.yaml
+    branch: main
+    repo: myrepo
+    arguments:
+      one: two
+      three:
+        four: five
 
-  - name: deploy-routing
-    condition: succeeded
-    app: 
-      name: sample-routing
-      cluster: dev
-      namespace: app-ns
-      helm:
-        wait: false
-        values:
-          library: # use part or all of a library chart as values
-            chart: sample-routing-values
-            repo: myrepo
-            version: '10.0.2'
-            file: sample-app.yaml
-
-  - name: run-tests
-    hold: 10m # a wait, executed before any conditional-defaults to 0m
-    condition: succeeded
-    test: 
-      name: sample-app-tests
-      cluster: dev
-      namespace: app-ns # the namespace the app is in
   
-  - name: uninstall-app
-    condition: failed
-    app: 
-      name: sample-app
-      cluster: dev
-      namespace: app-ns
-      helm:
-        command: uninstall
-  
-  - name: rollback-routing
-    condition: any
-    app: 
-      name: sample-routing
-      cluster: dev
-      namespace: app-ns
-      helm:
-        command: rollback
-        version: '2'
-  
-  - name: approval
-    hold: 2h
-    condition: any
-    # approvals are how specific parts of a deployment can require manual intervention
-    # note the hold happens before the approval is accepted but any parts of this step following
-    # the approval are gated
+  # an approval is a step where a person must log in and unblock it before it proceeds
+  # a rejection here is counted as a step failure for conditions
+  - name: my-approval
+    condition: succeeeded
     approval:
+      # similar to roles above as far as permissions, but multiple can be specified
       roles:
-        - Admin # Boatswain roles Admin, Editor, Reader (more to come!)
-      users: 
-        - some-body # same for groups but with users
-  
-  - name: trigger-following
-    condition: any
-    trigger: # trigger another deployment by using its name and the trigger name
-      name: another-app-deployment-trigger
-      deployment: another-app
-      arguments: 
+        - Editor
+        - Reader
+      users:
+        - "Adam Page"
+    
+  # triggers are steps that trigger other boatswain deployments
+  - name: trigger-another
+    condition: failed # this runs if the approval fails only
+    trigger:
+      name: my-trigger # note this is the name of the trigger on the deployment being triggered
+      deployment: my-deployment # the boatswain name of the deployment being triggered
+      arguments: # args passed to the other deployment, essentially the .Parameters object
         a: b
-
-  - name: cleanup
-    condition: always
-    app: 
-      name: sample-app
-      cluster: staging
-      namespace: app-ns
-      helm: 
-        wait: true
- 

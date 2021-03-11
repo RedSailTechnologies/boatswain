@@ -13,7 +13,9 @@ service Trigger {
     rpc Web (TriggerWeb) returns (WebTriggered);
 
     // gets the status of a run
-    rpc Status (ReadStatus) returns (StatusRead);
+    rpc Status (ReadStatus) returns (StatusRead) {
+        option deprecated = true;
+    };
 }
 
 message TriggerManual {
