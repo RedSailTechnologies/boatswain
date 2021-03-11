@@ -20,3 +20,13 @@ strategy:
     arguments:
       stepName: install-another-grafana
       helmName: another-grafana
+  
+  - name: test
+    condition: succeeded()
+    helm:
+      name: another-grafana
+      cluster: test
+      namespace: default
+      command: test
+      options:
+        wait: true

@@ -50,6 +50,10 @@ func (s *statuses) shouldExecute(c string) (bool, error) {
 		if status == Succeeded {
 			return true, nil
 		}
+	case "skipped":
+		if status == Skipped {
+			return true, nil
+		}
 	}
 	return false, nil
 }
@@ -60,7 +64,7 @@ type condition struct {
 }
 
 func parseCondition(c string) (*condition, error) {
-	re := regexp.MustCompile(`^(always|any|failed|succeeded)\((.*)\)$`)
+	re := regexp.MustCompile(`^(always|any|failed|skipped|succeeded)\((.*)\)$`)
 	m := re.FindStringSubmatch(c)
 	if len(m) != 3 || m[0] != c {
 		return nil, errors.New("could not parse condition")

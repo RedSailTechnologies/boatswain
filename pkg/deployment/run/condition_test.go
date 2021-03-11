@@ -13,11 +13,13 @@ func TestParseCondition(t *testing.T) {
 		"always()":    {cond: "always", step: ""},
 		"any()":       {cond: "any", step: ""},
 		"failed()":    {cond: "failed", step: ""},
+		"skipped()":   {cond: "skipped", step: ""},
 		"succeeded()": {cond: "succeeded", step: ""},
 
 		fmt.Sprintf("always(%s)", name):    {cond: "always", step: name},
 		fmt.Sprintf("any(%s)", name):       {cond: "any", step: name},
 		fmt.Sprintf("failed(%s)", name):    {cond: "failed", step: name},
+		fmt.Sprintf("skipped(%s)", name):   {cond: "skipped", step: name},
 		fmt.Sprintf("succeeded(%s)", name): {cond: "succeeded", step: name},
 	}
 
@@ -28,9 +30,9 @@ func TestParseCondition(t *testing.T) {
 	}
 
 	invalid := map[string]*condition{
-		"always": nil,
-		"any(":   nil,
-		"failed": nil,
+		"always":   nil,
+		"any(":     nil,
+		"failed)(": nil,
 
 		fmt.Sprintf("always %s", name): nil,
 		fmt.Sprintf("any(%s", name):    nil,

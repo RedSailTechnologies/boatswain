@@ -502,7 +502,7 @@ func (s Service) addApproval(a *approval.Approval, list *[]*pb.ApprovalRead) boo
 func (s Service) deploymentTrigger(name, deployment string, args []byte) (string, error) {
 	deps, err := s.read.All()
 	if err != nil {
-		logger.Error("error reading Deployment", "falserror", err)
+		logger.Error("error reading Deployment", "error", err)
 		return "", err
 	}
 
