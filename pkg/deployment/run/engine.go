@@ -1,6 +1,7 @@
 package run
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/redsailtechnologies/boatswain/pkg/cluster"
@@ -18,7 +19,9 @@ var retryCount int = 3
 
 // The Engine is the worker that performs all run steps and tracking
 type Engine struct {
-	run       *Run
+	run      *Run
+	statuses *statuses
+
 	write     *writeRepository
 	clusters  *cluster.ReadRepository
 	repos     *repo.ReadRepository
@@ -41,6 +44,7 @@ func NewEngine(r *Run, s storage.Storage, a agent.AgentAction, g git.Agent, ra r
 	}
 	engine := &Engine{
 		run:       r,
+		statuses:  &statuses{},
 		write:     w,
 		clusters:  cluster.NewReadRepository(s),
 		repos:     repo.NewReadRepository(s),
@@ -66,7 +70,7 @@ func (e *Engine) Start() {
 		return
 	}
 	e.persist()
-	e.startLoop(Succeeded, Succeeded)
+	e.startLoop()
 }
 
 // Resume continues a run after a pause
@@ -74,22 +78,15 @@ func (e *Engine) Resume() {
 	defer e.recover()
 
 	steps := e.run.Steps()
-	last := steps[len(steps)-1].Status
-	overall := Succeeded
 	for _, step := range steps {
-		if step.Status == Failed {
-			overall = Failed
-		}
+		e.statuses.addStatus(step.Name, step.Status)
 	}
 	logger.Info("continuing run", "uuid", e.run.UUID(), "start", ddd.NewTimestamp())
-	e.startLoop(last, overall)
+	e.startLoop()
 }
 
-func (e *Engine) startLoop(lastStatus, overallStatus Status) {
+func (e *Engine) startLoop() {
 	defer e.recover()
-
-	status := lastStatus
-	overall := overallStatus
 	looping := true
 
 	for looping {
@@ -97,11 +94,11 @@ func (e *Engine) startLoop(lastStatus, overallStatus Status) {
 
 		// step is nil if there are no more steps to be executed
 		if step == nil {
-			e.finalize(overall)
+			e.finalize(e.statuses.overall)
 			return
 		}
 
-		if shouldExecute(step, status) {
+		if should, err := e.statuses.shouldExecute(step.Condition); should && err == nil {
 			if !e.run.Paused() {
 				e.run.StartStep(step.Name, ddd.NewTimestamp())
 				e.persist()
@@ -113,22 +110,23 @@ func (e *Engine) startLoop(lastStatus, overallStatus Status) {
 				}
 			}
 
-			status = e.executeStep(step)
+			status := e.executeStep(step)
 			e.run.SetStatus(status)
+			e.statuses.addStatus(step.Name, status)
+
 			if status == Failed || status == Succeeded {
 				e.run.CompleteStep(ddd.NewTimestamp())
 			}
 			e.persist()
 
-			if status == Failed {
-				overall = Failed
-			}
-
 			if e.run.Paused() {
 				looping = false
 			}
+		} else if !should {
+			e.run.SkipStep(step.Name, fmt.Sprintf("step %s condition %s not met", step.Name, step.Condition), ddd.NewTimestamp())
+			e.persist()
 		} else {
-			e.run.SkipStep(step.Name, "conditions not met", ddd.NewTimestamp())
+			e.run.SkipStep(step.Name, fmt.Sprintf("step %s condition %s could not be parsed", step.Name, step.Condition), ddd.NewTimestamp())
 			e.persist()
 		}
 	}

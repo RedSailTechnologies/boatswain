@@ -15,8 +15,18 @@ triggers:
         - "Adam Page"
 strategy:
   - template: test/yaml/template.yaml
-    branch: feature/selector-naming
+    branch: feature/enhanced-conditions
     repo: boatswain
     arguments:
       stepName: install-another-grafana
       helmName: another-grafana
+  
+  - name: test
+    condition: succeeded()
+    helm:
+      name: another-grafana
+      cluster: test
+      namespace: default
+      command: test
+      options:
+        wait: true

@@ -18,17 +18,17 @@ triggers:
         - "Adam Page"
 strategy:
   - name: approve-install
-    condition: always
+    condition: always()
     approval:
       users: 
         - 'Adam Page'
   - name: approve-install-admin
-    condition: any
+    condition: any()
     approval:
       roles:
         - Admin
   - name: deploy-grafana
-    condition: succeeded
+    condition: succeeded(approve-install)
     helm:
       name: grafana
       cluster: test
@@ -53,7 +53,7 @@ strategy:
             path: "/"
   - name: upgrade-grafana
     hold: 10s
-    condition: succeeded
+    condition: succeeded()
     helm:
       selector:
         app.kubernetes.io/name: grafana
@@ -68,7 +68,7 @@ strategy:
         wait: true
   - name: rollback-grafana
     hold: 1m
-    condition: succeeded
+    condition: succeeded()
     helm:
       name: grafana
       selector:
@@ -83,7 +83,7 @@ strategy:
       options:
         wait: true
   - name: uninstall-grafana
-    condition: succeeded
+    condition: succeeded()
     helm:
       name: grafana
       cluster: test
@@ -92,7 +92,7 @@ strategy:
       options:
         wait: true
   - name: upgrade-install-grafana-fail
-    condition: succeeded
+    condition: succeeded()
     helm:
       name: grafana
       cluster: test
@@ -106,7 +106,7 @@ strategy:
         wait: true
         install: false
   - name: upgrade-install-grafana-succeed
-    condition: failed
+    condition: failed(update-install-grafana-fail)
     helm:
       name: grafana
       cluster: test
@@ -120,7 +120,7 @@ strategy:
         wait: true
         install: true
   - name: trigger-another-deployment
-    condition: succeeded
+    condition: any()
     trigger:
       name: deploy-trigger
       deployment: simple
