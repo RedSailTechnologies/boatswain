@@ -18,7 +18,9 @@ var retryCount int = 3
 
 // The Engine is the worker that performs all run steps and tracking
 type Engine struct {
-	run       *Run
+	run      *Run
+	statuses *statuses
+
 	write     *writeRepository
 	clusters  *cluster.ReadRepository
 	repos     *repo.ReadRepository
@@ -41,6 +43,7 @@ func NewEngine(r *Run, s storage.Storage, a agent.AgentAction, g git.Agent, ra r
 	}
 	engine := &Engine{
 		run:       r,
+		statuses:  &statuses{},
 		write:     w,
 		clusters:  cluster.NewReadRepository(s),
 		repos:     repo.NewReadRepository(s),
