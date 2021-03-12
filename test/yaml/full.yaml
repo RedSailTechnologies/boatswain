@@ -20,13 +20,10 @@ strategy:
   - name: approve-install
     condition: always()
     approval:
+      name: approve-grafana
+      action: create
       users: 
         - 'Adam Page'
-  - name: approve-install-admin
-    condition: any()
-    approval:
-      roles:
-        - Admin
   - name: deploy-grafana
     condition: succeeded(approve-install)
     helm:
