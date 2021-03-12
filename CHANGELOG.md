@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.8.6
+* 26e4248 Feature/enhanced conditions (#78)
+* 7a56854 Feature/selector naming (#76)
+
 ## v0.8.5
 * 6cdfef6 Feature/helm qol (#73)
 

@@ -8,14 +8,15 @@ import (
 
 // Args are arguments common to all commands
 type Args struct {
-	Name      string
-	Namespace string
-	Chart     []byte
-	Values    map[string]interface{}
-	Version   int
-	Wait      bool
-	Timeout   string
-	Install   bool
+	Name        string
+	Namespace   string
+	Chart       []byte
+	Values      map[string]interface{}
+	Version     int
+	Wait        bool
+	Timeout     string
+	Install     bool
+	ReuseValues bool
 }
 
 // ConvertArgs converts byte data back to args

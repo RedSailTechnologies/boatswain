@@ -82,14 +82,15 @@ func (e *Engine) executeHelmStep(step *template.Step) Status {
 	}
 
 	args := helm.Args{
-		Name:      name,
-		Namespace: step.Helm.Namespace,
-		Chart:     chart,
-		Values:    vals,
-		Wait:      step.Helm.Options.Wait,
-		Timeout:   step.Helm.Options.Timeout,
-		Install:   step.Helm.Options.Install,
-		Version:   step.Helm.Options.RollbackVersion,
+		Name:        name,
+		Namespace:   step.Helm.Namespace,
+		Chart:       chart,
+		Values:      vals,
+		Wait:        step.Helm.Options.Wait,
+		Timeout:     step.Helm.Options.Timeout,
+		Install:     step.Helm.Options.Install,
+		Version:     step.Helm.Options.RollbackVersion,
+		ReuseValues: step.Helm.Options.ReuseValues,
 	}
 	jsonArgs, err := json.Marshal(args)
 	if err != nil {
