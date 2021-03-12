@@ -349,7 +349,7 @@ func (s Service) Approve(ctx context.Context, cmd *pb.ApproveStep) (*pb.StepAppr
 			}
 
 			// start the engine in the background
-			eng, err := run.NewEngine(r, s.store, s.agent, git.DefaultAgent{}, repo.DefaultAgent{}, s.deploymentTrigger)
+			eng, err := run.NewEngine(r, s.store, s.agent, git.DefaultAgent{}, repo.DefaultAgent{}, s.approve, s.deploymentTrigger)
 			if err != nil {
 				logger.Error("could not recreate run engine", "error", err)
 				return nil, tw.ToTwirpError(err, "error resuming run")
@@ -377,17 +377,19 @@ func (s Service) Approvals(ctx context.Context, req *pb.ReadApprovals) (*pb.Appr
 
 	results := make([]*pb.ApprovalRead, 0)
 	for _, a := range approvals {
-		added := false
-		for _, u := range a.Users() {
-			if u == user.Name && !added {
-				added = s.addApproval(a, &results)
-			}
-		}
-
-		if !added {
-			for _, r := range a.Roles() {
-				if user.HasRole(r) && !added {
+		if !a.Completed() {
+			added := false
+			for _, u := range a.Users() {
+				if u == user.Name && !added {
 					added = s.addApproval(a, &results)
+				}
+			}
+
+			if !added {
+				for _, r := range a.Roles() {
+					if user.HasRole(r) && !added {
+						added = s.addApproval(a, &results)
+					}
 				}
 			}
 		}
@@ -442,10 +444,10 @@ func (s Service) Web(ctx context.Context, cmd *tr.TriggerWeb) (*tr.WebTriggered,
 		Token:     &cmd.Token,
 		Arguments: []byte(cmd.Args),
 	})
-
 	if err != nil {
 		return nil, tw.ToTwirpError(err, "deployment trigger failed")
 	}
+
 	return &tr.WebTriggered{
 		RunUuid: runUUID,
 	}, nil
@@ -491,6 +493,7 @@ func (s Service) addApproval(a *approval.Approval, list *[]*pb.ApprovalRead) boo
 
 	*list = append(*list, &pb.ApprovalRead{
 		Uuid:       a.UUID(),
+		Name:       a.Name(),
 		RunUuid:    a.RunUUID(),
 		RunName:    run.Name(),
 		RunVersion: run.RunVersion(),
@@ -564,8 +567,10 @@ func (s Service) trigger(trig *trigger.Trigger) (string, error) {
 	// create the run
 	r, err := run.Create(ddd.NewUUID(), temp, trig)
 
+	// TODO AdamP - here if there is already a run named this for this deployment, use the queue
+
 	// start the engine in the background
-	eng, err := run.NewEngine(r, s.store, s.agent, git.DefaultAgent{}, repo.DefaultAgent{}, s.deploymentTrigger)
+	eng, err := run.NewEngine(r, s.store, s.agent, git.DefaultAgent{}, repo.DefaultAgent{}, s.approve, s.deploymentTrigger)
 	if err != nil {
 		return "", err
 	}
@@ -573,6 +578,40 @@ func (s Service) trigger(trig *trigger.Trigger) (string, error) {
 
 	// return the run id
 	return r.UUID(), nil
+}
+
+func (s Service) approve(name, runName string, approved bool) error {
+	approvals, err := s.aprvRead.All()
+	if err != nil {
+		return err
+	}
+
+	for _, a := range approvals {
+		if a.Name() == name {
+			a.Complete(approved, true, &auth.User{Name: name, Roles: []auth.Role{auth.Admin}}, ddd.NewTimestamp())
+			if err != nil {
+				return err
+			}
+
+			s.aprvWrite.Save(a)
+			if err != nil {
+				return err
+			}
+
+			r, err := s.runRead.Load(a.RunUUID())
+			if err != nil {
+				return err
+			}
+
+			eng, err := run.NewEngine(r, s.store, s.agent, git.DefaultAgent{}, repo.DefaultAgent{}, s.approve, s.deploymentTrigger)
+			if err != nil {
+				return err
+			}
+			go eng.Resume()
+			return nil
+		}
+	}
+	return errors.New("approval not found")
 }
 
 func convertLogs(logs []run.Log) []*pb.StepLog {

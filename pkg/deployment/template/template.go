@@ -81,8 +81,10 @@ type Step struct {
 	} `yaml:"helm,omitempty"`
 
 	Approval *struct {
-		Roles []string `yaml:"roles"`
-		Users []string `yaml:"users"`
+		Name   string   `yaml:"name"`
+		Action string   `yaml:"action"`
+		Roles  []string `yaml:"roles"`
+		Users  []string `yaml:"users"`
 	} `yaml:"approval,omitempty"`
 
 	Trigger *struct {

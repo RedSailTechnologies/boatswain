@@ -574,6 +574,7 @@ const ReadApprovalsToJSON = (m: ReadApprovals): ReadApprovalsJSON => {
 
 export interface ApprovalRead {
     uuid: string;
+    name: string;
     runUuid: string;
     runName: string;
     runVersion: string;
@@ -583,6 +584,7 @@ export interface ApprovalRead {
 
 interface ApprovalReadJSON {
     uuid: string;
+    name: string;
     run_uuid: string;
     run_name: string;
     run_version: string;
@@ -595,6 +597,7 @@ const JSONToApprovalRead = (m: ApprovalRead | ApprovalReadJSON): ApprovalRead =>
     
     return {
         uuid: m.uuid,
+        name: m.name,
         runUuid: (((m as ApprovalRead).runUuid) ? (m as ApprovalRead).runUuid : (m as ApprovalReadJSON).run_uuid),
         runName: (((m as ApprovalRead).runName) ? (m as ApprovalRead).runName : (m as ApprovalReadJSON).run_name),
         runVersion: (((m as ApprovalRead).runVersion) ? (m as ApprovalRead).runVersion : (m as ApprovalReadJSON).run_version),

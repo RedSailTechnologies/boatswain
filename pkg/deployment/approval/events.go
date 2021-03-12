@@ -15,6 +15,7 @@ var eventTypes = map[string]func() ddd.Event{
 type Created struct {
 	UUID         string
 	RunID        string
+	Name         string
 	AllowedUsers []string
 	AllowedRoles []string
 }

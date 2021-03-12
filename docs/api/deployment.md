@@ -58,6 +58,7 @@ Deployment is the service for creation and management of application installs/up
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | uuid | [string](#string) |  |  |
+| name | [string](#string) |  |  |
 | run_uuid | [string](#string) |  |  |
 | run_name | [string](#string) |  |  |
 | run_version | [string](#string) |  |  |
