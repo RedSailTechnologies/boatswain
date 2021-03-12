@@ -3,25 +3,25 @@ name: boatswain
 description: Chart for the boatswain deployment tool.
 
 type: application
-version: 0.8.5
-appVersion: 0.8.5
+version: 0.8.6
+appVersion: 0.8.6
 
 dependencies:
   - name: kraken
     repository: file://../kraken
-    version: "0.8.5"
+    version: "0.8.6"
     condition: kraken.enabled
   - name: gyarados
     repository: file://../gyarados
-    version: "0.8.5"
+    version: "0.8.6"
     condition: gyarados.enabled
   - name: poseidon
     repository: file://../poseidon
-    version: "0.8.5"
+    version: "0.8.6"
     condition: poseidon.enabled
   - name: mate
     repository: file://../mate
-    version: "0.8.5"
+    version: "0.8.6"
     condition: mate.enabled
   - name: mongodb
     repository: https://charts.bitnami.com/bitnami
@@ -29,5 +29,5 @@ dependencies:
     condition: mongodb.enabled
   - name: triton
     repository: file://../triton
-    version: "0.8.5"
+    version: "0.8.6"
     condition: triton.enabled

@@ -213,6 +213,7 @@ func (a DefaultAgent) Upgrade(args *Args) (*Result, error) {
 	upgrade := action.NewUpgrade(cfg)
 	upgrade.Namespace = args.Namespace
 	upgrade.Wait = args.Wait
+	upgrade.ReuseValues = args.ReuseValues
 
 	if args.Timeout != "" {
 		timeout, err := time.ParseDuration(args.Timeout)

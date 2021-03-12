@@ -67,7 +67,8 @@ type Step struct {
 			Wait            bool   `yaml:"wait"`
 			Install         bool   `yaml:"install"`
 			Timeout         string `yaml:"timeout"`
-		} `yaml:"options,omitempty"`
+			ReuseValues     bool   `yaml:"reuseValues"`
+		} `yaml:"options"`
 		Values *struct {
 			Library *struct {
 				Chart   string `yaml:"chart"`

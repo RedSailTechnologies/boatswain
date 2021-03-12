@@ -3,5 +3,5 @@ name: tentacle
 description: The tentacle component chart
 
 type: application
-version: 0.8.5
-appVersion: 0.8.5
+version: 0.8.6
+appVersion: 0.8.6
