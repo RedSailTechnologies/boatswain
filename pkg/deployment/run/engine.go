@@ -66,14 +66,6 @@ func NewEngine(r *Run, s storage.Storage, aa agent.AgentAction, g git.Agent, ra 
 func (e *Engine) Start() {
 	defer e.recover()
 
-	// TODO AdamP - we may consider improving this method of making runs unique
-	for blocked, err := e.runIsBlocked(); blocked; {
-		if err != nil {
-			logger.Warn("error checking run start conditions", "error", err)
-		}
-		time.Sleep(3 * time.Second) // TODO - configurable?
-	}
-
 	logger.Info("starting run", "uuid", e.run.UUID(), "start", ddd.NewTimestamp())
 	err := e.run.Start(ddd.NewTimestamp())
 	if err != nil {
@@ -195,20 +187,6 @@ func (e *Engine) recover() {
 		e.run.AppendLog(err.(error).Error(), Error, ddd.NewTimestamp())
 		e.finalize(Failed)
 	}
-}
-
-func (e *Engine) runIsBlocked() (bool, error) {
-	runs, err := e.read.All()
-	if err != nil {
-		return true, err
-	}
-
-	for _, run := range runs {
-		if run.DeploymentUUID() == e.run.DeploymentUUID() && run.Name() == e.run.Name() {
-			return true, nil
-		}
-	}
-	return false, nil
 }
 
 func shouldExecute(s *template.Step, last Status) bool {
