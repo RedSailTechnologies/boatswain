@@ -88,10 +88,7 @@ func (e *Engine) executeApprovalCreateStep(step *template.Step) Status {
 			return Failed
 		}
 
-		if appr.Overridden() {
-			e.run.AppendLog(fmt.Sprintf("step overriden by %s", approver.Name), Info, ddd.NewTimestamp())
-			return Succeeded
-		} else if appr.Approved() {
+		if appr.Approved() {
 			e.run.AppendLog(fmt.Sprintf("step approved by %s", approver.Name), Info, ddd.NewTimestamp())
 			return Succeeded
 		}
