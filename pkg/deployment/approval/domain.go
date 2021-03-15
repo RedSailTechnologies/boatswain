@@ -15,6 +15,7 @@ type Approval struct {
 
 	uuid  string
 	runID string
+	name  string
 
 	completed  bool
 	approved   bool
@@ -36,7 +37,7 @@ func Replay(events []ddd.Event) ddd.Aggregate {
 }
 
 // Create handles create commands for approvals
-func Create(uuid, runID string, allowedUsers, allowedRoles []string) (*Approval, error) {
+func Create(uuid, runID, name string, allowedUsers, allowedRoles []string) (*Approval, error) {
 	if uuid == "" {
 		return nil, ddd.IDError{}
 	}
@@ -44,6 +45,12 @@ func Create(uuid, runID string, allowedUsers, allowedRoles []string) (*Approval,
 		return nil, ddd.InvalidArgumentError{
 			Arg: "runID",
 			Val: "run uuid cannot be nil",
+		}
+	}
+	if name == "" {
+		return nil, ddd.InvalidArgumentError{
+			Arg: "name",
+			Val: "approval name cannot be nil",
 		}
 	}
 	if len(allowedUsers)+len(allowedRoles) == 0 {
@@ -54,6 +61,7 @@ func Create(uuid, runID string, allowedUsers, allowedRoles []string) (*Approval,
 	a.on(&Created{
 		UUID:         uuid,
 		RunID:        runID,
+		Name:         name,
 		AllowedUsers: allowedUsers,
 		AllowedRoles: allowedRoles,
 	})
@@ -108,6 +116,11 @@ func (a *Approval) Destroyed() bool {
 	return a.destroyed // approvals can't be destroyed, but we still implement the interface
 }
 
+// Name gets the approval's name
+func (a *Approval) Name() string {
+	return a.name
+}
+
 // RunUUID gets the approval's run id
 func (a *Approval) RunUUID() string {
 	return a.runID
@@ -160,6 +173,7 @@ func (a *Approval) on(event ddd.Event) {
 	case *Created:
 		a.uuid = e.UUID
 		a.runID = e.RunID
+		a.name = e.Name
 		a.allowedUsers = e.AllowedUsers
 		a.allowedRoles = e.AllowedRoles
 		a.approved = false

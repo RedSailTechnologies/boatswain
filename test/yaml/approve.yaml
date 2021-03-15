@@ -1,0 +1,13 @@
+name: approve-grafana
+version: "1"
+triggers:
+  - manual:
+      name: user-trigger
+      users:
+        - "Adam Page"
+strategy:
+  - name: approve-grafana
+    condition: always()
+    approval:
+      name: approve-grafana
+      action: approve

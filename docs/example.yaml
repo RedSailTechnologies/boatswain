@@ -116,11 +116,17 @@ strategy:
 
   
   # an approval is a step where a person must log in and unblock it before it proceeds
-  # a rejection here is counted as a step failure for conditions
+  # the action here is whether this run creates the approval, or whether we complete other(s)
   - name: my-approval
     condition: succeeeded(my-deploy-step)
     approval:
+      # this is a name for this approval used for display and for searching
+      # note that when approve/reject is the action, it will use the name and approve
+      # or reject all other actions with that name, in any other deployment/run
+      name: approve-it!
+      action: create # create/approve/reject are valid, whether to create a new approval or approve/reject another
       # similar to roles above as far as permissions, but multiple can be specified
+      # roles and users are only required when the action is create
       roles:
         - Editor
         - Reader

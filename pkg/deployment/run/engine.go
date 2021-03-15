@@ -22,6 +22,7 @@ type Engine struct {
 	run      *Run
 	statuses *statuses
 
+	read      *ReadRepository
 	write     *writeRepository
 	clusters  *cluster.ReadRepository
 	repos     *repo.ReadRepository
@@ -32,11 +33,12 @@ type Engine struct {
 	git   git.Agent
 	repo  repo.Agent
 
+	approve func(string, string, bool) error
 	trigger func(string, string, []byte) (string, error)
 }
 
 // NewEngine initializes the engine with required dependencies
-func NewEngine(r *Run, s storage.Storage, a agent.AgentAction, g git.Agent, ra repo.Agent, t func(string, string, []byte) (string, error)) (*Engine, error) {
+func NewEngine(r *Run, s storage.Storage, aa agent.AgentAction, g git.Agent, ra repo.Agent, ap func(string, string, bool) error, t func(string, string, []byte) (string, error)) (*Engine, error) {
 	w := newWriteRepository(s)
 	if err := w.save(r); err != nil {
 		logger.Error("could not save created run", "error", err)
@@ -45,14 +47,16 @@ func NewEngine(r *Run, s storage.Storage, a agent.AgentAction, g git.Agent, ra r
 	engine := &Engine{
 		run:       r,
 		statuses:  &statuses{},
+		read:      NewReadRepository(s),
 		write:     w,
 		clusters:  cluster.NewReadRepository(s),
 		repos:     repo.NewReadRepository(s),
 		aprvRead:  approval.NewReadRepository(s),
 		aprvWrite: approval.NewWriteRepository(s),
-		agent:     a,
+		agent:     aa,
 		git:       g,
 		repo:      ra,
+		approve:   ap,
 		trigger:   t,
 	}
 	return engine, nil
@@ -95,6 +99,7 @@ func (e *Engine) startLoop() {
 		// step is nil if there are no more steps to be executed
 		if step == nil {
 			e.finalize(e.statuses.overall)
+			// TODO AdamP - get the next run off the queue if any and start it or somehow signal the service
 			return
 		}
 

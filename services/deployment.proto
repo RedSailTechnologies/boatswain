@@ -170,10 +170,11 @@ message ReadApprovals {}
 
 message ApprovalRead {
     string uuid = 1;
-    string run_uuid = 2;
-    string run_name = 3;
-    string run_version = 4;
-    string step_name = 5;
+    string name = 2;
+    string run_uuid = 3;
+    string run_name = 4;
+    string run_version = 5;
+    string step_name = 6;
 }
 
 message ApprovalsRead{

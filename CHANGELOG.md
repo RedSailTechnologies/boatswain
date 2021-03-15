@@ -112,3 +112,6 @@
 * 3eb75f4 Intermediate commit-dentist time!
 * bf60373 Add the first three projects.
 * de28725 Merge pull request #1 from RedSailTechnologies/feature/initial-design
+
+## 0.8.7
+* 3a9126c add a parameter to reuse existing values for upgrades (#79)
