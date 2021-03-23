@@ -58,8 +58,13 @@ func (k DefaultAgent) GetDeployments(args *Args) (*Result, error) {
 		return nil, err
 	}
 
+	selector := ""
+	if args.Labels != nil {
+		selector = labels.SelectorFromValidatedSet(*args.Labels).String()
+	}
+
 	d, err := k8s.AppsV1().Deployments(args.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.SelectorFromValidatedSet(*args.Labels).String(),
+		LabelSelector: selector,
 	})
 	if err != nil {
 		logger.Error("could not get deployments from cluster", "error", err)
@@ -119,8 +124,13 @@ func (k DefaultAgent) GetStatefulSets(args *Args) (*Result, error) {
 		return nil, err
 	}
 
+	selector := ""
+	if args.Labels != nil {
+		selector = labels.SelectorFromValidatedSet(*args.Labels).String()
+	}
+
 	ss, err := k8s.AppsV1().StatefulSets(args.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.SelectorFromValidatedSet(*args.Labels).String(),
+		LabelSelector: selector,
 	})
 	if err != nil {
 		logger.Error("could not get statefulsets from cluster", "error", err)
