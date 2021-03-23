@@ -3,5 +3,5 @@ name: mate
 description: Mate is the gateway/router for boatswain.
 
 type: application
-version: 0.8.8
+version: 0.8.9
 appVersion: 1.16

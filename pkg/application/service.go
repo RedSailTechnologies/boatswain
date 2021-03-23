@@ -199,7 +199,7 @@ func (s Service) getDeployments(c *cluster.Cluster) ([]v1.Deployment, error) {
 
 	deps, err := kube.ConvertDeployments(result.Data)
 	if err != nil {
-		logger.Error("error convertiong luster deployments", "error", "cluster", c.Name())
+		logger.Error("error converting cluster deployments", "error", "cluster", c.Name())
 		return nil, err
 	}
 
