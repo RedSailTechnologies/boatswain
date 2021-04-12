@@ -13,7 +13,9 @@ import { AuthService } from 'src/app/utils/auth/auth.service';
 })
 export class ApprovalsComponent implements OnInit {
   private client: Deployment;
+  private filter: Map<string, string> = new Map<string, string>();
   private retries = 0;
+  private allApprovals: ApprovalRead[];
 
   public approvals: ApprovalRead[];
 
@@ -30,6 +32,18 @@ export class ApprovalsComponent implements OnInit {
 
   ngOnInit(): void {
     this.refresh()
+  }
+
+  applyFilter(column: string, filter: string) {
+    this.filter.set(column, filter);
+    this.filterResults();
+  }
+
+  filterResults() {
+    this.approvals = this.allApprovals
+    this.filter.forEach((v, k) => {
+      this.approvals = this.approvals.filter(x => x[k].indexOf(v) >= 0);
+    })
   }
 
   approval(approval: ApprovalRead, approve: boolean, override: boolean) {
@@ -66,7 +80,8 @@ export class ApprovalsComponent implements OnInit {
       this.retries++;
       this.client.approvals({})
       .then((value: ApprovalsRead) => {
-        this.approvals = value.approvals;
+        this.allApprovals = value.approvals;
+        this.filterResults();
         this.retries = 0;
       }).catch((err: TwirpError) => {
         if (err.code == 'Unauthorized') {
@@ -81,7 +96,8 @@ export class ApprovalsComponent implements OnInit {
     } else {
       console.log('could not update approvals after 5 retries');
       this.retries = 0;
-      this.approvals = new Array<ApprovalRead>();
+      this.allApprovals = new Array<ApprovalRead>();
+      this.filterResults();
       this.snackBar.open(`Error getting approvals`, 'Dismiss', {
         duration: 5 * 1000,
         panelClass: ['warn-snack'],

@@ -121,7 +121,7 @@ func addApplication(resp *pb.ApplicationsRead, labels map[string]string, cluster
 	}
 
 	for _, app := range resp.Applications {
-		if app.Name == name {
+		if app.Name == name && app.Project == partOf {
 			addApplicationCluster(app, version, cluster, namespace, ready)
 			return
 		}

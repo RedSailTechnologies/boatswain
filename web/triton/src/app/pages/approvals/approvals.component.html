@@ -1,5 +1,37 @@
 <div class="page" *ngIf="approvals;else noData">
     <mat-table [dataSource]="approvals" class="full-width">
+        <ng-container matColumnDef="nameSearch">
+            <mat-header-cell *matHeaderCellDef>
+                <mat-form-field>
+                    <input matInput (keyup)="applyFilter('name', $event.target.value)" placeholder="filter name">
+                </mat-form-field>
+            </mat-header-cell>
+        </ng-container>
+        <ng-container matColumnDef="runSearch">
+            <mat-header-cell *matHeaderCellDef>
+                <mat-form-field>
+                    <input matInput (keyup)="applyFilter('runName', $event.target.value)" placeholder="filter run">
+                </mat-form-field>
+            </mat-header-cell>
+        </ng-container>
+        <ng-container matColumnDef="versionSearch">
+            <mat-header-cell *matHeaderCellDef>
+                <mat-form-field>
+                    <input matInput (keyup)="applyFilter('runVersion', $event.target.value)" placeholder="filter version">
+                </mat-form-field>
+            </mat-header-cell>
+        </ng-container>
+        <ng-container matColumnDef="stepSearch">
+            <mat-header-cell *matHeaderCellDef>
+                <mat-form-field>
+                    <input matInput (keyup)="applyFilter('stepName', $event.target.value)" placeholder="filter step">
+                </mat-form-field>
+            </mat-header-cell>
+        </ng-container>
+        <ng-container matColumnDef="empty">
+            <mat-header-cell *matHeaderCellDef>
+            </mat-header-cell>
+        </ng-container>
         <ng-container matColumnDef="name">
             <mat-header-cell *matHeaderCellDef> name </mat-header-cell>
             <mat-cell *matCellDef="let element"> {{element.name}} </mat-cell>
@@ -25,6 +57,7 @@
             </mat-cell>
         </ng-container>
         <mat-header-row *matHeaderRowDef="['name', 'run', 'version', 'step', 'actions']; sticky: true"></mat-header-row>
+        <mat-header-row *matHeaderRowDef="['nameSearch', 'runSearch', 'versionSearch', 'stepSearch', 'empty']; sticky: true"></mat-header-row>
         <mat-row *matRowDef="let row; columns: ['name', 'run', 'version', 'step', 'actions'];"></mat-row>
     </mat-table>
 </div>

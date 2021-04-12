@@ -14,8 +14,16 @@ triggers:
       users:
         - "Adam Page"
 strategy:
+  - name: approve-simple
+    condition: always()
+    approval:
+      name: approve-simple
+      action: create
+      users: 
+        - 'Adam Page'
+
   - template: test/yaml/template.yaml
-    branch: feature/queues-rejections
+    branch: hotfix/more-minor-fixes
     repo: boatswain
     arguments:
       stepName: install-another-grafana
